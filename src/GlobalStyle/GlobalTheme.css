@@ -1,0 +1,253 @@
+:root {
+  --sidebar-width: 220px;
+  --sidebar-collapsed-width: 55px;
+  --background-light: #f8f8ff;
+  --background-dark: #192532;
+  --text-light: rgb(199, 199, 199);
+  --text-dark: white;
+}
+
+ .base-container {
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+}
+
+.inner-container {
+  width: calc(100vw - var(--sidebar-width));
+  margin: 0;
+  padding: 0;
+  background-color: var(--background-light);
+}
+
+.inner-container.close {
+  width: calc(100vw - var(--sidebar-collapsed-width));
+}
+
+.tcontainer {
+  width: 80vw;
+  height: 60vh;
+  margin-left: 0;
+  overflow: auto;
+}
+
+.tcontainer.close {
+  width: 90vw;
+}
+
+ .header {
+  position: fixed;
+  top: 0 !important;
+}
+
+.header-color,
+.navbar {
+  background-color: var(--background-dark);
+}
+
+.box-container {
+  width: 80vw;
+  height: 95vh;
+}
+
+.box-container.close {
+  width: 92vw;
+}
+
+.logoPic {
+  width: 120px;
+  margin-left: 10px;
+}
+
+.navbar {
+  box-shadow: 1px 1px 2px lightgray;
+  position: absolute;
+  z-index: 2;
+  width: calc(100vw - var(--sidebar-width));
+}
+
+.navbar.close {
+  width: calc(100vw - var(--sidebar-collapsed-width));
+}
+
+.nav-link {
+  font-family: "play", sans-serif;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 10px 5px;
+  margin: 0 12px;
+  color: var(--text-light) !important;
+}
+
+.nav-link:hover {
+  color: var(--text-dark) !important;
+}
+
+.active {
+  font-weight: 500;
+  width: 130px;
+  color: var(--text-dark) !important;
+}
+
+.navbar-expand {
+  flex-wrap: wrap;
+}
+
+.nav-anchor {
+  color: var(--background-dark);
+  text-decoration: none;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.navbar-toggler:focus {
+  color: var(--text-dark) !important;
+  outline: 1px solid var(--text-dark) !important;
+  box-shadow: none;
+  padding: 0 3px;
+}
+
+.nav-item {
+  padding-top: 5px !important;
+}
+
+.nav-item-dropdown {
+  color: var(--text-dark);
+}
+
+.nav-item-dropdown::after {
+  display: none;
+}
+
+.active-dropdown {
+  color: dodgerblue;
+  font-weight: normal;
+  font-family: "play", sans-serif;
+}
+
+#menu {
+  color: var(--text-dark) !important;
+  outline: none;
+  font-size: 25px;
+}
+
+.offcanvas-title {
+  color: var(--text-light) !important;
+  flex-grow: 1;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: var(--text-dark);
+  font-size: 20px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.toggle-btn:hover {
+  color: var(--text-dark);
+}
+
+.sidebar {
+  height: 100vh;
+  padding: 0 !important;
+  background-color: black;
+  width: var(--sidebar-width);
+  overflow-y: auto;
+}
+
+.sidebar.close {
+  width: var(--sidebar-collapsed-width);
+}
+
+.sidebar-header {
+  width: var(--sidebar-width);
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: black;
+  color: var(--text-dark);
+}
+
+.sidebar-header.close {
+  width: var(--sidebar-collapsed-width);
+}
+
+.sidebar-title {
+  color: var(--text-dark);
+  display: block;
+}
+
+.sidebar.close .sidebar-title,
+.sidebar.close .sidebar-header h3,
+.sidebar.close a span,
+.sidebar-header.close h6 {
+  display: none;
+}
+
+.sidebar a {
+  padding: 8px 3px;
+  text-decoration: none;
+  font-size: 16px;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  transition: 0.2s;
+}
+
+.sidebar a:hover {
+  background-color: rgb(73, 73, 73);
+}
+
+.sidebar a i {
+  min-width: 30px;
+  font-size: 20px;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  color: #1a92f5;
+  width: calc(100vw - var(--sidebar-width));
+  background-color: var(--background-light);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer.close {
+  width: calc(100vw - var(--sidebar-collapsed-width));
+}
+
+ .vanishing-div {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+ @media (max-width: 992px) {
+  .vanishing-div {
+    display: none;
+  }
+}
+
+@media (max-width: 756px) {
+  #menu {
+    font-size: 25px;
+  }
+
+  .footer {
+    width: calc(100vw - var(--sidebar-width));
+  }
+}
+
+@media (min-width: 757px) {
+  #menu {
+    display: none;
+  }
+}

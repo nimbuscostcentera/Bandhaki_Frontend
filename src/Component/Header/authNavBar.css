@@ -1,0 +1,15 @@
+.white-icon{
+    color: white;
+    font-size: medium;
+    padding: 5px 15px;
+}
+
+.sidebar::-webkit-scrollbar{
+width: 5px;
+height: 5px;
+background-color: lightgray;
+}
+
+.sidebar::-webkit-scrollbar-thumb{
+background-color: gray;
+}

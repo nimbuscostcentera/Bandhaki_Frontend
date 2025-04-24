@@ -1,0 +1,27 @@
+.select-box {
+  border: 1px solid rgb(219, 223, 231);
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: small;
+}
+.ul-div {
+  background-color: rgb(253, 253, 253);
+  width: 200px;
+  border: 1px solid rgb(226, 226, 226);
+  padding-left: 0;
+  text-decoration: none;
+  list-style: none;
+  position: absolute;
+  z-index: 10;
+  outline: 1px solid rgb(157, 203, 245);
+}
+.list-box {
+  padding: 5px 20px 5px 20px;
+}
+.label-style {
+  padding-left: 1px;
+}
+.list-box:hover {
+  background-color: rgb(221, 221, 221);
+  color: rgb(0, 0, 0);
+}

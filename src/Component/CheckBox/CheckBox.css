@@ -1,0 +1,10 @@
+.small{
+font-size: small;
+color: rgb(165, 165, 165);
+}
+.text-pos-cen{
+color: rgb(165, 165, 165);
+display: flex;
+justify-content: center;
+align-items: center;
+}

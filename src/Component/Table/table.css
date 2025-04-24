@@ -1,0 +1,83 @@
+.table-wrapper {
+  max-height: 360px !important;
+  padding: 0px;
+  overflow: auto !important;
+  display: block;
+}
+
+.tab-body tr td {
+  color: #252525 !important;
+  font-size: smaller;
+  text-align: center;
+  border: 1px solid rgb(231, 231, 231);
+}
+
+.tab-head tr th {
+  font-weight: 500;
+  font-size: 14px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 0;
+  background-color: #2f2d66 !important;
+  color: rgb(255, 255, 255) !important;
+}
+
+.tab-head tr th:first-child {
+  position: sticky;
+  left: 0;
+  color: white !important;
+  background-color: #2f2d66 !important;
+  z-index: 1;
+  text-align: center;
+  font-size: "10px" !important;
+  padding-bottom: 5px !important;
+}
+
+.tab-body tr td:first-child {
+  position: sticky;
+  left: 0;
+  color: white !important;
+  background-color: #2f2d66 !important;
+  z-index: 1;
+  text-align: center;
+  font-size: "10px" !important;
+  padding-bottom: 5px !important;
+  border-bottom: "grey" !important;
+  border-bottom-color: gray;
+}
+
+.bi-pencil-square {
+  color: rgb(2, 2, 2);
+  font-size: larger;
+  outline: none;
+}
+
+.bi-pencil-square:hover {
+  color: rgb(0, 102, 255);
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 2px;
+  height: 4px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #dbdbdb9d;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #90909150;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #858484;
+}
+.form-input:focus {
+  border: 1px solid #25a353 !important;
+  outline: 3px solid #25a35367;
+}

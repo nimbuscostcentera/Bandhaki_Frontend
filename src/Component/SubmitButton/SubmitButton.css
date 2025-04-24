@@ -1,0 +1,8 @@
+.color-btn-success {
+  background-color:#25a354;
+  color: white;
+}
+.color-btn-success:hover {
+  background-color:  #2f2d66;
+  color: white;
+}

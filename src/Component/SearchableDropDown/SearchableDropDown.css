@@ -1,0 +1,106 @@
+
+.table-responsive {
+    overflow-x: auto;
+    margin: 20px 0;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+/* Dropdown styling */
+.dropdown {
+    position: relative;
+    width: 150px;
+    margin: 0 auto;
+    cursor: pointer;
+    color: #333;
+}
+
+.dropdown .selected-value {
+    position: relative;
+}
+
+.dropdown .selected-value input {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 1rem;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+    box-sizing: border-box;
+    transition: all 200ms ease;
+}
+
+.dropdown .arrow {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    border-style: solid;
+    border-width: 5px 5px 0;
+    border-color: #333 transparent transparent;
+}
+
+.dropdown .arrow.open {
+    border-width: 0 5px 5px;
+    border-color: transparent transparent #333;
+}
+
+/* Dropdown options styling */
+.dropdown .options {
+    display: none;
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 1050; /* Ensure dropdown is above the table */
+    -webkit-overflow-scrolling: touch;
+}
+
+.dropdown .options.open {
+    display: block;
+}
+
+.dropdown .option {
+    padding: 8px 10px;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 200ms ease;
+}
+
+.dropdown .option:hover,
+.dropdown .option.selected {
+    background-color: #f2f9fc;
+}
+
+/* Ensure the dropdown options are not clipped by the table */
+.table-responsive {
+    position: relative;
+    overflow: visible;
+}
+
+.table {
+    position: relative;
+    z-index: 1; /* Dropdown options will appear above the table */
+}

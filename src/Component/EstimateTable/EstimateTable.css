@@ -1,0 +1,92 @@
+.th-decor {
+  text-align: center !important;
+  text-wrap: nowrap;
+  padding: 3px 8px;
+  font-weight: 500;
+  font-size: 13px;
+}
+.thead-decor {
+  background-color: #ffffff !important;
+  color: white !important;
+}
+.table-button {
+  background-color: #2f2d66!important;
+  border: 2px solid #2f2d66;
+  padding: 3px 5px;
+  color: white!important;
+  border-radius: 0 5px 5px 0;
+}
+.table-bordered {
+  border-color: black;
+}
+.input-cell {
+  font-size: 12px;
+  text-align: end;
+  padding-right:8px ;
+  height: 35px;
+  border: 1px solid rgb(231, 231, 231);
+  border-radius: 3px;
+  outline: none;
+}
+
+.table-input-wrapper {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  text-wrap: wrap;
+  height: "100%";
+}
+.table-body-decor {
+  background-color: rgb(255, 255, 255);
+  padding: 0;
+}
+.table>:not(caption)>*>* {
+ padding: 0 ;
+ margin:0;
+}
+
+.table-button-del{
+  background-color: rgb(190, 31, 31);
+  color: rgb(255, 255, 255);
+  font-size: 20px;
+  font-weight: 600;
+  border: none;
+  padding: 2px 10px;
+  border-radius: 4px;
+}
+.table-button-del-disabled{
+  background-color: rgb(145, 145, 145);
+  color: rgb(255, 255, 255);
+  font-size: 20px;
+  font-weight: 600;
+  border: none;
+  padding: 2px 10px;
+  border-radius: 4px;
+}
+/* width */
+::-webkit-scrollbar {
+  width: 2px;
+  height: 4px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #dbdbdb9d;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #90909150;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #858484;
+}
+@media screen and (width<576px) {
+  #estimate-body{
+    padding:10px 25px;
+  }
+}

@@ -1,0 +1,11 @@
+.disabled-date-input:disabled {
+    background-color: #fafaf8 !important;
+    opacity: 1 !important;
+    cursor: not-allowed;
+}
+.rcv-tab-body tr td {
+    color: #252525 !important;
+    font-size: smaller;
+    text-align: center;
+    border: 1px solid rgb(231, 231, 231);
+}

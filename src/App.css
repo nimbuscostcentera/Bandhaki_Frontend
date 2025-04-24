@@ -1,0 +1,65 @@
+
+.input-cell {
+  font-size: 12px;
+  text-align: end;
+  padding-right: 8px;
+  height: 35px;
+  border: 1px solid rgb(231, 231, 231);
+  border-radius: 3px;
+  outline: none;
+}
+
+.table-input-wrapper {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  text-wrap: wrap;
+  height: "100%";
+}
+.table-box {
+  width: auto !important;
+  overflow: auto !important;
+}
+
+/* Custom Scrollbar for WebKit browsers */
+.table-box::-webkit-scrollbar {
+  width: 5px;
+  /* Scrollbar width */
+}
+
+.table-box::-webkit-scrollbar-thumb {
+  background-color: #9c9c9c;
+  /* Scrollbar thumb color */
+  border-radius: 5px;
+}
+
+.table-box::-webkit-scrollbar-track {
+  background-color: #e2e2e2;
+}
+
+/* Firefox scrollbar */
+.table-box {
+  scrollbar-width: thin;
+  scrollbar-color: #9c9c9c #e2e2e2;
+}
+/* Add to your CSS file */
+.pagination-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 0.25rem;
+}
+
+.pagination-info {
+  margin: 0 1rem;
+  font-weight: 500;
+}
+
+.form-input:focus {
+  border: 1px solid #25a353 !important;
+  outline: 3px solid #25a35367;
+}

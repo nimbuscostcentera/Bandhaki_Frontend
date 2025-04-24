@@ -1,0 +1,92 @@
+.navbar {
+  box-shadow: 1px 1px 2px rgb(211, 211, 211);
+}
+#menu-button {
+  color: white !important;
+}
+.vanising-div{
+    height: 0px;
+    width: 0px;
+}
+.navbar {
+  box-shadow: 1px 1px 2px rgb(211, 211, 211);
+  background-color: #192532;
+}
+.nav-link {
+  font-family: "play", sans-serif;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 1px 12px;
+  margin: 0px 12px;
+  color: rgb(199, 199, 199) !important;
+}
+.nav-link:hover {
+  color: white !important;
+}
+.active {
+  font-weight: 500;
+  color: #ffffff !important;
+  border-top: 2px solid white; /* Ensure color stays white when active */
+}
+.nav-anchor {
+  color: #192532;
+  text-decoration: none;
+  padding-left: 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  cursor: pointer;
+}
+.navbar-toggler:focus {
+  color: white !important;
+  outline: 1px solid white !important;
+  box-shadow: none;
+}
+.nav-item {
+  padding-top: 5px !important;
+}
+.logo-box {
+  width: 180px;
+}
+.nav-item-dropdown {
+  margin-top: 0;
+  padding-top: 0;
+  color: #ffffff;
+}
+.nav-item-dropdown ::after {
+  display: none;
+}
+.active-dropdown {
+  color: dodgerblue;
+  font-weight: normal;
+  font-family: "play", sans-serif;
+}
+.offcanvas {
+  background-color: #192532 !important;
+}
+@media screen and (max-width:992px) {
+.nav-link {
+  font-family: "play", sans-serif;
+  cursor: pointer;
+  padding: 0 12px 20px 5px!important;
+}
+.offcanvas-title{
+    color:rgb(199, 199, 199) !important;
+    flex-grow: 1;
+}
+.offcanvas-header{
+    padding: 20px 10px 0 10px;
+    margin: 0;
+}
+.offcanvas-button{
+    background-color: transparent;
+    color: #ffffff;
+    border: none;
+}
+.vanising-div{
+    height: auto;
+    width: auto;
+    color: #ffffff;
+    border: none;
+    padding: 0;
+}
+}

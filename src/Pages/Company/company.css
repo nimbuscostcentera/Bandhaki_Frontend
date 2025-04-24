@@ -1,0 +1,110 @@
+/* General Styles */
+.company-list-edit-container {
+    padding: 0;
+    width: 100%;
+}
+
+.company-list-edit-row {
+    margin-top: 60px;
+    margin-left: 3px;
+    width: 100%;
+}
+
+.company-registration-header,
+.company-edit-header {
+    padding-left: 15px;
+    margin: 0;
+}
+
+.company-registration-header h5,
+.company-edit-header h5 {
+    margin-bottom: 0;
+}
+
+.company-registration-header hr,
+.company-edit-header hr {
+    margin-top: 2px;
+    border-top: 1px solid #ccc;
+}
+
+/* Table Styles */
+.company-table-container {
+    width: 100%;
+    overflow: auto;
+}
+
+.company-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+
+.company-table th,
+.company-table td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+.company-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.company-table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+.input-cell {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Button Styles */
+.register-button-container {
+    margin-top: 10px;
+    text-align: left;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+
+    .company-table th,
+    .company-table td {
+        padding: 6px;
+        font-size: 14px;
+    }
+
+    .input-cell {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 576px) {
+
+    .company-table th,
+    .company-table td {
+        padding: 4px;
+        font-size: 12px;
+    }
+
+    .input-cell {
+        font-size: 12px;
+    }
+}
+/* Add to your CSS file */
+.pagination-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+}
+
+.pagination-info {
+    margin: 0 1rem;
+    font-weight: 500;
+}

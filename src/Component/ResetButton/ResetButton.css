@@ -1,0 +1,8 @@
+.color-btn-err {
+  background-color:#af0808;
+  color: white;
+}
+.color-btn-err:hover {
+  background-color:  #f32222;
+  color: white;
+}

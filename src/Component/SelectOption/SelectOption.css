@@ -1,0 +1,16 @@
+.form-select{
+  font-size: 12px!important;
+  padding: 1px 10px;
+}
+
+.form-select:hover{
+  border-color: #2f2d66!important;
+  box-shadow: 2px 2px 3px rgb(102, 117, 182);
+}
+.form-select:focus{
+  border:1px solid #25a353!important;
+  outline: 3px solid #25a35367;
+}
+.option-fontSize{
+  font-size: 12px;
+}

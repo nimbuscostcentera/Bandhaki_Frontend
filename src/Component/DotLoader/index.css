@@ -1,0 +1,31 @@
+/* HTML: <div className="loader"></div> */
+.loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px; /* Spacing between dots */
+}
+
+.loader span {
+  width: 8px; /* Small dot size */
+  height: 8px;
+  background-color: white;
+  border-radius: 50%;
+  display: inline-block;
+  animation: wave 1.2s infinite ease-in-out;
+}
+
+.loader span:nth-child(1) { animation-delay: 0s; }
+.loader span:nth-child(2) { animation-delay: 0.2s; }
+.loader span:nth-child(3) { animation-delay: 0.4s; }
+.loader span:nth-child(4) { animation-delay: 0.6s; }
+.loader span:nth-child(5) { animation-delay: 0.8s; }
+
+@keyframes wave {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px); /* Wave height */
+  }
+}
