@@ -1,55 +1,56 @@
-"use client";
-
 import { useEffect, useState } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.min.js";
+import { ToastContainer } from "react-toastify";
 
 import { Row, Col, Form, Container, InputGroup } from "react-bootstrap";
-import InputBox from "../../Component/InputBox";
-import BongCalender from "../../Component/BongCalender";
+import Table from "../../Component/Table";
+import BongDatePicker from "../../Component/BongDatePicker";
 
 import checkOrder from "../../GlobalFunctions/Ordercheck";
 import SortArrayByString from "../../GlobalFunctions/SortarrayByString";
 import SortArrayByDate from "../../GlobalFunctions/SortArrayByDate";
 import SortArrayByNumber from "../../GlobalFunctions/SortArrayByNumber";
-import useFetchAuth from "../../store/Auth/useFetchAuth";
-import Table from "../../Component/Table";
-// import usefetchMetalReturnHeader from "../../store/ShowStore/usefetchMetalReturnHeader";
-import { useLocation, useSearchParams } from "react-router-dom";
 import BongDateSorting from "../../GlobalFunctions/BongDateSorting";
 import SortArrayByTime from "../../GlobalFunctions/SortArrayByTime";
-import { ToastContainer } from "react-toastify";
+
+import useFetchAuth from "../../store/Auth/useFetchAuth";
 import useFetchAdjustDetailReport from "../../store/ShowStore/useFetchAdjustDetailReport";
-import useFetchFineHeader from "../../store/ShowStore/useFetchFineHeader";
+// import useFetchFineHeader from "../../store/ShowStore/useFetchFineHeader";
 import useFetchMetalReturnView from "../../store/ShowStore/useFetchMetalReturnView";
 
 function MetalReturnView() {
   //---------other state-------
 
   const location = useLocation();
-  const { custId, customertype } = location?.state || {};
+  const { custId, customertype, lotNo, srl } = location?.state || {};
+  // console.log(custId, customertype, lotNo,"1","2");
 
   //------use state hooks----------//
   const [searchParams] = useSearchParams();
   let entityType = searchParams.get("type") === "customer" ? 1 : 2;
   entityType = customertype ? customertype : entityType;
-
+  const [Filters, setFilters] = useState({
+    StartDate: null,
+    EndDate:null,
+  });
   const [filteredData, setFilteredData] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
   const [originalOrder, setOriginalOrder] = useState([]);
   const [editedData, setEditedData] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
-  const [params, setParams] = useState(false);
+  const [params, setParams] = useState({
+    viewStartDatePicker: false,
+    viewEndDatePicker: false,
+  });
   const [initialCustId, setInitialCustId] = useState(custId || -1);
   const [searchDate, setSearchDate] = useState("");
-  const [view, setView] = useState(false);
 
   //-----------------------api calls--------------------------------
 
   const { user, CompanyID } = useFetchAuth();
   const { isAdjustDetailError } = useFetchAdjustDetailReport();
-  const { FineHeaderList, fetchFineHeader, isFineHeaderLoading } =
-    useFetchFineHeader();
+
   const {
     MetalReturnList,
     isMetalReturnListLoading,
@@ -58,8 +59,6 @@ function MetalReturnView() {
     fetchMetalReturnHeader,
     searchMetalReturnHeader,
   } = useFetchMetalReturnView();
-
-  //--------------------------api calls-----------------------------
 
   //--------------------------function call-----------------------------
 
@@ -119,30 +118,7 @@ function MetalReturnView() {
     setFilteredData(result);
     setOriginalOrder(result.map((row) => row.ID));
   };
-  //detail view close
-  const CloseHandler = () => {
-    setParams(false);
-  };
-  //detail view Open
-  const handleViewClick = (tabindex) => {
-    const selectedData = filteredData[tabindex];
-    // console.log(selectedData, "selectedData");
-    setInitialCustId((prev) => selectedData?.id_Customer);
-    setSelectedId(selectedData.ID);
-    setParams(true);
-  };
-  // Calendar handlers
-  const handleShow = () => {
-    setView(true);
-  };
-  // Calendar handlers
-  const handleClose1 = () => {
-    setView(false);
-  };
-  // Calendar handlers
-  const handleSave1 = (BengaliDate, EnglishDate) => {
-    setSearchDate(BengaliDate);
-  };
+
   // Search functionality
   const performSearch = () => {
     if (
@@ -155,6 +131,9 @@ function MetalReturnView() {
         CustomerID: custId || null,
         CompanyID: user?.CompanyID,
         Cust_Type: entityType,
+        LotNo: lotNo || null,
+        SRL: srl || null,
+        ...Filters,
       });
     } else {
       searchMetalReturnHeader({
@@ -162,8 +141,36 @@ function MetalReturnView() {
         date: searchDate,
         CompanyID: user?.CompanyID,
         Cust_Type: entityType,
+        lotNo: lotNo,
+        srl: srl,
+        ...Filters,
       });
     }
+  };
+  const HandleCloseDatePicker = () => {
+    setParams({
+      viewStartDatePicker: false,
+      viewEndDatePicker: false,
+    });
+  };
+  const HandleOpenStartDatePicker = () => {
+    setParams({
+      viewStartDatePicker: true,
+      viewEndDatePicker: false,
+    });
+    return;
+  };
+
+  const HandleOpenEndDatePicker = () => {
+    setParams({
+      viewStartDatePicker: false,
+      viewEndDatePicker: true,
+    });
+    return;
+  };
+  const FilterHandler = (e, key) => {
+    console.log(e, key);
+    setFilters({ ...Filters, [key]: e });
   };
 
   //--------------------------useEffects-----------------------------
@@ -172,25 +179,24 @@ function MetalReturnView() {
   useEffect(() => {
     if (custId) {
       performSearch();
-    } else {
-      if (searchTerm.trim() || searchDate) {
+    }
+    else
+    {
+      if (
+        searchTerm.trim() ||
+        searchDate ||
+        (Filters?.StartDate && Filters?.EndDate) ||
+        (!Filters?.StartDate && !Filters?.EndDate)
+      ) {
         const debounceTimer = setTimeout(() => {
           performSearch();
         }, 500);
         return () => clearTimeout(debounceTimer);
-      } else {
-        // Make API call on page load even without search terms
-        performSearch();
       }
     }
-  }, [searchDate, searchTerm, custId, entityType]);
-  //debouncing
-//   useEffect(() => {
-//     if (isAdjustDetailError) {
-//       ClearstateMetalReturnList();
-//       performSearch();
-//     }
-//   }, [isAdjustDetailError]);
+  }, [searchDate, searchTerm, custId, entityType, Filters?.StartDate, Filters?.EndDate]);
+  
+  
   // Reset state when entityType changes
   useEffect(() => {
     setFilteredData([]);
@@ -239,8 +245,9 @@ function MetalReturnView() {
     isMetalReturnListLoading,
     isAdjustDetailError,
     isMetalReturnListError,
+    Filters?.EndDate,
+    Filters?.StartDate,
   ]);
-
   //-------------------------variables call-----------------------------
   const paymentMode = [
     { label: "Cash", Value: 1 },
@@ -283,40 +290,56 @@ function MetalReturnView() {
       fieldname: "Total_Int_Paid",
       type: "number",
     },
- 
-
   ];
-  // Reset filteredData when entityType changes
-  useEffect(() => {
-    setFilteredData(() => []);
-    setSearchTerm("");
-    setSearchDate("");
-    ClearstateMetalReturnList();
-  }, [entityType]);
-//   console.log(initialCustId);
+
+  //   console.log(initialCustId);
   return (
     <Container fluid className="pt-5">
       <ToastContainer />
       <Row className="pt-2">
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
-          <div className="d-flex align-items-center justify-content-between flex-wrap">
+          <div className="d-flex align-items-center justify-content-between flex-wrap my-2">
             <div>
-              <h5 className="mt-2">
-                Metal Return View for{" "}
-                {entityType == 1 ? "Customer" : "WholeSeller"}
+              <h5 className="mt-2" style={{ fontSize: "18px" }}>
+                Return Metal List for
+                {entityType == 1 ? " Customer" : " Wholesaler"}
               </h5>
+            </div>
+            <div className="d-flex align-items-center justify-content-center text-nowrap">
+              <BongDatePicker
+                handleClose={HandleCloseDatePicker}
+                handleOpenStartDate={HandleOpenStartDatePicker}
+                handleOpenEndDate={HandleOpenEndDatePicker}
+                handleChange={FilterHandler}
+                view1={params?.viewStartDatePicker}
+                view2={params?.viewEndDatePicker}
+                startDate={Filters?.StartDate}
+                endDate={Filters?.EndDate}
+              />
+
+              <InputGroup className="mx-3">
+                <Form.Control
+                  autoFocus
+                  placeholder="Search..."
+                  aria-label="search"
+                  aria-describedby="basic-addon1"
+                  style={{ zIndex: "1", padding: "5px 10px", width: "30vw" }}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </InputGroup>
             </div>
           </div>
           <hr className="my-1" />
         </Col>
         {/* Form Fields */}
-        <Col xl={12} lg={12} md={12} sm={12} xs={12} className="mb-3">
+        {/* <Col xl={12} lg={12} md={12} sm={12} xs={12} className="mb-3">
           <Row>
-            <Col xs={12} sm={12} md={12} lg={7}>
+            <Col xs={12} sm={12} md={12} lg={12}>
               <div className="d-flex align-items-center justify-content-center text-nowrap">
-                {/* Date Picker */}
-                <label>Search By Date &nbsp;&nbsp;</label>
-                <Form.Group className="me-3 mt-2">
+                {/* Date Picker 
+                <label>Date Range &nbsp;&nbsp;</label>
+                {/* <Form.Group className="me-3 mt-2">
                   <InputBox
                     type="date"
                     placeholder="Date"
@@ -339,15 +362,15 @@ function MetalReturnView() {
                     handleSave={handleSave1}
                   />
                 </Form.Group>
-
-                {/* Search Input */}
-                <InputGroup className="mt-2">
+                <BongDatePicker />
+                {/* Search Input 
+                <InputGroup className="mx-3">
                   <Form.Control
                     autoFocus
                     placeholder="Search..."
                     aria-label="search"
                     aria-describedby="basic-addon1"
-                    style={{ width: "250px", zIndex: "1" }}
+                    style={{ zIndex: "1", padding: "5px 10px" }}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -357,12 +380,12 @@ function MetalReturnView() {
                     onClick={performSearch}
                   >
                     <i className="bi bi-search"></i>
-                  </Button> */}
+                  </Button> 
                 </InputGroup>
               </div>
             </Col>
           </Row>
-        </Col>
+        </Col> */}
         {/* Table */}
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
           <div

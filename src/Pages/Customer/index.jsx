@@ -214,8 +214,7 @@ function CustListEdit() {
         position: "top-right",
         autoClose: 3000,
       });
-    }
-    else if (CustRegSuccess && !isCustRegLoading && !CustRegError) {
+    } else if (CustRegSuccess && !isCustRegLoading && !CustRegError) {
       toast.success("Customer Added Successfully", {
         position: "top-right",
         autoClose: 3000,
@@ -232,8 +231,7 @@ function CustListEdit() {
         FineID: -1,
       });
       custref.current.value = "";
-    }
-    else if (CustRegError && !isCustRegLoading && !CustRegSuccess) {
+    } else if (CustRegError && !isCustRegLoading && !CustRegSuccess) {
       toast.error(CustRegError, {
         position: "top-right",
         autoClose: 3000,
@@ -494,7 +492,7 @@ function CustListEdit() {
                 }}
               >
                 <i
-                  class="bi bi-search"
+                  className="bi bi-search"
                   style={{
                     fontSize: "16px",
                   }}

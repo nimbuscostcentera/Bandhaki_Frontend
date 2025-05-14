@@ -107,11 +107,19 @@ function AdjustEntry() {
         toast.error("You can only select items from the same customer!");
         return prev;
       } else {
-        setCustId(item.CustomerID);
+        setCustId(item?.CustomerID);
+        // setLotNo(item?.LotNo);
       }
 
       return isChecked
-        ? [...prev, { LotNo: item.LotNo, CustomerId: item.CustomerID }]
+        ? [
+            ...prev,
+            {
+              LotNo: item.LotNo,
+              CustomerId: item.CustomerID,
+              TranCode: item.TRANCODE,
+            },
+          ]
         : prev.filter((i) => i.LotNo !== item.LotNo);
     });
   };
@@ -316,96 +324,42 @@ function AdjustEntry() {
     setSearchDate("");
     setSearchTerm("");
     setFineInterestCode(-1);
-    setCustId([]);
+    setCustId(null);
     setFilteredData(() => []);
     entityType=0;
   }, [entityType]);
 
+  const excludedLotNos = useMemo(
+    () => checkedIds.map((item) => item.LotNo),
+    [checkedIds]
+  );
+
   return (
     <Container fluid className="pt-5">
       <ToastContainer />
-      <Row className="pt-2">
+      <Row className="pt-3">
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
           <div className="d-flex align-items-center justify-content-between flex-wrap">
             <div>
-              <h5 className="mt-2">
-                Adjust Entry For {entityType == 1 ? "Customer" : "Wholeseller"}
+              <h5 className="m-0" style={{ fontSize: "18px", height: "100%" }}>
+                Adjust Entry For {entityType == 1 ? "Customer" : "Wholesaler"}
               </h5>
             </div>
-
-            <div className="my-2 d-flex justify-content-start align-items-center flex-wrap">
-              <div>
-                <label className=" fs-6 d-block">
-                  Voucher Date &nbsp;&nbsp;
-                </label>
+            <div className="d-flex align-items-center justify-content-between flex-wrap">
+              <div className="mx-3">
+                <SelectOption
+                  defaultval={-1}
+                  OnSelect={onSelect}
+                  SName={"FineId"}
+                  Soptions={SelectOptionFineInterestCode}
+                  PlaceHolder={"--Select Fine Interest Code--"}
+                  Value={fineInterestCode}
+                  SelectStyle={{ width: "250px", padding: "7px 8px" }}
+                  key={1}
+                />
               </div>
               <div>
-                <InputBox
-                  Icon={<i className="bi bi-calendar"></i>}
-                  type="text"
-                  value={voucherDate}
-                  readOnly
-                  disabled
-                  className="disabled-date-input"
-                />{" "}
-              </div>
-            </div>
-          </div>
-          <hr className="my-1" />
-        </Col>
-
-        {/* Form Fields */}
-        <Col xl={12} lg={12} md={12} sm={12} xs={12} className="mb-3">
-          <Row>
-            <Col xs={12} sm={12} md={12} lg={5}>
-              <div className="d-flex justify-content-start flex-wrap me-3 mt-2">
-                <div>
-                  <label className=" fs-6 d-block">
-                    Fine Code: &nbsp; &nbsp;
-                  </label>
-                </div>
-                <div>
-                  <SelectOption
-                    defaultval={-1}
-                    OnSelect={onSelect}
-                    SName={"FineId"}
-                    Soptions={SelectOptionFineInterestCode}
-                    PlaceHolder={"--Select Fine Interest Code--"}
-                    Value={fineInterestCode}
-                    SelectStyle={{ width: "250px", padding: "7px 8px" }}
-                    key={1}
-                  />
-                </div>
-              </div>
-            </Col>
-            <Col xs={12} sm={12} md={12} lg={7}>
-              <div className="d-flex align-items-center justify-content-center text-nowrap">
-                {/* Date Picker */}
-                <label className="mt-1">Search By Date &nbsp;&nbsp;</label>
-                <Form.Group className="me-3 mt-2">
-                  <InputBox
-                    type="text"
-                    placeholder="yyyy-mm-dd"
-                    label="date"
-                    Name="date"
-                    onChange={(e) => setSearchDate(e.target.value)}
-                    Icon={<i className="bi bi-calendar"></i>}
-                    SearchButton={true}
-                    SearchIcon={<i className="bi bi-calendar fs-5"></i>}
-                    SearchHandler={handleShow}
-                    value={searchDate || ""}
-                    isfrontIconOff={true}
-                    InputStyle={{ padding: "8px", width: "150px" }}
-                  />
-                  <BongCalender
-                    view={view}
-                    handleclose={handleClose1}
-                    handleSave={handleSave1}
-                  />
-                </Form.Group>
-
-                {/* Search Input */}
-                <InputGroup className="mt-2">
+                <InputGroup>
                   <Form.Control
                     // autoFocus
                     ref={searchInputRef}
@@ -413,7 +367,12 @@ function AdjustEntry() {
                     placeholder="Search..."
                     aria-label="search"
                     aria-describedby="basic-addon1"
-                    style={{ width: "200px", zIndex: "1" }}
+                    style={{
+                      zIndex: "1",
+                      width: "300px",
+                      padding: "4px 5px",
+                      borderRadius: "5px",
+                    }}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={(e) => {
@@ -424,8 +383,9 @@ function AdjustEntry() {
                   />
                 </InputGroup>
               </div>
-            </Col>
-          </Row>
+            </div>
+          </div>
+          <hr className="my-1" />
         </Col>
 
         {/* Table */}
@@ -504,6 +464,7 @@ function AdjustEntry() {
         // handlePrimary={() => setShowCalculationModal(false)}
         // PrimaryButtonName={"Submit"}
         size="xl" // Use "xl" for extra large modal
+        isFullScreen={true}
         body={
           <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
             <Calculate
@@ -528,6 +489,7 @@ function AdjustEntry() {
         onClose={() => setShowReceiveInterest(false)} // Add this prop
         showReceiveInterest={showReceiveInterest}
         // setShowReceiveInterest={setShowReceiveInterest}
+        LotNo={excludedLotNos}
         fineInterestCode={fineInterestCode}
       />
       {/* )} */}

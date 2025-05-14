@@ -13,14 +13,14 @@ import useFetchGroupWareHouse from "../../store/ShowStore/useFetchGroupWareHouse
 import useFetchAuth from "../../store/Auth/useFetchAuth";
 
 function WareHouseListEdit() {
-   const inputRef = useRef();
+  const inputRef = useRef();
   const [searchData, setSearchData] = useState("");
-   useEffect(() => {
-     if (inputRef.current) {
-       inputRef.current.focus();
-     }
-   }, []);
-   const { CompanyID } = useFetchAuth();
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+  const { CompanyID } = useFetchAuth();
   const [warehouseData, setWarehouseData] = useState({
     CODE: "",
     DESCRIPTION: "",
@@ -43,12 +43,12 @@ function WareHouseListEdit() {
   } = useAddWareHouse();
   const { GroupWareHouseList, fetchGroupWareHouse } = useFetchGroupWareHouse();
   useEffect(() => {
-    fetchGroupWareHouse({ CompanyID: CompanyID });
+    fetchGroupWareHouse({ CompanyID: CompanyID, isTable: true });
   }, []);
   // Convert GroupWareHouseList to ParentCode options
   const ParentCodeOptions = useMemo(() => {
     return GroupWareHouseList.map((item) => ({
-      label: `${item?.CODE}`,
+      label: `${item?.CODE}:${item?.DESCRIPTION}`,
       value: item?.ID,
     }));
   }, [GroupWareHouseList]);
@@ -211,7 +211,7 @@ function WareHouseListEdit() {
                 }}
               >
                 <i
-                  class="bi bi-search"
+                  className="bi bi-search"
                   style={{
                     fontSize: "16px",
                   }}

@@ -6,18 +6,20 @@ import useAddGroupCost from "../../store/AddStore/useAddGroupCost";
 import GroupWareHouseTable from "./GroupWareHouseTable";
 import useAddGroupWareHouse from "../../store/AddStore/useAddGroupWareHouse";
 import useFetchAuth from "../../store/Auth/useFetchAuth";
-
+import useFetchGroupWareHouse from "../../store/ShowStore/useFetchGroupWareHouse";
 function GroupWareHouseListEdit() {
-   const inputRef = useRef();
+  const inputRef = useRef();
   const [searchData, setSearchData] = useState("");
-   useEffect(() => {
-     if (inputRef.current) {
-       inputRef.current.focus();
-     }
-   }, []);
+  const [newGropuWarehouse, setNewGropuWarehouse] = useState([]);
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
   const [groupWareHouseData, setGroupWareHouseData] = useState({
     CODE: "",
     DESCRIPTION: "",
+    ParentCode: "",
   });
 
   const [isDisable, setIsDisable] = useState(false);
@@ -88,7 +90,17 @@ function GroupWareHouseListEdit() {
 
     ClearStateGroupWareHouseAdd();
   }, [isGroupWareHouseLoading, GroupWareHouseSuccess, GroupWareHouseError]);
-
+  const { GroupWareHouseList, fetchGroupWareHouse } = useFetchGroupWareHouse();
+  // useEffect(() => {
+  //   fetchGroupWareHouse({ CompanyID: CompanyID, isTable: false });
+  //  },[])
+  const ParentCodeOptions = useMemo(() => {
+ return GroupWareHouseList?.map((item) => ({
+            label: `${item?.CODE}`,
+            value: item?.ID,
+          }));
+      
+}, [GroupWareHouseList]);
   return (
     <Container fluid style={{ width: "98%", padding: 0 }}>
       <ToastContainer />
@@ -116,6 +128,7 @@ function GroupWareHouseListEdit() {
                   </th>
                   <th>Group WareHouse Code*</th>
                   <th>Description*</th>
+                  <th>Parent WareHouse</th>
                 </tr>
               </thead>
               <tbody className="tab-body">
@@ -128,7 +141,7 @@ function GroupWareHouseListEdit() {
                       placeholder="Group WareHouse Code"
                       className="input-cell form-input"
                       name="CODE"
-                      value={groupWareHouseData.CODE}
+                      value={groupWareHouseData?.CODE}
                       onChange={OnChangeHandler}
                       type="text"
                       maxLength={100}
@@ -141,11 +154,23 @@ function GroupWareHouseListEdit() {
                       placeholder="Description"
                       className="input-cell"
                       name="DESCRIPTION"
-                      value={groupWareHouseData.DESCRIPTION}
+                      value={groupWareHouseData?.DESCRIPTION}
                       onChange={OnChangeHandler}
                       type="text"
                       maxLength={255}
                       style={{ width: "100%" }}
+                    />
+                  </td>
+                  <td>
+                    <SearchableDropDown
+                      options={ParentCodeOptions || []}
+                      handleChange={(e) => OnChangeHandler(e)}
+                      selectedVal={groupWareHouseData?.ParentCode}
+                      label={"ParentCode"}
+                      placeholder={"--Select Parent Code--"}
+                      key={2}
+                      defaultval={-1}
+                      width={"100%"}
                     />
                   </td>
                 </tr>
@@ -171,46 +196,46 @@ function GroupWareHouseListEdit() {
           </div>
           <hr className="mt-1 mb-2" />
         </Col>
-           <Col xs={12} sm={12} md={12} lg={12} xl={12}>
-                  <hr className="my-1" />
-                  <div className="d-flex justify-content-between align-items-center m-0 flex-wrap">
-                    <div>
-                      <label
-                        className="form-input"
-                        style={{
-                          width: "28vw",
-                          border: "1px solid dodgerblue",
-                          borderRadius: "5px",
-                          padding: "5px",
-                          outline: "1px solid dodgerblue",
-                          display: "flex",
-                          alignItems: "center",
-                          // borderColor: "#25a353",
-                        }}
-                      >
-                        <i
-                          class="bi bi-search"
-                          style={{
-                            fontSize: "16px",
-                          }}
-                        ></i>
-                        <input
-                          value={searchData}
-                          type="search"
-                          placeholder="Search here....."
-                          style={{
-                            width: "80%",
-                            border: "none",
-                            outline: "none",
-                            padding: "0px 5px",
-                          }}
-                          onChange={(e) => setSearchData(e.target.value)}
-                        />
-                      </label>
-                    </div>
-                  </div>
-                  <hr className="my-1" />
-                </Col>
+        <Col xs={12} sm={12} md={12} lg={12} xl={12}>
+          <hr className="my-1" />
+          <div className="d-flex justify-content-between align-items-center m-0 flex-wrap">
+            <div>
+              <label
+                className="form-input"
+                style={{
+                  width: "28vw",
+                  border: "1px solid dodgerblue",
+                  borderRadius: "5px",
+                  padding: "5px",
+                  outline: "1px solid dodgerblue",
+                  display: "flex",
+                  alignItems: "center",
+                  // borderColor: "#25a353",
+                }}
+              >
+                <i
+                  className="bi bi-search"
+                  style={{
+                    fontSize: "16px",
+                  }}
+                ></i>
+                <input
+                  value={searchData}
+                  type="search"
+                  placeholder="Search here....."
+                  style={{
+                    width: "80%",
+                    border: "none",
+                    outline: "none",
+                    padding: "0px 5px",
+                  }}
+                  onChange={(e) => setSearchData(e.target.value)}
+                />
+              </label>
+            </div>
+          </div>
+          <hr className="my-1" />
+        </Col>
 
         <Col xs={12}>
           <GroupWareHouseTable

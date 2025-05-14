@@ -1,5 +1,6 @@
-import React from "react";
-import { Button } from "react-bootstrap";
+"use client";
+
+import { useCallback, useRef } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.min.css";
 import "./table.css";
@@ -8,14 +9,16 @@ import MultipleSelection from "../MultipleSelection";
 import defaultimage from "../../Asset/default.png";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import BongCalender from "../BongCalender";
+import InputBox from "../InputBox";
 
 const ActionButton = ({ icon, color, onClick, disabled, title }) => (
   <button
-    className="btn btn-link"
-    style={{ padding: "0" }}
+    className="btn btn-link p-0"
     onClick={onClick}
     disabled={disabled}
     title={title}
+    aria-label={title}
   >
     <i
       className={`bi bi-${icon}`}
@@ -23,13 +26,167 @@ const ActionButton = ({ icon, color, onClick, disabled, title }) => (
         color: disabled ? "lightgrey" : color || "#ac4bec",
         fontSize: "22px",
       }}
-    ></i>
+    />
   </button>
 );
 
+const RenderCellContent = ({
+  item,
+  field,
+  index,
+  toaster,
+  CloseBongCal,
+  ActionId,
+  HandleMultiSelection,
+  EditedData,
+  OnChangeHandler,
+  bongView,
+  setBongView,
+  useInputRef,
+  isUseInputRef,
+}) => {
+  const handleDateCheck = useCallback(
+    (event) => {
+      const regex = /^(?:14|15)\d\d-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[02])$/;
+      if (!regex.test(event.target.value)) {
+        toaster.error(
+          "Invalid Date Format. It should be YYYY-MM-DD. Also make sure day and month number contain 0 if less than 10."
+        );
+      }
+    },
+    [toaster]
+  );
+
+  const handleBongSave = useCallback(
+    (bengalidate) => {
+      const obj = {
+        target: {
+          value: bengalidate,
+          name: `${field?.fieldname}`,
+        },
+      };
+      OnChangeHandler(index, obj);
+      CloseBongCal();
+    },
+    [index, OnChangeHandler, CloseBongCal]
+  );
+
+  if (field?.isIconicData) {
+    return item[field.fieldname] == 1
+      ? field.iconSuccess(item)
+      : field.iconError(item);
+  }
+
+  if (ActionId === index && !field?.isNotEditable) {
+    if (field?.isSelection) {
+      return field?.isMultiSelection ? (
+        <MultipleSelection
+          options={field.options}
+          handleChange={HandleMultiSelection}
+          selectedVal={
+            EditedData[field.selectionname] || item[field.selectionname]
+          }
+          label={field.labelname}
+          placeholder={field.placeholder}
+          defaultval={EditedData[field.labelname]}
+        />
+      ) : (
+        <SearchableDropDown
+          options={field.options}
+          handleChange={(e) => OnChangeHandler(index, e)}
+          selectedVal={
+            EditedData[field.selectionname] || item[field.selectionname]
+          }
+          label={field.selectionname}
+          placeholder={field.headername}
+          defaultval={item[field.fieldname]}
+        />
+      );
+    }
+
+    if (field?.isBongDate) {
+      return (
+        <div className="d-flex justify-content-start flex-nowrap table-input-wrapper">
+          <InputBox
+            type="text"
+            placeholder="yyyy-mm-dd"
+            label={field.headername}
+            Name={field.fieldname}
+            onChange={(event) => OnChangeHandler(index, event)}
+            onFocusChange={(e) => {
+              handleDateCheck(e);
+              field?.LostFocus?.(index, e.target.value);
+            }}
+            Icon={<i className="bi bi-calendar" />}
+            SearchButton={true}
+            SearchIcon={<i className="bi bi-calendar" />}
+            SearchHandler={() => setBongView(true)}
+            InputStyle={{ width: field?.width }}
+            value={EditedData[field.fieldname] || item[field.fieldname]}
+          />
+          {bongView && (
+            <BongCalender
+              key={`${index}-${field.fieldname}`}
+              view={bongView}
+              handleclose={() => setBongView(false)}
+              handleSave={(bdate) => {
+                handleBongSave(bdate);
+                field?.LostFocus?.(index, bdate);
+                setBongView(false);
+              }}
+            />
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <input
+        name={field.fieldname}
+        maxLength={field.max}
+        placeholder={field.headername}
+        value={EditedData[field.fieldname] || ""}
+        ref={field?.isUseInputRef ? useInputRef : null}
+        type={field.type || "text"}
+        onChange={(e) => OnChangeHandler(index, e)}
+        className="input-cell form-input w-100"
+        readOnly={field?.isReadOnly || false}
+      />
+    );
+  }
+
+  if (field?.type === "Img") {
+    const imageUrl = item[field.fieldname]
+      ? `${process.env.REACT_APP_BASEURL_IMAGE}/${item[field.fieldname]}`
+      : defaultimage;
+
+    return (
+      <a
+        href={imageUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-decoration-none"
+      >
+        <img
+          src={imageUrl || "/placeholder.svg"}
+          alt=""
+          className="w-100 cursor-pointer"
+          style={{ height: "50px" }}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = defaultimage;
+          }}
+        />
+      </a>
+    );
+  }
+
+  return item[field.fieldname] == 0 ? "-" : item[field.fieldname];
+};
+
 const Table = ({
-  grandtotal,
-  checkedIds,
+  grandtotal = 0,
+  checkedIds = [],
   isCheck,
   isFooter,
   isPrint,
@@ -37,14 +194,14 @@ const Table = ({
   isDelete,
   isEdit,
   viewPref,
-  tab,
+  tab = [],
   ActionId,
   ActionFunc,
   onSorting,
-  Col,
+  Col = [],
   OnChangeHandler,
   OnSaveHandler,
-  EditedData,
+  EditedData = {},
   HandleMultiSelection,
   isLoading,
   PageNumber,
@@ -57,84 +214,25 @@ const Table = ({
   onCheckChange,
   getFocusText,
   useInputRef,
-  // Dynamic action buttons configuration
-  actions =[] ,
+  showScrollButtons,
+  FooterBody,
+  toaster,
+  bongView,
+  setBongView,
+  CloseBongCal,
+  isUseInputRef,
+  actions = [],
 }) => {
+  const scrollRef = useRef(null);
 
-  const renderCellContent = (item, field, index) => {
-    // console.log(field?.isUseInputRef,"true or false");
-    if (ActionId == index && !field?.isNotEditable) {
-      if (field?.isSelection) {
-        return field?.isMultiSelection ? (
-          <MultipleSelection
-            options={field?.options}
-            handleChange={HandleMultiSelection}
-            selectedVal={
-              EditedData[field?.selectionname] || item[field?.selectionname]
-            }
-            label={field?.labelname}
-            placeholder={field?.placeholder}
-            defaultval={EditedData[field?.labelname]}
-          />
-        ) : (
-          <SearchableDropDown
-            options={field?.options}
-            handleChange={(e) => OnChangeHandler(index, e)}
-            selectedVal={
-              EditedData[field?.selectionname] || item[field?.selectionname]
-            }
-            label={field?.selectionname}
-            placeholder={field?.headername}
-            defaultval={item[field?.fieldname]}
-          />
-        );
-      }
-      return (
-        <input
-          name={field?.fieldname}
-          maxLength={field?.max}
-          placeholder={field?.headername}
-          value={EditedData[field?.fieldname] || ""}
-          ref={field?.isUseInputRef ? useInputRef : null}
-          type={field?.type}
-          onChange={(e) => OnChangeHandler(index, e)}
-          className="input-cell form-input"
-          style={{ width: "100%" }}
-          readOnly={field?.isReadOnly || false}
-        />
-      );
+  const handleScroll = (direction) => {
+    if (scrollRef.current) {
+      const container = scrollRef.current;
+      container.scrollTo({
+        top: direction === "up" ? 0 : container.scrollHeight,
+        behavior: "smooth",
+      });
     }
-
-    if (field?.type === "Img") {
-      return (
-        <a
-          href={`${process.env.REACT_APP_BASEURL_IMAGE}/${
-            item[field?.fieldname] || "default-image.jpg"
-          }`}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ textDecoration: "none" }}
-        >
-          <img
-            src={`${process.env.REACT_APP_BASEURL_IMAGE}/${
-              item[field?.fieldname] || "default-image.jpg"
-            }`}
-            alt="img"
-            style={{
-              width: "100%",
-              height: "50px",
-              cursor: "pointer",
-            }}
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = defaultimage;
-            }}
-          />
-        </a>
-      );
-    }
-
-    return item[field?.fieldname] == 0 ? "-" : item[field?.fieldname];
   };
 
   const renderActionButtons = (item, index) => {
@@ -148,11 +246,8 @@ const Table = ({
                 (i) => i[action.checkKey] === item[action.checkKey]
               )}
               onChange={(e) => action.onChange(item, e.target.checked)}
-              style={{
-                width: "18px",
-                height: "18px",
-                cursor: "pointer",
-              }}
+              className="cursor-pointer"
+              style={{ width: "18px", height: "18px" }}
             />
           </td>
         );
@@ -174,290 +269,300 @@ const Table = ({
     });
   };
 
+  const renderRowNumber = (index) => {
+    return PageNumber && rowsperpage
+      ? (PageNumber - 1) * rowsperpage + index + 1
+      : index + 1;
+  };
+
+  const renderLoadingSkeleton = () =>
+    [...Array(8)].map((_, index) => (
+      <tr key={index}>
+        <td>
+          <Skeleton width={30} />
+        </td>
+        {Col.map((_, colIndex) => (
+          <td key={colIndex}>
+            <Skeleton height={30} />
+          </td>
+        ))}
+        {actions.map((_, i) => (
+          <td key={i}>
+            <Skeleton circle height={26} width={26} />
+          </td>
+        ))}
+      </tr>
+    ));
+
+  const renderNoDataRow = () => {
+    const colspan =
+      Col.length +
+      (isEdit ? 2 : 0) +
+      (isView ? 1 : 0) +
+      (isPrint ? 1 : 0) +
+      (isCheck ? 1 : 0) +
+      (isDelete ? 1 : 0) +
+      actions.length +
+      1;
+
+    return (
+      <tr>
+        <td />
+        <td
+          colSpan={colspan}
+          className="text-center text-muted bg-light"
+          style={{
+            height: height || "250px",
+            fontSize: "16px",
+            letterSpacing: "1px",
+          }}
+        >
+          <i className="bi bi-exclamation-circle me-2" />
+          No Data Found
+        </td>
+      </tr>
+    );
+  };
+
+  const renderDataRows = () =>
+    tab.map((item, index) => (
+      <tr key={index}>
+        <td>{renderRowNumber(index)}</td>
+        {Col?.map((field, indexfield) => (
+          <td
+            key={indexfield}
+            onClick={() => getFocusText?.(item[field?.fieldname])}
+          >
+            <div
+              style={{
+                textAlign: "center",
+                margin: "0px 2px",
+                maxWidth: field?.width || "100%",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              <RenderCellContent
+                item={item}
+                field={field}
+                index={index}
+                toaster={toaster}
+                CloseBongCal={CloseBongCal}
+                ActionId={ActionId}
+                HandleMultiSelection={HandleMultiSelection}
+                EditedData={EditedData}
+                OnChangeHandler={OnChangeHandler}
+                bongView={bongView}
+                setBongView={setBongView}
+                useInputRef={useInputRef}
+                isUseInputRef={isUseInputRef}
+              />{" "}
+            </div>
+          </td>
+        ))}
+
+        {isEdit && (
+          <>
+            <td>
+              <ActionButton
+                icon="pencil-square"
+                color="#ac4bec"
+                onClick={() => ActionFunc(index)}
+                title="Edit"
+              />
+            </td>
+            <td>
+              <ActionButton
+                icon="floppy"
+                color={index === ActionId ? "green" : "lightgrey"}
+                onClick={() => OnSaveHandler(index)}
+                disabled={ActionId == null || ActionId === -1}
+                title="Save"
+              />
+            </td>
+          </>
+        )}
+
+        {isView && (
+          <td>
+            <ActionButton
+              icon="eye"
+              color="#ac4bec"
+              onClick={() => handleViewClick(index)}
+              title={`${viewPref} View`}
+            />
+          </td>
+        )}
+
+        {isPrint && (
+          <td>
+            <ActionButton
+              icon="printer"
+              color="#ac4bec"
+              onClick={() => handleprint(index)}
+              title="Print"
+            />
+          </td>
+        )}
+
+        {isCheck && (
+          <td>
+            <input
+              type="checkbox"
+              checked={checkedIds.some(
+                (i) => i?.LotNo === item.LotNo && i?.SRL === item.SRL
+              )}
+              onChange={(e) => onCheckChange(item, e.target.checked)}
+              className="cursor-pointer"
+              style={{ width: "18px", height: "18px" }}
+            />
+          </td>
+        )}
+
+        {isDelete && (
+          <td>
+            <ActionButton
+              icon="trash"
+              color="#ff0000"
+              onClick={() => handleDelete(index)}
+              title="Delete"
+            />
+          </td>
+        )}
+
+        {renderActionButtons(item, index)}
+      </tr>
+    ));
+
   return (
-    <div style={{ width: "auto" }}>
-      <table
-        className="table table-responsive table-sm table-hover align-middle"
-        style={{ width: width || "100%" }}
+    <div>
+      <div
+        ref={scrollRef}
+        className="overflow-auto border border-secondary-subtle"
+        style={{ maxHeight: height || "auto" }}
       >
-        <thead className="tab-head">
-          <tr className="table-secondary">
-            <th scope="col" style={{ minWidth: "40px" }}>
-              Row
-            </th>
-            {Array.isArray(Col) &&
-              Col?.map((col, index) => (
+        <table className="table table-responsive table-sm table-hover align-middle w-100">
+          <thead className="tab-head">
+            <tr className="table-secondary">
+              <th scope="col" style={{ width: "40px" }}>
+                Row
+              </th>
+              {Col.map((col, index) => (
                 <th
                   scope="col"
                   style={{ minWidth: col?.width || "100px" }}
                   key={index}
                 >
-                  <span>{col?.headername}</span>
+                  <span>{col.headername}</span>
                   {!col?.isShortingOff && (
-                    <Button
-                      variant="link"
-                      style={{ padding: "1px 1px", color: "white" }}
-                      onClick={() => onSorting(col?.fieldname, col?.type)}
+                    <button
+                      className="btn btn-link p-1 text-white"
+                      onClick={() => onSorting(col.fieldname, col.type)}
+                      aria-label={`Sort by ${col.headername}`}
                     >
-                      <i className="bi bi-arrow-down-up"></i>
-                    </Button>
+                      <i className="bi bi-arrow-down-up" />
+                    </button>
                   )}
                 </th>
               ))}
-            {isEdit ? (
-              <>
-                <th scope="col" style={{ minWidth: "55px" }}>
-                  Edit
-                </th>
-                <th scope="col" style={{ minWidth: "55px" }}>
-                  {" "}
-                  Save{" "}
-                </th>
-              </>
-            ) : null}
-            {isView ? (
-              <>
+              {isEdit && (
+                <>
+                  <th scope="col" style={{ minWidth: "55px" }}>
+                    Edit
+                  </th>
+                  <th scope="col" style={{ minWidth: "55px" }}>
+                    Save
+                  </th>
+                </>
+              )}
+              {isView && (
                 <th scope="col" style={{ minWidth: "70px" }}>
                   {viewPref} View
                 </th>
-              </>
-            ) : null}
-            {isPrint ? (
-              <>
+              )}
+              {isPrint && (
                 <th scope="col" style={{ minWidth: "70px" }}>
                   Print
                 </th>
-              </>
-            ) : null}
-            {isCheck ? (
-              <>
+              )}
+              {isCheck && (
                 <th scope="col" style={{ minWidth: "70px" }}>
                   Check Button
                 </th>
-              </>
-            ) : null}
-            {isDelete ? (
-              <>
+              )}
+              {isDelete && (
                 <th scope="col" style={{ minWidth: "70px" }}>
                   Delete
                 </th>
-              </>
-            ) : null}
-            {actions.map((action, i) => (
-              <th
-                key={i}
-                scope="col"
-                style={{ minWidth: action.width || "70px" }}
-              >
-                {action.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="tab-body">
-          {isLoading ? (
-            [...Array(8)].map((_, index) => (
-              <tr key={index}>
-                <td>
-                  <Skeleton width={30} />
-                </td>
-                {Array.isArray(Col) &&
-                  Col?.map((_, colIndex) => (
-                    <td key={colIndex}>
-                      <Skeleton height={30} />
-                    </td>
-                  ))}
-                {actions.map((_, i) => (
-                  <td key={i}>
-                    <Skeleton circle={true} height={26} width={26} />
-                  </td>
-                ))}
-              </tr>
-            ))
-          ) : tab?.length === 0 ? (
-            <tr>
-              <td></td>
-              <td
-                colSpan={
-                  Col?.length +
-                  (isEdit ? 2 : 0) +
-                  (isView ? 1 : 0) +
-                  (isPrint ? 1 : 0) +
-                  (isCheck ? 1 : 0) +
-                  (isDelete ? 1 : 0) +
-                  actions.length +
-                  1 // for the Row column
-                }
-                style={{
-                  height: height || "250px",
-                  textAlign: "center",
-                  fontSize: "16px",
-                  color: "#777",
-                  backgroundColor: "#f8f9fa",
-                  letterSpacing: "1px",
-                }}
-              >
-                <i
-                  className="bi bi-exclamation-circle"
-                  style={{
-                    fontSize: "16px",
-                    color: "#999",
-                    marginRight: "8px",
-                  }}
-                ></i>
-                <span
-                  style={{
-                    fontSize: "16px",
-                    color: "#999",
-                    marginRight: "8px",
-                    fontStyle: "",
-                  }}
+              )}
+              {actions.map((action, i) => (
+                <th
+                  key={i}
+                  scope="col"
+                  style={{ minWidth: action.width || "70px" }}
                 >
-                  No Data Found
-                </span>
-              </td>
+                  {action.label}
+                </th>
+              ))}
             </tr>
-          ) : (
-            Array.isArray(tab) &&
-            tab.map((item, index) => (
-              <tr key={index}>
-                <td>
-                  {PageNumber && rowsperpage
-                    ? (PageNumber - 1) * rowsperpage + index + 1
-                    : index + 1}
-                </td>
-                {Array.isArray(Col) &&
-                  Col?.map((field, indexfield) => (
-                    <td
-                      key={indexfield}
-                      style={{
-                        maxWidth: field?.width || "100px",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                      onClick={() => {
-                        if (getFocusText) {
-                          getFocusText(item[field?.fieldname]);
-                        } else {
-                          return;
-                        }
-                      }}
-                    >
-                      {renderCellContent(item, field, index)}
-                    </td>
-                  ))}
-                {/* Buttons with Skeleton Loaders */}
-                {isEdit ? (
-                  <>
-                    <td>
-                      <button
-                        className="btn btn-link"
-                        style={{ padding: "0" }}
-                        onClick={() => {
-                          ActionFunc(index);
-                        }}
-                      >
-                        <i
-                          className="bi bi-pencil-square"
-                          style={{ color: "#ac4bec", fontSize: "22px" }}
-                        ></i>
-                      </button>
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-link"
-                        style={{ padding: "0" }}
-                        onClick={() => OnSaveHandler(index)}
-                        disabled={
-                          ActionId == null ||
-                          ActionId == undefined ||
-                          ActionId == -1
-                        }
-                      >
-                        <i
-                          className="bi bi-floppy"
-                          style={{
-                            color:
-                              index === ActionId && ActionId !== null
-                                ? "green"
-                                : "lightgrey",
-                            fontSize: "22px",
-                          }}
-                        ></i>
-                      </button>
-                    </td>
-                  </>
-                ) : null}
-                {isView ? (
-                  <td>
-                    <button
-                      className="btn btn-link"
-                      style={{ padding: "0" }}
-                      onClick={() => handleViewClick(index)}
-                    >
-                      <i
-                        className="bi bi-eye text-primary"
-                        style={{ color: "#ac4bec", fontSize: "22px" }}
-                      ></i>
-                    </button>
-                  </td>
-                ) : null}
-                {isPrint ? (
-                  <td>
-                    <button
-                      className="btn btn-link"
-                      style={{ padding: "0" }}
-                      onClick={() => handleprint(index)}
-                    >
-                      <i
-                        className="bi bi-printer text-primary"
-                        style={{ color: "#ac4bec", fontSize: "22px" }}
-                      ></i>
-                    </button>
-                  </td>
-                ) : null}
-                {isCheck ? (
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={checkedIds?.some((i) => i.LotNo === item.LotNo)}
-                      onChange={(e) => onCheckChange(item, e.target.checked)}
-                      style={{
-                        width: "18px",
-                        height: "18px",
-                        cursor: "pointer",
-                      }}
-                    />
-                  </td>
-                ) : null}
-                {isDelete ? (
-                  <td>
-                    <button
-                      className="btn btn-trash"
-                      style={{ padding: "0" }}
-                      onClick={() => handleDelete(index)}
-                    >
-                      <i
-                        className="bi bi-trash"
-                        style={{ color: "#ff0000", fontSize: "22px" }}
-                      ></i>
-                    </button>
-                  </td>
-                ) : null}
-                {renderActionButtons(item, index)}
-              </tr>
-            ))
-          )}
-          {isFooter && (
-            <tr>
-              <td colSpan={Col?.length}>Grand Total:</td>
-              <td>{grandtotal == 0 ? "-" : grandtotal}</td>
-              {actions.length > 0 && <td colSpan={actions.length}></td>}
-            </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="tab-body">
+            {isLoading
+              ? renderLoadingSkeleton()
+              : tab.length === 0
+              ? renderNoDataRow()
+              : renderDataRows()}
+
+            {isFooter &&
+              (FooterBody || (
+                <tr className="position-sticky bottom-0" style={{ zIndex: 2 }}>
+                  <td colSpan={Col.length}>Grand Total:</td>
+                  <td>{grandtotal === 0 ? "-" : grandtotal}</td>
+                  {actions.length > 0 && <td colSpan={actions.length} />}
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+      {showScrollButtons && (
+        <div
+          className="z-2 position-sticky d-flex flex-column justify-content-between float-end py-5"
+          style={{
+            right: 0,
+            transform: "translateY(-100%)",
+            zIndex: 6,
+            width: "fit-content",
+            height: height || "55vh",
+          }}
+        >
+          <button
+            className="btn btn-link p-1 shadow-sm fw-bold fs-3"
+            style={{
+              textDecoration: "none",
+              color: "grey",
+              transition: "all 0.3s ease",
+            }}
+            onClick={() => handleScroll("up")}
+            aria-label="Scroll up"
+          >
+            <i className="bi bi-arrow-up-circle"></i>
+          </button>
+          <button
+            className="btn btn-link p-1 shadow-sm fw-bold fs-3"
+            style={{
+              buttom: "20px",
+              textDecoration: "none",
+              color: "grey",
+              transition: "all 0.3s ease",
+            }}
+            onClick={() => handleScroll("down")}
+            aria-label="Scroll down"
+          >
+            <i className="bi bi-arrow-down-circle"></i>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

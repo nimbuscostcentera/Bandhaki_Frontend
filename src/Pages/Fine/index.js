@@ -12,66 +12,63 @@ import FineTable from "./FineTable";
 import ReusableModal from "../../Component/Modal";
 
 function FineListEdit() {
-    const { CompanyID } = useFetchAuth();
-    const [rows, setRows] = useState([
-      {
-        rowid: 1,
-        MONTH: "",
-        FINE_PERCENTAGE: "",
-      },
-    ]);
-    const [searchData, setSearchData] = useState("");
-    const [showModal, setShowModal] = useState(false);
-   const [fineData, setFineData] = useState([
-     {
-       id: 1,
-       CompanyID: CompanyID,
-       CODE: null,
-       DESCRIPTION: null, // Added DESCRIPTION field
-       displayString: "", // Add this line
-       fine_master: [
-         {
-           MONTH: "",
-           FINE_PERCENTAGE: "",
-         },
-       ],
-     },
-   ]);
-   const inputRef1 = useRef();
+  const { CompanyID } = useFetchAuth();
+  const [rows, setRows] = useState([
+    {
+      rowid: 1,
+      MONTH: "",
+      FINE_PERCENTAGE: "",
+    },
+  ]);
+  const [searchData, setSearchData] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [fineData, setFineData] = useState([
+    {
+      id: 1,
+      CompanyID: CompanyID,
+      CODE: null,
+      DESCRIPTION: null, // Added DESCRIPTION field
+      displayString: "", // Add this line
+      fine_master: [
+        {
+          MONTH: "",
+          FINE_PERCENTAGE: "",
+        },
+      ],
+    },
+  ]);
+  const inputRef1 = useRef();
 
-   useEffect(() => {
-     if (inputRef1.current) {
-       inputRef1.current.focus();
-     }
-   }, []);
-   const inputRef2 = useRef();
+  useEffect(() => {
+    if (inputRef1.current) {
+      inputRef1.current.focus();
+    }
+  }, []);
+  const inputRef2 = useRef();
 
-   useEffect(() => {
-     if (showModal) {
-       const timer = setTimeout(() => {
-         if (inputRef2.current) {
-           inputRef2.current.focus();
-         }
-       }, 0);
-       return () => clearTimeout(timer);
-     }
-   }, [showModal]);
+  useEffect(() => {
+    if (showModal) {
+      const timer = setTimeout(() => {
+        if (inputRef2.current) {
+          inputRef2.current.focus();
+        }
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [showModal]);
 
-   // Focus on the date field when new rows are added
-   useEffect(() => {
-     const timer = setTimeout(() => {
-       if (inputRef2.current) {
-         inputRef2.current.focus();
-       }
-     }, 0);
-     return () => clearTimeout(timer);
-   }, [rows.length]);
-
-
-
+  // Focus on the date field when new rows are added
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (inputRef2.current) {
+        inputRef2.current.focus();
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [rows.length]);
 
   // Updated data structure with nested data array and added DESCRIPTION field
- 
+
   // console.log(fineData[0]);
   const [isDisable, setIsDisable] = useState(false);
   const {
@@ -110,24 +107,24 @@ function FineListEdit() {
     []
   );
 
-  const detailColumns =  [
-      {
-        label: "Month*",
-        key: "MONTH",
-        type: "number",
-        PlaceHolder: "Enter Month (1-12)",
-        width: "200px",
-        proprefs: true,
-      },
-      {
-        label: "Fine Percentage (%)*",
-        key: "FINE_PERCENTAGE",
-        type: "number",
-        PlaceHolder: "Enter Percentage",
-        width: "250px",
-      },
-    ]
-  
+  const detailColumns = [
+    {
+      label: "Month*",
+      key: "MONTH",
+      type: "number",
+      PlaceHolder: "Enter Month (1-12)",
+      width: "200px",
+      proprefs: true,
+    },
+    {
+      label: "Fine Percentage (%)*",
+      key: "FINE_PERCENTAGE",
+      type: "number",
+      PlaceHolder: "Enter Percentage",
+      width: "250px",
+    },
+  ];
+
   const validateFinePercentage = (value) => {
     const regex = /^\d{0,2}(\.\d{0,2})?$/;
     return regex.test(value);
@@ -323,7 +320,6 @@ function FineListEdit() {
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
           <hr className="my-1" />
           <div className="d-flex justify-content-between align-items-center m-0 flex-wrap">
-       
             <div>
               <label
                 className="form-input"
@@ -339,7 +335,7 @@ function FineListEdit() {
                 }}
               >
                 <i
-                  class="bi bi-search"
+                  className="bi bi-search"
                   style={{
                     fontSize: "16px",
                   }}

@@ -20,11 +20,10 @@ import BongDateSorting from "../../GlobalFunctions/BongDateSorting";
 import SortArrayByTime from "../../GlobalFunctions/SortArrayByTime";
 import { ToastContainer } from "react-toastify";
 import useFetchAdjustDetailReport from "../../store/ShowStore/useFetchAdjustDetailReport";
-import useFetchFineHeader from "../../store/ShowStore/useFetchFineHeader";
+import BongDatePicker from "../../Component/BongDatePicker";
 
 function AdjustEntryHeaderTableView() {
   //---------other state-------
-
   const location = useLocation();
   const { custId, customertype } = location?.state || {};
 
@@ -32,7 +31,10 @@ function AdjustEntryHeaderTableView() {
   const [searchParams] = useSearchParams();
   let entityType = searchParams.get("type") === "customer" ? 1 : 2;
   entityType = customertype ? customertype : entityType;
-
+  const [Filters, setFilters] = useState({
+    StartDate: null,
+    EndDate: null,
+  });
   const [filteredData, setFilteredData] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [originalOrder, setOriginalOrder] = useState([]);
@@ -41,14 +43,15 @@ function AdjustEntryHeaderTableView() {
   const [params, setParams] = useState(false);
   const [initialCustId, setInitialCustId] = useState(custId || -1);
   const [searchDate, setSearchDate] = useState("");
-  const [view, setView] = useState(false);
+  const [view, setView] = useState({
+    View1: false,
+    View2: false,
+  });
 
   //-----------------------api calls--------------------------------
 
   const { user, CompanyID } = useFetchAuth();
   const { isAdjustDetailError } = useFetchAdjustDetailReport();
-  const { FineHeaderList, fetchFineHeader, isFineHeaderLoading } =
-    useFetchFineHeader();
   const {
     AdjustEntryList,
     isAdjustEntryListLoading,
@@ -57,9 +60,6 @@ function AdjustEntryHeaderTableView() {
     fetchAdjustEntryHeader,
     searchAdjustEntryHeader,
   } = useFetchAdjustEntryHeader();
-
-  //--------------------------api calls-----------------------------
-
   //--------------------------function call-----------------------------
 
   //edit input handler
@@ -125,22 +125,27 @@ function AdjustEntryHeaderTableView() {
   //detail view Open
   const handleViewClick = (tabindex) => {
     const selectedData = filteredData[tabindex];
-    console.log(selectedData,"selectedData")
-    setInitialCustId((prev)=>selectedData?.id_Customer);
+    // console.log(selectedData, "selectedData");
+    setInitialCustId((prev) => selectedData?.id_Customer);
     setSelectedId(selectedData.ID);
     setParams(true);
   };
   // Calendar handlers
-  const handleShow = () => {
-    setView(true);
+  const handleShow1 = () => {
+    setView({ ...view, View1: true });
+  };
+  const handleShow2 = () => {
+    setView({ ...view, View2: true });
+  };
+  const HandleInputDateRange = (val, name) => {
+    setFilters({ ...Filters, [name]: val });
   };
   // Calendar handlers
-  const handleClose1 = () => {
-    setView(false);
-  };
-  // Calendar handlers
-  const handleSave1 = (BengaliDate, EnglishDate) => {
-    setSearchDate(BengaliDate);
+  const handleClose = () => {
+    setView({
+      View1: false,
+      View2: false,
+    });
   };
   // Search functionality
   const performSearch = () => {
@@ -151,9 +156,11 @@ function AdjustEntryHeaderTableView() {
       custId !== ""
     ) {
       fetchAdjustEntryHeader({
-        CustomerID: custId||null,
+        CustomerID: custId || null,
         CompanyID: user?.CompanyID,
         Cust_Type: entityType,
+        StartDate: Filters?.StartDate,
+        EndDate: Filters?.EndDate,
       });
     } else {
       searchAdjustEntryHeader({
@@ -161,6 +168,8 @@ function AdjustEntryHeaderTableView() {
         date: searchDate,
         CompanyID: user?.CompanyID,
         Cust_Type: entityType,
+        StartDate: Filters?.StartDate,
+        EndDate: Filters?.EndDate,
       });
     }
   };
@@ -171,19 +180,20 @@ function AdjustEntryHeaderTableView() {
   useEffect(() => {
     if (custId) {
       performSearch();
-    } else {
+    }
+    else
+    {
       if (searchTerm === "" && !searchDate) {
         setFilteredData([]);
       }
-      if (searchTerm.trim() || searchDate) {
+      if (searchTerm.trim() || searchDate || (Filters?.StartDate && Filters?.EndDate)) {
         const debounceTimer = setTimeout(() => {
           performSearch();
         }, 500);
         return () => clearTimeout(debounceTimer);
       }
     }
-
-  }, [searchDate, searchTerm, custId]);
+  }, [searchDate, searchTerm, custId,Filters]);
   //debouncing
   useEffect(() => {
     if (isAdjustDetailError) {
@@ -231,11 +241,13 @@ function AdjustEntryHeaderTableView() {
     isAdjustDetailError,
     isAdjustEntryListError,
   ]);
-  //finecode fetch
+  // Reset filteredData when entityType changes
   useEffect(() => {
-    fetchFineHeader({ CompanyID, Type: 1 });
-  }, []);
-
+    setFilteredData(() => []);
+    setSearchTerm("");
+    setSearchDate("");
+    ClearstateAdjustEntryList();
+  }, [entityType]);
   //-------------------------variables call-----------------------------
   const paymentMode = [
     { label: "Cash", Value: 1 },
@@ -249,7 +261,7 @@ function AdjustEntryHeaderTableView() {
       type: "String",
     },
     {
-      headername: "Rcv Amt",
+      headername: "Rcv. Amt",
       fieldname: "Rcv_Amt",
       type: "number",
     },
@@ -264,16 +276,15 @@ function AdjustEntryHeaderTableView() {
       options: paymentMode,
     },
     {
-      headername: "Adjust Amt",
+      headername: "Adj. Amt",
       fieldname: "Cust_Adjust_Amt",
       type: "number",
     },
-    { headername: "Refund Amt", fieldname: "Ref_Amt", type: "number" },
+    { headername: "Ref. Amt", fieldname: "Ref_Amt", type: "number" },
 
     {
-      headername: "Pay Mode(Refund)",
+      headername: "Pay Mode(Ref)",
       fieldname: "paymentModeLabelrefamt",
-      // fieldname: "paymentModeLabelrefamt",
       selectionname: "Ref_Amt_Mode",
       type: "String",
       max: 100,
@@ -282,11 +293,32 @@ function AdjustEntryHeaderTableView() {
       options: paymentMode,
     },
     {
-      headername: "Balance Amt",
-      fieldname: "Bal_Amt",
+      headername: "LotNo",
+      fieldname: "LotNo",
+      type: "String",
+    },
+    {
+      headername: "LotPrnAmt",
+      fieldname: "LotPrnAmount",
       type: "number",
     },
 
+    {
+      headername: "Disc. Amt",
+      fieldname: "DiscountAmt",
+      type: "number",
+    },
+
+    {
+      headername: "CreditAmt",
+      fieldname: "CreditAmt",
+      type: "number",
+    },
+    {
+      headername: "Bal. Amt",
+      fieldname: "Bal_Amt",
+      type: "number",
+    },
     {
       headername: "Tans. Date",
       fieldname: "TransDate",
@@ -298,14 +330,7 @@ function AdjustEntryHeaderTableView() {
       type: "time",
     },
   ];
-  // Reset filteredData when entityType changes
-  useEffect(() => {
-    setFilteredData(()=> []);
-    setSearchTerm("");
-    setSearchDate("");
-     ClearstateAdjustEntryList();
-  }, [entityType]);
-  console.log(initialCustId)
+
   return (
     <Container fluid className="pt-5">
       <ToastContainer />
@@ -313,73 +338,46 @@ function AdjustEntryHeaderTableView() {
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
           <div className="d-flex align-items-center justify-content-between flex-wrap">
             <div>
-              <h5 className="mt-2">
-                Adjust Entry View for{" "}
-                {entityType == 1 ? "Customer" : "WholeSeller"}
+              <h5 className="mt-2" style={{ fontSize: "18px" }}>
+                Adjusted Dafa of {entityType == 1 ? "Customer" : "Wholesaler"}
               </h5>
             </div>
-          </div>
-          <hr className="my-1" />
-        </Col>
-        {/* Form Fields */}
-        <Col xl={12} lg={12} md={12} sm={12} xs={12} className="mb-3">
-          <Row>
-            <Col xs={12} sm={12} md={12} lg={7}>
-              <div className="d-flex align-items-center justify-content-center text-nowrap">
-                {/* Date Picker */}
-                <label>Search By Date &nbsp;&nbsp;</label>
-                <Form.Group className="me-3 mt-2">
-                  <InputBox
-                    type="date"
-                    placeholder="Date"
-                    label="date"
-                    Name="date"
-                    onChange={(e) => setSearchDate(e.target.value)}
-                    Icon={<i className="bi bi-calendar"></i>}
-                    SearchButton={true}
-                    SearchIcon={<i className="bi bi-calendar fs-5"></i>}
-                    SearchHandler={handleShow}
-                    maxlen={100}
-                    value={searchDate || ""}
-                    isfrontIconOff={true}
-                    InputStyle={{ padding: "8px" }}
-                    isdisable
-                  />
-                  <BongCalender
-                    view={view}
-                    handleclose={handleClose1}
-                    handleSave={handleSave1}
-                  />
-                </Form.Group>
-
-                {/* Search Input */}
-                <InputGroup className="mt-2">
+            <div className="d-flex justify-content-between flex-wrap align-items-end">
+              <div>
+                <BongDatePicker
+                  view1={view?.View1}
+                  view2={view?.View2}
+                  endDate={Filters?.EndDate}
+                  startDate={Filters?.StartDate}
+                  handleChange={HandleInputDateRange}
+                  handleClose={handleClose}
+                  handleOpenEndDate={handleShow2}
+                  handleOpenStartDate={handleShow1}
+                />
+              </div>
+              <div className="mt-1 mb-0">
+                <InputGroup>
                   <Form.Control
                     autoFocus
                     placeholder="Search..."
                     aria-label="search"
                     aria-describedby="basic-addon1"
-                    style={{ width: "250px", zIndex: "1" }}
+                    style={{ width: "340px", zIndex: "1", padding: "3px 5px" }}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
-                  {/* <Button
-                    variant="outline-secondary"
-                    id="button-addon2"
-                    onClick={performSearch}
-                  >
-                    <i className="bi bi-search"></i>
-                  </Button> */}
                 </InputGroup>
               </div>
-            </Col>
-          </Row>
+            </div>
+          </div>
+          <hr className="my-1" />
         </Col>
+
         {/* Table */}
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
           <div
             className="table-box"
-            style={{ height: "65vh", border: "1px solid lightgrey" }}
+            style={{ height: "75vh", border: "1px solid lightgrey" }}
           >
             {filteredData?.length > 0 ? (
               <Table

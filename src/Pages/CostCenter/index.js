@@ -9,13 +9,13 @@ import useFetchGroupCost from "../../store/ShowStore/useFetchGroupCost";
 import useFetchAuth from "../../store/Auth/useFetchAuth";
 
 function CostCenterListEdit() {
-   const inputRef = useRef();
-    const [searchData, setSearchData] = useState("");
-    useEffect(() => {
-      if(inputRef.current){
-        inputRef.current.focus();
-      }
-    },[])
+  const inputRef = useRef();
+  const [searchData, setSearchData] = useState("");
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
   const [costCenterData, setCostCenterData] = useState({
     CODE: "",
     DESCRIPTION: "",
@@ -39,13 +39,10 @@ function CostCenterListEdit() {
     CostCenterAdd,
     ClearStateCostCenterAdd,
   } = useAddCostCenter();
-    const { isGroupCostLoading, GroupCostList, fetchGroupCost } =
-      useFetchGroupCost();
+  const { isGroupCostLoading, GroupCostList, fetchGroupCost } =
+    useFetchGroupCost();
 
-  const {
-    CompanyID,
-
-  } = useFetchAuth();
+  const { CompanyID } = useFetchAuth();
   // Input change handler
   const OnChangeHandler = (e) => {
     const { name, value } = e.target;
@@ -56,9 +53,9 @@ function CostCenterListEdit() {
           ParentCode: GroupCostList.Type,
         }));
       }
-        setCostCenterData((prev) => ({ ...prev, ParentCode: null }));
+      setCostCenterData((prev) => ({ ...prev, ParentCode: null }));
     }
-      setCostCenterData((prev) => ({ ...prev, [name]: value }));
+    setCostCenterData((prev) => ({ ...prev, [name]: value }));
   };
 
   // Memoized parent code list
@@ -245,7 +242,7 @@ function CostCenterListEdit() {
                 }}
               >
                 <i
-                  class="bi bi-search"
+                  className="bi bi-search"
                   style={{
                     fontSize: "16px",
                   }}

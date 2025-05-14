@@ -13,13 +13,29 @@ import useOpeningDetailDelete from "../../store/DeleteStore/useOpeningDetailDele
 import useFetchOpeningPrincipalReport from "../../store/ShowStore/useFetchOpeningPrincipalReport";
 import DeleteConfirmation from "../../Component/ReusableDelete";
 import useOpeningDetailDeleteCheck from "../../store/Checker/useOpeningDetailDeleteCheck";
-function OpeningEntryDetailTable({ id, lotno, onCloseHandler, entityType }) {
+import { useNavigate } from "react-router-dom";
+import AddItem from "./AddItem";
+import useAddExtraItem from "../../store/AddStore/useAddExtraItem";
+function OpeningEntryDetailTable({
+  id,
+  lotno,
+  onCloseHandler,
+  entityType,
+  trancode,
+  rendering,
+  info,
+  headerData,
+}) {
+  //-----------------------------------useref hook-----------------------------------//
   const editinputref = useRef(null);
+  const navigate = useNavigate();
+  console.log(headerData, "headerData");
+  //--------------------------------------useState--------------------------------------//
   const [focusText, setfocusText] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
-  //  const [itemToDelete, setItemToDelete] = useState(null);
   const [originalOrder, setOriginalOrder] = useState([]);
+  const [search, setSearch] = useState("");
   const [editedData, setEditedData] = useState({
     SRL: null,
     Description: null,
@@ -29,8 +45,20 @@ function OpeningEntryDetailTable({ id, lotno, onCloseHandler, entityType }) {
     RATE: null,
     Valuation: null,
   });
-   const [showDeleteModal, setShowDeleteModal] = useState(false);
-   const [itemToDelete, setItemToDelete] = useState(null);
+  const newRow = {
+    srl: 1, // Auto-assigned SRL
+    description: "",
+    grossWeight: "",
+    percentage: "",
+    netWeight: "",
+    rate: 0,
+    valuation: "",
+    principalAmount: "",
+    principalDetails: [],
+    ...headerData,
+  };
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
   const [params, setParams] = useState({
     ActionID: -1,
     IsAction: false,
@@ -38,7 +66,13 @@ function OpeningEntryDetailTable({ id, lotno, onCloseHandler, entityType }) {
     limit: 10,
     view: false,
     SRL: null,
+    Valuation: null,
+    isAdd: false,
+    ItemCounter: 0,
+    isDelete: false,
   });
+  //-----------------------------------API Call---------------------------------------------------//
+  const { user } = useFetchAuth();
   const {
     CheckOpeningDetailsMsg,
     isCheckOpeningDetailsLoading,
@@ -54,7 +88,6 @@ function OpeningEntryDetailTable({ id, lotno, onCloseHandler, entityType }) {
     isOpeningDetailEditLoading,
     OpeningDetailEditSuccess,
   } = useEditOpeningDetail();
-  const { user } = useFetchAuth();
   const {
     fetchOpeningDetail,
     ClearstateOpeningDetailList,
@@ -71,95 +104,32 @@ function OpeningEntryDetailTable({ id, lotno, onCloseHandler, entityType }) {
     OpeningDetailDeleteErr,
     isOpeningDetailDeleteLoading,
   } = useOpeningDetailDelete();
-
-    const {
-      CheckOpeningDetailDeleteCheckMsg,
-      isCheckOpeningDetailDeleteCheck,
-      isCheckOpeningDetailDeleteCheckLoading,
-      CheckOpeningDetailDeleteCheckErr,
-      CheckOpeningDetailDeleteCheck,
-      ClearCheckOpeningDetailDeleteCheck,
+  const {
+    CheckOpeningDetailDeleteCheckMsg,
+    isCheckOpeningDetailDeleteCheck,
+    isCheckOpeningDetailDeleteCheckLoading,
+    CheckOpeningDetailDeleteCheckErr,
+    CheckOpeningDetailDeleteCheck,
+    ClearCheckOpeningDetailDeleteCheck,
   } = useOpeningDetailDeleteCheck();
-  
-  // console.log(isCheckOpeningDetailDeleteCheck, "isCheckOpeningDetailDeleteCheck");
-
-    useEffect(() => {
-      if (isCheckOpeningDetailDeleteCheck === 1) {
-        // If check passes, show the delete confirmation modal
-        if (itemToDelete) {
-          setShowDeleteModal(true);
-        }
-      } else if (isCheckOpeningDetailDeleteCheck === 0) {
-        toast.dismiss();
-        toast.warning(CheckOpeningDetailDeleteCheckErr, {
-          position: "top-right",
-          autoClose: 3000,
-        });
-      }
-      ClearCheckOpeningDetailDeleteCheck();
-    }, [isCheckOpeningDetailDeleteCheckLoading, isCheckOpeningDetailDeleteCheck]);
-  
-  
   const { isOpeningPrincipalError, OpenPrnDelErrMsg } =
     useFetchOpeningPrincipalReport();
-  let ColumnDetail = [
-    {
-      headername: "Srl",
-      fieldname: "SRL",
-      type: "number",
-      width: "45px",
-      isNotEditable: true,
-    },
-    {
-      headername: "Description",
-      fieldname: "Description",
-      type: "string",
-      width: "145px",
-      isShortingOff: true,
-      isUseInputRef: true,
-    },
-    {
-      headername: "Gross Weight",
-      fieldname: "GROSS_WT",
-      type: "number",
-    },
-    {
-      headername: "Purity(%)",
-      fieldname: "PERCENTAGE",
-      type: "number",
-    },
-    {
-      headername: "Net Weight",
-      fieldname: "NET_WT",
-      type: "number",
-      isReadOnly: true,
-    },
-
-    {
-      headername: "Rate",
-      fieldname: "RATE",
-      type: "number",
-    },
-    {
-      headername: "Valuation",
-      fieldname: "Valuation",
-      type: "number",
-      isReadOnly: true,
-    },
-  ];
-
+  
+    const { ExtraItemAddSuccess } = useAddExtraItem();
+ 
+  //------------------------------------function---------------------------------------------------//
   const handleDeleteClick = (index) => {
     const selectedData = filteredData[index];
-      CheckOpeningDetailDeleteCheck({
-        ID: selectedData.ID,
-        Cust_Type: entityType,
-        Srl: selectedData.SRL,
-        LotNo:lotno,
-      });
+    CheckOpeningDetailDeleteCheck({
+      ID: selectedData.ID,
+      Cust_Type: entityType,
+      TranCode: trancode,
+      Srl: selectedData.SRL,
+      LotNo: lotno,
+    });
     setItemToDelete(selectedData);
     // setShowDeleteModal(true);
   };
-
   // Confirm delete action
   const confirmDelete = () => {
     if (itemToDelete) {
@@ -168,10 +138,56 @@ function OpeningEntryDetailTable({ id, lotno, onCloseHandler, entityType }) {
         LotNo: lotno,
         Srl: itemToDelete.SRL,
         Cust_Type: entityType,
+        TranCode: trancode,
       });
     }
     setShowDeleteModal(false);
     setItemToDelete(null);
+  };
+  const handleSearch = (e) => {
+    const value = search.toLowerCase();
+
+    // Extract valid field names from the Col array
+    const validFields = ColumnDetail.map((col) => col.fieldname);
+
+    const filtered = OpeningDetailList?.filter((order) =>
+      validFields?.some((field) =>
+        order[field]?.toString().toLowerCase().includes(value)
+      )
+    );
+
+    setFilteredData(filtered);
+  };
+  const handleAdd = () => {
+    setParams((prev) => ({
+      ...prev,
+      isAdd: true,
+      ItemCounter: prev?.ItemCounter + 1,
+      isDelete: false,
+    }));
+  };
+  const handleClickClose = (srl) => {
+    // onCloseHandler();
+    console.log(srl, "info");
+    if (entityType == 1) {
+      navigate("/auth/metal-return-view?type=customer", {
+        state: {
+          customertype: entityType,
+          custId: info?.custId,
+          lotNo: info?.LotNo,
+          srl: srl,
+        },
+      });
+    } else if (entityType == 2) {
+      navigate("/auth/metal-return-view?type=wholeseller", {
+        state: {
+          customertype: entityType,
+          custId: info?.custId,
+          lotNo: info?.LotNo,
+          srl: srl,
+        },
+      });
+    }
   };
 
   // Cancel delete action
@@ -182,9 +198,15 @@ function OpeningEntryDetailTable({ id, lotno, onCloseHandler, entityType }) {
   const handleViewClick = (tabindex) => {
     //  console.log(tabindex);
     const selectedData = filteredData[tabindex];
+    // console.log(selectedData, "ID");
     setSelectedId(selectedData.ID);
     // console.log(selectedData?.SRL);
-    setParams((prev) => ({ ...prev, SRL: selectedData?.SRL, view: true }));
+    setParams((prev) => ({
+      ...prev,
+      SRL: selectedData?.SRL,
+      view: true,
+      Valuation: selectedData.Valuation,
+    }));
     // HandleOpen();
   };
   const handleClose = () => {
@@ -192,11 +214,12 @@ function OpeningEntryDetailTable({ id, lotno, onCloseHandler, entityType }) {
   };
   const EditCheckfunc = async (tabindex) => {
     const selectedData = filteredData[tabindex];
-    console.log(selectedData);
+    // console.log(selectedData);
     CheckOpeningDetails({
       LotNo: lotno,
       Srl: selectedData.SRL,
       Cust_Type: entityType,
+      TranCode: trancode,
     });
     setSelectedId(tabindex);
     let { WareHouse, createdAt, updatedAt, ...leftall } =
@@ -223,9 +246,19 @@ function OpeningEntryDetailTable({ id, lotno, onCloseHandler, entityType }) {
       ...editedData,
       LotNo: lotno,
       Cust_Type: entityType,
+      TranCode: trancode,
     });
   };
-
+  // const DeleteDetailData = (index) => {
+  //   let selectedData = filteredData[index];
+  //   DeleteOpeningDetail({
+  //     ID: selectedData.ID,
+  //     LotNo: lotno,
+  //     Srl: selectedData.SRL,
+  //     Cust_Type: entityType,
+  //     TranCode: trancode,
+  //   });
+  // };
   //AutoClaculation
   useEffect(() => {
     if (editedData?.GROSS_WT && editedData?.RATE && editedData?.PERCENTAGE) {
@@ -277,13 +310,16 @@ function OpeningEntryDetailTable({ id, lotno, onCloseHandler, entityType }) {
       page: 1,
       limit: 10,
       Cust_Type: entityType,
+      TranCode: trancode,
     });
   }, [
     id,
+    ExtraItemAddSuccess,
     OpeningDetailEditSuccess,
     OpeningDetailDeleteMsg,
     isOpeningPrincipalError,
     entityType,
+    trancode,
   ]);
   //set filtered data
   useEffect(() => {
@@ -318,8 +354,13 @@ function OpeningEntryDetailTable({ id, lotno, onCloseHandler, entityType }) {
     OpeningDetailEditSuccess,
     OpeningDetailDeleteMsg,
     isOpeningPrincipalError,
+    ExtraItemAddSuccess,
   ]);
-
+  // useEffect(() => {
+  //   if (OpnDetailErrMsg) {
+  //       toast.error(OpnDetailErrMsg, { position: "top-right", autoClose: 3000 });
+  //     }
+  //   }, [OpnDetailErrMsg]);
   //check editable or not then open for edit
   useEffect(() => {
     if (isCheckOpDetail == 1) {
@@ -360,30 +401,173 @@ function OpeningEntryDetailTable({ id, lotno, onCloseHandler, entityType }) {
   ]);
 
   useEffect(() => {
+    if (isCheckOpeningDetailDeleteCheck === 1) {
+      // If check passes, show the delete confirmation modal
+      if (itemToDelete) {
+        setShowDeleteModal(true);
+      }
+    } else if (isCheckOpeningDetailDeleteCheck === 0) {
+      toast.dismiss();
+      toast.warning(CheckOpeningDetailDeleteCheckErr, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+    ClearCheckOpeningDetailDeleteCheck();
+  }, [isCheckOpeningDetailDeleteCheckLoading, isCheckOpeningDetailDeleteCheck]);
+
+  useEffect(() => {
     setTimeout(() => {
       if (editinputref.current) {
         editinputref.current.focus();
       }
     }, 150);
   }, [editedData.ID]);
+
+  useEffect(() => {
+    // if (search.length > 0) {
+    handleSearch();
+    // }
+  }, [search]);
+
+  useEffect(() => {
+    setParams((prev) => ({
+      ...prev,
+      isAdd: false,
+      isDelete: false,
+      ItemCounter: 0,
+      lastSrl: 0,
+    }));
+  }, [ExtraItemAddSuccess]);
+  //----------------------------------------const & var-------------------------------------------//
+  let ColumnDetail = [
+    {
+      headername: "Srl",
+      fieldname: "SRL",
+      type: "number",
+      width: "45px",
+      isNotEditable: true,
+    },
+    {
+      headername: "Description",
+      fieldname: "Description",
+      type: "string",
+      width: "145px",
+      isShortingOff: true,
+      isUseInputRef: true,
+    },
+    {
+      headername: "Gross Weight",
+      fieldname: "GROSS_WT",
+      type: "number",
+    },
+    {
+      headername: "Purity(%)",
+      fieldname: "PERCENTAGE",
+      type: "number",
+    },
+    {
+      headername: "Net Weight",
+      fieldname: "NET_WT",
+      type: "number",
+      isReadOnly: true,
+    },
+
+    {
+      headername: "Rate",
+      fieldname: "GOLD_RATE",
+      type: "number",
+    },
+    {
+      headername: "Valuation",
+      fieldname: "Valuation",
+      type: "number",
+      isReadOnly: true,
+    },
+    {
+      headername: "Closing Status",
+      fieldname: "Update_Return_Metal",
+      type: "number",
+      isReadOnly: true,
+      isShortingOff: true,
+      isIconicData: true,
+      iconError: (rowData) => (
+        <button className="btn btn-link" type="button">
+          <i
+            className="bi bi-bootstrap-reboot"
+            style={{ color: "orange", fontSize: "25px" }}
+          ></i>
+        </button>
+      ),
+      iconSuccess: (rowData) => (
+        <button
+          className="btn btn-link"
+          type="button"
+          onClick={() => handleClickClose(rowData.SRL)} // Pass SRL here
+        >
+          <i
+            className="bi bi-check2-circle"
+            style={{ color: "green", fontSize: "25px" }}
+          ></i>
+        </button>
+      ),
+    },
+  ];
   return (
     <div>
-      <div>
-        <textarea
-          placeholder="Text"
-          value={focusText.toString()}
-          style={{
-            width: "100%",
-            border: "1px solid lightgrey",
-            borderRadius: "2px",
-            padding: "3px 8px",
-          }}
-        />
+      <div className="d-flex justify-content-between align-items-center m-0 flex-wrap">
+        <div>
+          <textarea
+            value={focusText}
+            type="search"
+            readOnly
+            placeholder="Detail View"
+            style={{
+              width: "50vw",
+              border: "1px solid dodgerblue",
+              outline: "1px solid dodgerblue",
+              borderRadius: "5px",
+              padding: "0px 5px",
+            }}
+          />
+        </div>
+        <div>
+          <label
+            className="form-input"
+            style={{
+              width: "28vw",
+              border: "1px solid dodgerblue",
+              borderRadius: "5px",
+              padding: "5px",
+              outline: "1px solid dodgerblue",
+              display: "flex",
+              alignItems: "center",
+              // borderColor: "#25a353",
+            }}
+          >
+            <i
+              className="bi bi-search"
+              style={{
+                fontSize: "16px",
+              }}
+            ></i>
+            <input
+              value={search}
+              type="search"
+              placeholder="Search here....."
+              style={{
+                width: "80%",
+                border: "none",
+                outline: "none",
+                padding: "0px 5px",
+              }}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </label>
+        </div>
       </div>
       <div
-        className="table-box"
-        style={{ height: "55vh", border: "1px solid lightgrey" }}
-      >
+        className="table-box">
         <Table
           tab={filteredData || []}
           Col={ColumnDetail}
@@ -404,6 +588,7 @@ function OpeningEntryDetailTable({ id, lotno, onCloseHandler, entityType }) {
           // handleDelete={DeleteDetailData}
           handleDelete={handleDeleteClick}
           useInputRef={editinputref}
+          height={"50vh"}
         />
         <DeleteConfirmation
           show={showDeleteModal}
@@ -414,6 +599,7 @@ function OpeningEntryDetailTable({ id, lotno, onCloseHandler, entityType }) {
         <ReusableModal
           show={params?.view}
           handleClose={handleClose}
+          isFullScreen={true}
           body={
             <PrincipalEntryView
               id={selectedId}
@@ -421,13 +607,42 @@ function OpeningEntryDetailTable({ id, lotno, onCloseHandler, entityType }) {
               SRL={params?.SRL}
               HandleClose={handleClose}
               entityType={entityType}
+              trancode={trancode}
+              Valuation={params.Valuation}
+              headerEntryDate={headerData?.EntryDate}
             />
           }
-          Title={"Opening Principal Detail View"}
+          Title={`${
+            trancode === "0RC" || trancode === "0RW" ? "Opening" : "Recive/Dafa"
+          } Principal Detail View`}
           isPrimary={true}
           handlePrimary={handleClose}
           PrimaryButtonName={"Close"}
         />
+      </div>
+      <div className="d-flex justify-content-end mt-1">
+        <button
+          className="btn btn-success py-1 px-2"
+          type="button"
+          onClick={handleAdd}
+        >
+          +
+        </button>
+      </div>
+      <div>
+        {params?.isAdd && (
+          <AddItem
+            newRow={newRow}
+            params={params}
+            setParams={setParams}
+            headerData={headerData}
+            entityType={entityType}
+            trancode={trancode}
+            headerid={id}
+            lotno={lotno}
+            lastSrl={filteredData?.length}
+          />
+        )}
       </div>
     </div>
   );

@@ -214,6 +214,7 @@ function WSListEdit() {
         IDPROOF: null,
         IDPROOF_IMG: null,
         FinePercentage: null,
+        timing: 2,
       });
       wsref.current.value = "";
     } else if (WSRegError && !isWSRegLoading && !WSRegSuccess) {
@@ -242,7 +243,7 @@ function WSListEdit() {
           style={{ paddingLeft: "15px", margin: "0px" }}
         >
           <div className="d-flex justify-content-between">
-            <h5 style={{ fontSize: "18px" }}>WholeSeller Add</h5>
+            <h5 style={{ fontSize: "18px" }}>Wholesaler Add</h5>
           </div>
           <hr style={{ marginTop: "2px" }} />
         </Col>
@@ -272,7 +273,7 @@ function WSListEdit() {
                   >
                     <i className="bi bi-person-circle"></i>
                   </th>
-                  <th>WholeSeller Name*</th>
+                  <th>Wholesaler Name*</th>
                   <th>Phone No.*</th>
                   <th>Address*</th>
                   <th>Interest Type</th>
@@ -291,7 +292,7 @@ function WSListEdit() {
                   </td>
                   <td>
                     <input
-                      placeholder="WholeSeller Name"
+                      placeholder="Wholesaler  Name"
                       className="input-cell form-input"
                       name="Name"
                       value={WSData?.Name || ""}
@@ -425,7 +426,7 @@ function WSListEdit() {
             style={{ height: "100%" }}
           >
             <div>
-              <h5 style={{ fontSize: "17px" }}>WholeSeller Edit</h5>
+              <h5 style={{ fontSize: "17px" }}>Wholesaler Edit</h5>
             </div>
             <div>
               <Button
@@ -473,7 +474,7 @@ function WSListEdit() {
                 }}
               >
                 <i
-                  class="bi bi-search"
+                  className="bi bi-search"
                   style={{
                     fontSize: "16px",
                   }}

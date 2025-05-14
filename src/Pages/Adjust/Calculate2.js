@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col,Form ,Button} from "react-bootstrap";
+import { Container, Row, Col, Form, Button } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import useFetchAdjustEntry from "../../store/ShowStore/useFetchAdjustEntry";
 import moment from "moment";
@@ -9,27 +11,27 @@ const Calculate = ({
   fineInterestCode,
   onSave,
   onClose,
-  entityType
+  entityType,
 }) => {
   const [showModal, setShowModal] = useState(false);
-   const [masterToggle, setMasterToggle] = useState(true);
+  const [masterToggle, setMasterToggle] = useState(true);
   // Nested data structure with arrays inside an array
-    const { isAdjustEntryLoading, AdjustEntryList, fetchAdjustEntry } =
+  const { isAdjustEntryLoading, AdjustEntryList, fetchAdjustEntry } =
     useFetchAdjustEntry();
-  
-    useEffect(() => {
-      fetchAdjustEntry({
-        data: checkedIds,
-        FineId: fineInterestCode,
-        VoucherDate: moment().format("YYYY-MM-DD"),
-        Cust_Type: entityType,
-      });
-    }, [checkedIds, fineInterestCode]);
-  
+
+  useEffect(() => {
+    fetchAdjustEntry({
+      data: checkedIds,
+      FineId: fineInterestCode,
+      VoucherDate: moment().format("YYYY-MM-DD"),
+      Cust_Type: entityType,
+    });
+  }, [checkedIds, fineInterestCode]);
+
   useEffect(() => {
     setCalculationData(AdjustEntryList);
   }, [AdjustEntryList]);
-  
+
   const [calculationData, setCalculationData] = useState([]);
 
   const handleSave = () => {};
@@ -53,8 +55,10 @@ const Calculate = ({
       updatedData[groupIndex][rowIndex].isToggled &&
       updatedData[groupIndex][rowIndex].interestDr
     ) {
-      updatedData[groupIndex][rowIndex].interestCr =
-        updatedData[groupIndex][rowIndex].interestDr;
+      // Ensure we're using the exact same value format
+      updatedData[groupIndex][rowIndex].interestCr = Number.parseFloat(
+        updatedData[groupIndex][rowIndex].interestDr
+      ).toFixed(2);
     } else if (!updatedData[groupIndex][rowIndex].isToggled) {
       // If toggled off, clear interestCr
       updatedData[groupIndex][rowIndex].interestCr = "";
@@ -66,29 +70,39 @@ const Calculate = ({
     setCalculationData(updatedData);
   };
   // Function to handle remarks changes
-   const handleRemarksChange = (groupIndex, rowIndex, value) => {
-     const updatedData = [...calculationData];
-     updatedData[groupIndex] = [...updatedData[groupIndex]];
+  const handleRemarksChange = (groupIndex, rowIndex, value) => {
+    const updatedData = [...calculationData];
+    updatedData[groupIndex] = [...updatedData[groupIndex]];
 
-     // Don't modify the total row
-     if (updatedData[groupIndex][rowIndex].interfaceName === "Total") {
-       return;
-     }
+    // Don't modify the total row
+    if (updatedData[groupIndex][rowIndex].interfaceName === "Total") {
+      return;
+    }
 
-     updatedData[groupIndex][rowIndex] = {
-       ...updatedData[groupIndex][rowIndex],
-       remarks: value,
-     };
+    updatedData[groupIndex][rowIndex] = {
+      ...updatedData[groupIndex][rowIndex],
+      remarks: value,
+    };
 
-     setCalculationData(updatedData);
-   };
+    setCalculationData(updatedData);
+  };
   // Handle principalCr input change
   const handlePrincipalCrChange = (groupIndex, rowIndex, value) => {
     const updatedData = [...calculationData];
     updatedData[groupIndex] = [...updatedData[groupIndex]];
+
+ const amountRegex = /^(\d*\.?\d{0,2})?$/; // Allows up to 2 decimal places
+    // Format the value to 2 decimal places for consistency
+    let isValid = amountRegex.test(value);
+    
+    if (!isValid) {
+      return;
+    }
+    const formattedValue = value === "" ? "" : parseFloat(value);
+
     updatedData[groupIndex][rowIndex] = {
       ...updatedData[groupIndex][rowIndex],
-      principalCr: Number(value) || "",
+      principalCr: formattedValue,
     };
 
     // Update the totals for this group
@@ -103,22 +117,40 @@ const Calculate = ({
     // Calculate totals for this group (excluding the total row itself)
     const groupTotals = group.slice(0, totalRowIndex).reduce(
       (acc, row) => {
-        acc.principalDr += Number(row.principalDr || 0);
-        acc.principalCr += Number(row.principalCr || 0);
-        acc.interestDr += Number(row.interestDr || 0);
-        acc.interestCr += Number(row.interestCr || 0);
+        // Use parseFloat and toFixed to handle floating point precision
+        acc.principalDr = (
+          Number.parseFloat(acc.principalDr) +
+          Number.parseFloat(row.principalDr || 0)
+        ).toFixed(2);
+        acc.principalCr = (
+          Number.parseFloat(acc.principalCr) +
+          Number.parseFloat(row.principalCr || 0)
+        ).toFixed(2);
+        acc.interestDr = (
+          Number.parseFloat(acc.interestDr) +
+          Number.parseFloat(row.interestDr || 0)
+        ).toFixed(2);
+        acc.interestCr = (
+          Number.parseFloat(acc.interestCr) +
+          Number.parseFloat(row.interestCr || 0)
+        ).toFixed(2);
         return acc;
       },
-      { principalDr: 0, principalCr: 0, interestDr: 0, interestCr: 0 }
+      {
+        principalDr: "0.00",
+        principalCr: "0.00",
+        interestDr: "0.00",
+        interestCr: "0.00",
+      }
     );
 
     // Update the total row
     data[groupIndex][totalRowIndex] = {
       ...data[groupIndex][totalRowIndex],
-      principalDr: groupTotals.principalDr || "",
-      principalCr: groupTotals.principalCr || "",
-      interestDr: groupTotals.interestDr || "",
-      interestCr: groupTotals.interestCr || "",
+      principalDr: groupTotals.principalDr || "0.00",
+      principalCr: groupTotals.principalCr || "0.00",
+      interestDr: groupTotals.interestDr || "0.00",
+      interestCr: groupTotals.interestCr || "0.00",
     };
   };
   // Calculate grand totals across all groups
@@ -128,14 +160,32 @@ const Calculate = ({
         // Find the total row in each group
         const totalRow = group.find((row) => row.interfaceName === "Total");
         if (totalRow) {
-          acc.principalDr += Number(totalRow.principalDr || 0);
-          acc.principalCr += Number(totalRow.principalCr || 0);
-          acc.interestDr += Number(totalRow.interestDr || 0);
-          acc.interestCr += Number(totalRow.interestCr || 0);
+          // Use parseFloat and toFixed to handle floating point precision
+          acc.principalDr = (
+            Number.parseFloat(acc.principalDr) +
+            Number.parseFloat(totalRow.principalDr || 0)
+          ).toFixed(2);
+          acc.principalCr = (
+            Number.parseFloat(acc.principalCr) +
+            Number.parseFloat(totalRow.principalCr || 0)
+          ).toFixed(2);
+          acc.interestDr = (
+            Number.parseFloat(acc.interestDr) +
+            Number.parseFloat(totalRow.interestDr || 0)
+          ).toFixed(2);
+          acc.interestCr = (
+            Number.parseFloat(acc.interestCr) +
+            Number.parseFloat(totalRow.interestCr || 0)
+          ).toFixed(2);
         }
         return acc;
       },
-      { principalDr: 0, principalCr: 0, interestDr: 0, interestCr: 0 }
+      {
+        principalDr: "0.00",
+        principalCr: "0.00",
+        interestDr: "0.00",
+        interestCr: "0.00",
+      }
     );
   };
   // Initialize totals for each group
@@ -149,45 +199,47 @@ const Calculate = ({
     return updatedData;
   };
   // Initialize totals when component mounts
-  useState(() => {
+  useEffect(() => {
     setCalculationData(initializeGroupTotals());
   }, []);
+
   const grandTotals = calculateGrandTotals();
- const handleMasterToggleChange = () => {
-   const updatedData = [...calculationData];
-   const newToggleState = !masterToggle;
+  const handleMasterToggleChange = () => {
+    const updatedData = [...calculationData];
+    const newToggleState = !masterToggle;
 
-   // Update all eligible rows with the new toggle state
-   updatedData.forEach((group, groupIndex) => {
-     group.forEach((row, rowIndex) => {
-       if (
-         row.interfaceName !== "Opening" &&
-         row.interfaceName !== "Total" &&
-         row.interestDr
-       ) {
-         // Update the row's toggle state
-         updatedData[groupIndex][rowIndex] = {
-           ...updatedData[groupIndex][rowIndex],
-           isToggled: newToggleState,
-         };
+    // Update all eligible rows with the new toggle state
+    updatedData.forEach((group, groupIndex) => {
+      group.forEach((row, rowIndex) => {
+        if (
+          row.interfaceName !== "Opening" &&
+          row.interfaceName !== "Total" &&
+          row.interestDr
+        ) {
+          // Update the row's toggle state
+          updatedData[groupIndex][rowIndex] = {
+            ...updatedData[groupIndex][rowIndex],
+            isToggled: newToggleState,
+          };
 
-         // If toggled on, set interestCr equal to interestDr
-         if (newToggleState) {
-           updatedData[groupIndex][rowIndex].interestCr =
-             updatedData[groupIndex][rowIndex].interestDr;
-         } else {
-           // If toggled off, clear interestCr
-           updatedData[groupIndex][rowIndex].interestCr = "";
-         }
-       }
-     });
+          // If toggled on, set interestCr equal to interestDr
+          if (newToggleState) {
+            updatedData[groupIndex][rowIndex].interestCr = Number.parseFloat(
+              updatedData[groupIndex][rowIndex].interestDr
+            ).toFixed(2);
+          } else {
+            // If toggled off, clear interestCr
+            updatedData[groupIndex][rowIndex].interestCr = "";
+          }
+        }
+      });
 
-     // Update the totals for this group
-     updateGroupTotals(updatedData, groupIndex);
-   });
+      // Update the totals for this group
+      updateGroupTotals(updatedData, groupIndex);
+    });
 
-   setMasterToggle(newToggleState);
-   setCalculationData(updatedData);
+    setMasterToggle(newToggleState);
+    setCalculationData(updatedData);
   };
   useEffect(() => {
     // Check if all eligible toggles are checked
@@ -203,7 +255,7 @@ const Calculate = ({
 
     setMasterToggle(allToggled);
   }, [calculationData]);
-  
+
   return (
     <Container fluid>
       <Row className="pt-2">
@@ -277,7 +329,11 @@ const Calculate = ({
                       <td>{row.startDate || ""}</td>
                       <td>{row.endDate || ""}</td>
                       <td>{row.interfaceName || ""}</td>
-                      <td>{row.principalDr == 0 ? "-" : row.principalDr}</td>
+                      <td>
+                        {row.principalDr == 0
+                          ? "-"
+                          : Number.parseFloat(row.principalDr).toFixed(2)}
+                      </td>
                       <td>
                         {row.interfaceName == "Opening" ? (
                           <Form.Control
@@ -295,8 +351,16 @@ const Calculate = ({
                           row.principalCr || "-"
                         )}
                       </td>
-                      <td>{row.interestDr == 0 ? "-" : row.interestDr}</td>
-                      <td>{row.interestCr == 0 ? "-" : row.interestCr}</td>
+                      <td>
+                        {row.interestDr == 0
+                          ? "-"
+                          : Number.parseFloat(row.interestDr).toFixed(2)}
+                      </td>
+                      <td>
+                        {row.interestCr == 0
+                          ? "-"
+                          : Number.parseFloat(row.interestCr).toFixed(2)}
+                      </td>
                       <td>
                         {row.interfaceName !== "Opening" &&
                         row.interfaceName !== "Total" ? (
@@ -345,17 +409,15 @@ const Calculate = ({
                 <td colSpan={8} className="text-center">
                   Grand Total:
                 </td>
-                <td>{grandTotals.principalDr || 0}</td>
-                <td>{grandTotals.principalCr || 0}</td>
-                <td>{grandTotals.interestDr || 0}</td>
-                <td>{grandTotals.interestCr || 0}</td>
+                <td>{Number.parseFloat(grandTotals.principalDr).toFixed(2)}</td>
+                <td>{Number.parseFloat(grandTotals.principalCr).toFixed(2)}</td>
+                <td>{Number.parseFloat(grandTotals.interestDr).toFixed(2)}</td>
+                <td>{Number.parseFloat(grandTotals.interestCr).toFixed(2)}</td>
                 <td colSpan={2}></td>
               </tr>
             </tbody>
           </table>
         </Col>
-      </Row>
-      <Row className="pt-2">
         <Col xs={12} sm={12} md={9} lg={10} xl={11}>
           <div className="d-flex align-items-end justify-content-end flex-wrap my-4">
             <span>Check All</span>
@@ -371,7 +433,9 @@ const Calculate = ({
           <div className="d-flex justify-content-end align-items-center my-3">
             <Button
               onClick={() => onSave(calculationData)}
-              disabled={!grandTotals.interestCr || grandTotals.interestCr === 0}
+              disabled={
+                grandTotals.interestCr == 0 && grandTotals?.principalCr == 0
+              }
             >
               Submit
             </Button>

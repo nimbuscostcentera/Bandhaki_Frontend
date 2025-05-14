@@ -17,6 +17,7 @@ function GroupWareHouseTable({ setIsDisable, search }) {
     DESCRIPTION: "",
     CODE: null,
     CompanyID: null,
+    ParentID:null
   });
     const editinputref = useRef(null);
     useEffect(() => {
@@ -56,7 +57,7 @@ function GroupWareHouseTable({ setIsDisable, search }) {
   } = useGroupWareHouseDelete();
   // Fetch company list when new data is added or item is edited
   useEffect(() => {
-    fetchGroupWareHouse({ CompanyID: CompanyID });
+    fetchGroupWareHouse({ CompanyID: CompanyID, isTable: true });
     if (originalOrder.length > 0 && GroupWareHouseList?.length > 0) {
       const sortedData = originalOrder
         .map((id) => GroupWareHouseList.find((row) => row.ID === id))
@@ -65,7 +66,6 @@ function GroupWareHouseTable({ setIsDisable, search }) {
       setFilteredData(sortedData);
     }
   }, [
-    GroupWareHouseSuccess,
     GroupWareHouseEditSuccess,
     GroupWareHouseDeleteMsg,
   ]);
@@ -100,6 +100,13 @@ function GroupWareHouseTable({ setIsDisable, search }) {
   }, [GroupWareHouseList, isGroupWareHouseFetchLoading, GroupWareHouseEditSuccess]);
 
   // Column configuration for the table headers
+   const GroupWareHouse = useMemo(() => {
+     return GroupWareHouseList.map((item) => ({
+       label: `${item?.CODE}`,
+       value: item?.ID,
+     }));
+   }, [GroupWareHouseList]);
+
   const Col = [
     {
       headername: "Group WareHouse Code",
@@ -115,6 +122,15 @@ function GroupWareHouseTable({ setIsDisable, search }) {
       width: "200px",
       isUseInputRef: true,
     },
+    {
+      headername: "Parent Warehouse",
+      fieldname: "ParentCode",
+      selectionname: "Parent",
+      type: "String",
+      width: "200px",
+      isSelection: true,
+      options: GroupWareHouse,
+    },
   ];
 
   // ActionFunc: Used to enable editing for a selected row
@@ -127,11 +143,11 @@ function GroupWareHouseTable({ setIsDisable, search }) {
         ID: selectedData.ID,
         DESCRIPTION: selectedData.DESCRIPTION,
         CODE: selectedData.CODE,
-        CompanyID: selectedData.CompanyID,
+        CompanyID: CompanyID,
       });
     }
   };
-
+console.log(editedData);
   // Sorting function for the table
   const SortingFunc = (header, type) => {
     if (!filteredData || filteredData.length === 0) return;

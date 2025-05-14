@@ -1,5 +1,5 @@
-import React ,{ useEffect, useState } from "react";
-import {useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Container } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -14,7 +14,7 @@ import "bootstrap-icons/font/bootstrap-icons.min.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.min";
 import "./Login.css";
-import  '../../../Component/DotLoader/index.css';
+import "../../../Component/DotLoader/index.css";
 
 import useFetchAuth from "../../../store/Auth/useFetchAuth";
 
@@ -49,12 +49,12 @@ function LoginPage() {
   }, [isAuthError, token]);
 
   useEffect(() => {
-   const getToken = JSON.parse(localStorage.getItem("auth-storage"));
-    const Token = getToken?.state?.token; 
+    const getToken = JSON.parse(localStorage.getItem("auth-storage"));
+    const Token = getToken?.state?.token;
     if (Token) {
       navigate("/auth/manager/company");
     }
-  },[])
+  }, []);
 
   //functions
   const InputHandler = (e) => {
@@ -90,9 +90,7 @@ function LoginPage() {
           </div>
 
           <div className="d-flex justify-content-center align-items-center">
-            <p className="mt-1 fs-5 fw-normal color-header">
-             Bandhaki Systems
-            </p>
+            <p className="mt-1 fs-5 fw-normal color-header">Bandhaki Systems</p>
           </div>
           <form className="px-3">
             <InputBox
@@ -107,6 +105,8 @@ function LoginPage() {
               error={false}
               errorMsg={"Enter Correct Phone Number"}
               maxlen={10}
+              marginYClass="my-3"
+              value={data?.ContactNumber}
             />
             <InputBox
               Icon={<i className="bi bi-key fs-5"></i>}
@@ -118,6 +118,7 @@ function LoginPage() {
               error={false}
               errorMsg={""}
               maxlen={16}
+              value={data?.password}
             />
             <div className="d-flex justify-content-between align-items-center flex-wrap px-1 mt-3">
               <CheckBox

@@ -11,21 +11,21 @@ import PhnoValidation from "../../GlobalFunctions/PhnoValidation";
 import useFetchAuth from "../../store/Auth/useFetchAuth";
 
 function UserListEdit() {
-   const inputRef = useRef();
+  const inputRef = useRef();
   const [searchData, setSearchData] = useState("");
-   useEffect(() => {
-     if (inputRef.current) {
-       inputRef.current.focus();
-     }
-   }, []);
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
   const [CustData, setCustData] = useState({
     Name: null,
     ContactNumber: null,
     Utype: null,
     password: null,
-    CompanyID: null
+    CompanyID: null,
   });
-   const { CompanyID } = useFetchAuth();
+  const { CompanyID } = useFetchAuth();
   const [isDisable, setIsDisable] = useState(false);
   // //console.log(CustData);
   // const { user } = useFetchAuth();
@@ -87,7 +87,6 @@ function UserListEdit() {
 
   //toaster
   useEffect(() => {
-
     if (AddUserSuccess) {
       toast.dismiss();
       toast.success("User Added Successfully", {
@@ -270,7 +269,7 @@ function UserListEdit() {
                 }}
               >
                 <i
-                  class="bi bi-search"
+                  className="bi bi-search"
                   style={{
                     fontSize: "16px",
                   }}

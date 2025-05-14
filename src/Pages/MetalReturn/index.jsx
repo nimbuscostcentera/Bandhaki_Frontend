@@ -1,11 +1,11 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { Container, Row, Col, InputGroup, Form, Button } from "react-bootstrap";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import Table from "../../Component/Table";
-import ReusableModal from "../../Component/ReusableModal";
 import useFetchAllPaidLots from "../../store/ShowStore/useFetchAllPaidLots";
 import { toast, ToastContainer } from "react-toastify";
-import RecheckMetalDetail from "./RecheckMetalView";
 import useReturnMetalUpdate from "../../store/UpdateStore/useReturnMetalUpdate";
 import ReusableConfirm from "../../Component/ReusableConfirm";
 function Index() {
@@ -15,7 +15,7 @@ function Index() {
   const [filteredData, setFilteredData] = useState([]);
   const [selectedId, setSelectedId] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [params, setParams] = useState({
     ActionID: null,
     IsAction: false,
@@ -47,69 +47,69 @@ function Index() {
   };
   const handleReturn = (e) => {
     setShowConfirmModal(true);
-  }
-    const confirmDelete = () => {
-      // if (itemToDelete) {
-      //   DeleteOpeningHeader({ ID: itemToDelete.ID, Cust_Type: entityType });
-      // }
-       if (selectedId.length > 0) {
-         ReturnMetalUpdateFunc({
-           LotNo: selectedId[0]?.LotNo,
-           Srl: selectedId[0]?.SRL,
-         });
-         // console.log(selectedId);
-       }
-      // setShowDeleteModal(false);
-          setShowConfirmModal(false);
-      // setItemToDelete(null);
   };
-    const cancelDelete = () => {
-      // setShowDeleteModal(false);
-         setShowConfirmModal(false);
-      // setItemToDelete(null);
-    };
-  const handleViewClick = (e) => {
-    console.log(AllPaidLotsList[e], "AllPaidLotsList");
-    let obj = (AllPaidLotsList[e]);
-    let Lotno = obj?.LotNo;
-    let SRL = obj?.SRL;
-     setParams((prev) => ({
-       ...prev,
-       Lotno:Lotno,
-       srl:SRL,
-     }));
-    setParams((prev) => ({ ...prev, view: true }));
+  const confirmDelete = () => {
+    // if (itemToDelete) {
+    //   DeleteOpeningHeader({ ID: itemToDelete.ID, Cust_Type: entityType });
+    // }
+    if (selectedId.length > 0) {
+      ReturnMetalUpdateFunc({
+        LotNo: selectedId[0]?.LotNo,
+        Srl: selectedId[0]?.SRL,
+      });
+      // console.log(selectedId);
+    }
+    // setShowDeleteModal(false);
+    setShowConfirmModal(false);
+    // setItemToDelete(null);
+  };
+  const cancelDelete = () => {
+    // setShowDeleteModal(false);
+    setShowConfirmModal(false);
+    // setItemToDelete(null);
+  };
+  // const handleViewClick = (e) => {
+  //   console.log(AllPaidLotsList[e], "AllPaidLotsList");
+  //   let obj = (AllPaidLotsList[e]);
+  //   let Lotno = obj?.LotNo;
+  //   let SRL = obj?.SRL;
+  //    setParams((prev) => ({
+  //      ...prev,
+  //      Lotno:Lotno,
+  //      srl:SRL,
+  //    }));
+  //   setParams((prev) => ({ ...prev, view: true }));
 
-  };
-  const handleClose = () => {
-    setParams((prev) => ({ ...prev, view: false }));
-  };
-  const onCheckChange = (e) => {
-   
-  };
+  // };
+  // const handleClose = () => {
+  //   setParams((prev) => ({ ...prev, view: false }));
+  // };
+  // const onCheckChange = (e) => {
+
+  // };
   const handleCheckChange = (item, isChecked) => {
-  // console.log(item,"Item");
-  setSelectedId((prev) => {
-    const isAlreadySelected = prev.some((i) => i.LotNo === item.LotNo);
+    // console.log(item,"Item");
+    setSelectedId((prev) => {
+      const isAlreadySelected = prev.some(
+        (i) => i?.LotNo === item?.LotNo && i?.SRL === item?.SRL
+      );
 
-    // Uncheck if the same item is clicked again
-    if (isAlreadySelected && !isChecked) {
+      // Uncheck if the same item is clicked again
+      if (isAlreadySelected && !isChecked) {
+        return [];
+      }
+
+      // Select the new item (replacing the previous one)
+      if (isChecked) {
+        return [item];
+      }
+
       return [];
-    }
-
-    // Select the new item (replacing the previous one)
-    if (isChecked) {
-      return [item];
-    }
-
-    return [];
-  });
-};
-
-
+    });
+  };
   //-------------------------------useEffect--------------------------
   useEffect(() => {
-    let timeid = setTimeout(() => {
+    const timeid = setTimeout(() => {
       if (searchTerm !== "") {
         fetchAllPaidLotList({ Cust_Type: entityType, keyword: searchTerm });
       } else if (searchTerm === "") {
@@ -190,7 +190,7 @@ function Index() {
             <div>
               <h6 className="mt-2">
                 All Paid Lot Items of{" "}
-                {entityType == 1 ? "Customer" : "Wholeseller"}
+                {entityType == 1 ? "Customer" : "Wholesaler"}
               </h6>
             </div>
             <div>

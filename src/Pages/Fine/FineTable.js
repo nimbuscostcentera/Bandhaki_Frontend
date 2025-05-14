@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import Table from "../../Component/Table";
 import ReusableModal from "../../Component/Modal";
 import { toast } from "react-toastify";
@@ -15,6 +17,8 @@ import useAddFine from "../../store/AddStore/useAddFine";
 import useEditFineDetails from "../../store/UpdateStore/useEditFineDetails";
 import useFineHeaderDelete from "../../store/DeleteMasterStore/useFineHeaderDelete";
 import useFineDetailDelete from "../../store/DeleteMasterStore/useFineDetailDelete";
+import useAddFineDetails from "../../store/AddStore/useAddFineDetails";
+import EstimateTable from "../../Component/EstimateTable";
 
 function FineTable({ setIsDisable, search }) {
   const [editedData, setEditedData] = useState({
@@ -92,6 +96,12 @@ function FineTable({ setIsDisable, search }) {
     FineHeaderDeleteMsg,
   } = useFineHeaderDelete();
   const { FineAddSuccess } = useAddFine();
+  const {
+    FineDetailsAddSuccess,
+    FineDetailsAddError,
+    FineDetailsAdd,
+    ClearStateFineDetailsAdd,
+  } = useAddFineDetails();
 
   const [params, setParams] = useState({
     ActionID: -1,
@@ -128,9 +138,9 @@ function FineTable({ setIsDisable, search }) {
     }
   }, [FineDetailsList, selectedFineId, FineDetailsEditSuccess]);
 
-    useEffect(() => {
-      handleSearch();
-    }, [search]);
+  useEffect(() => {
+    handleSearch();
+  }, [search]);
 
   const Col = [
     {
@@ -158,6 +168,23 @@ function FineTable({ setIsDisable, search }) {
     { headername: "Percentage", fieldname: "FINE_PERCENTAGE", type: "number" },
   ];
 
+    const detailColumns = [
+      {
+        label: "Month*",
+        key: "MONTH",
+        type: "number",
+        PlaceHolder: "Enter Month (1-12)",
+        width: "200px",
+        proprefs: true,
+      },
+      {
+        label: "Fine Percentage (%)*",
+        key: "FINE_PERCENTAGE",
+        type: "number",
+        PlaceHolder: "Enter Percentage",
+        width: "250px",
+      },
+    ];
   const ActionFunc = (tabIndex) => {
     const selectedData = filteredData[tabIndex];
     setParams((prev) => ({ ...prev, IsAction: true, ActionID: tabIndex }));
@@ -205,7 +232,6 @@ function FineTable({ setIsDisable, search }) {
 
     setFilteredData(filtered);
   };
-
 
   const SortingFunc = (header, type) => {
     if (!filteredData.length) return;
@@ -366,7 +392,7 @@ function FineTable({ setIsDisable, search }) {
       return;
     }
 
-    const monthValue = parseInt(editedDetailData.MONTH, 10);
+    const monthValue = Number.parseInt(editedDetailData.MONTH, 10);
     if (isNaN(monthValue) || monthValue < 1 || monthValue > 12) {
       toast.error("Month should be between 1-12");
       return;
@@ -426,6 +452,115 @@ function FineTable({ setIsDisable, search }) {
       DeleteFineDetail({ ID: deleteobj.ID, CompanyID: CompanyID });
     }
   };
+
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [rows, setRows] = useState([
+    {
+      rowid: 1,
+      MONTH: "",
+      FINE_PERCENTAGE: "",
+      HeaderId: selectedFineId,
+    },
+  ]);
+  const inputRef2 = useRef(null);
+  const validateFinePercentage = (value) => {
+    const regex = /^\d{0,2}(\.\d{0,2})?$/;
+    return regex.test(value);
+  };
+
+  const handleDetailChange = (rowIndex, colKey, e) => {
+    const updatedRows = [...rows];
+    const value = e.target.value;
+
+    if (colKey === "FINE_PERCENTAGE" && !validateFinePercentage(value)) return;
+
+    if (colKey === "MONTH") {
+      const monthValue = Number.parseInt(value, 10);
+      if (monthValue < 1 || monthValue > 12) return;
+    }
+
+    updatedRows[rowIndex][colKey] = value;
+    setRows(updatedRows);
+  };
+
+   const deleteRow = (id) => {
+     const existingRows = rows.filter((row) => row.rowid !== id);
+     const n = existingRows?.length;
+     for (let i = 0; i < n; i++) {
+       existingRows[i].rowid = i + 1;
+     }
+     setRows(existingRows);
+   };
+
+  const addRow = () => {
+    const newRow = {
+      rowid: rows.length + 1,
+      MONTH: "",
+      FINE_PERCENTAGE: "",
+      HeaderId: selectedFineId,
+    };
+    setRows([...rows, newRow]);
+  };
+
+  const isFormValid = () => {
+    return rows.some((row) => row.MONTH && row.FINE_PERCENTAGE);
+  };
+
+  const saveNewRows = () => {
+    // Validate rows before saving
+    const invalidRows = rows.filter(
+      (row) => !row.MONTH || !row.FINE_PERCENTAGE
+    );
+
+    if (invalidRows.length > 0) {
+      toast.error(
+        "Please fill all required fields correctly. Month must be between 1 and 12."
+      );
+      return;
+    }
+
+    // Prepare data for API
+    const detailsToAdd = rows.map((row) => ({
+      HeaderID: selectedFineId,
+      CompanyID: CompanyID,
+      MONTH: row.MONTH,
+      FINE_PERCENTAGE: row.FINE_PERCENTAGE,
+    }));
+
+    // Call API to add details
+    FineDetailsAdd(detailsToAdd);
+
+    // Reset form
+    setShowAddForm(false);
+    setRows([
+      {
+        rowid: 1,
+        MONTH: "",
+        FINE_PERCENTAGE: "",
+        HeaderId: selectedFineId,
+      },
+    ]);
+
+    // Refresh details data
+    fetchFineDetails({ HeaderID: selectedFineId, CompanyID });
+  };
+
+  useEffect(() => {
+    if (FineDetailsAddSuccess) {
+      toast.success("Fine details added successfully");
+      fetchFineDetails({ HeaderID: selectedFineId, CompanyID });
+      ClearStateFineDetailsAdd();
+    }
+    if (FineDetailsAddError) {
+      toast.error(FineDetailsAddError);
+      ClearStateFineDetailsAdd();
+    }
+  }, [FineDetailsAddSuccess, FineDetailsAddError]);
+
+
+
+
+
   return (
     <div
       className="table-box"
@@ -490,6 +625,46 @@ function FineTable({ setIsDisable, search }) {
               isDelete={true}
               handleDelete={handleDelete1}
             />
+
+            <div className="d-flex justify-content-end mb-3 mt-4">
+              <button
+                className="btn btn-primary"
+                onClick={() => setShowAddForm(!showAddForm)}
+              >
+                {showAddForm ? "Hide Form" : "Add New Rows"}
+              </button>
+            </div>
+
+            {showAddForm && (
+              <>
+                <div className="border p-3 mb-3">
+                  <div className="d-flex justify-content-between mb-3">
+                    <h5>Add New Fine Details</h5>
+                    <div>
+                      <button className="btn btn-success me-2" onClick={addRow}>
+                        Add Row
+                      </button>
+                      <button
+                        className="btn btn-primary"
+                        onClick={saveNewRows}
+                        disabled={!isFormValid()}
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                  <EstimateTable
+                    columns={detailColumns}
+                    rows={rows || []}
+                    handleChange={handleDetailChange}
+                    deleteRow={deleteRow}
+                    isDelete={true}
+                    id={"rowid"}
+                    priorityref={inputRef2}
+                  />
+                </div>
+              </>
+            )}
           </>
         }
         PrimaryButtonName="Close"

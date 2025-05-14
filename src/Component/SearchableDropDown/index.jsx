@@ -119,15 +119,27 @@ const SearchableDropDown = ({
   }, [show]);
 
   return (
-    <div style={{ width: width || "auto", position: "relative" }}>
-      <InputGroup style={{ width:width|| "100%" }}>
+    <div style={{ width: width || "auto", position: "relative", zIndex: 1 }}>
+      <InputGroup style={{ width: width || "100%" }}>
         <Form.Control
           ref={inputRef}
           placeholder={placeholder}
           value={directSearch ? searchTerm : findSelectedValue()}
-          onChange={directSearch ? handleInputChange : undefined}
+          onChange={
+            directSearch
+              ? handleInputChange
+              : () => {
+                  return;
+                }
+          }
           onKeyUp={handleKeyDown}
-          onClick={directSearch ? undefined : handleShow}
+          onClick={
+            directSearch
+              ? () => {
+                  return;
+                }
+              : handleShow
+          }
           aria-describedby="basic-addon2"
           style={{
             padding: "4px 5px",

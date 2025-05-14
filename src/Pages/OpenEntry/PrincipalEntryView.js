@@ -1,6 +1,4 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
 import useFetchAuth from "../../store/Auth/useFetchAuth";
@@ -15,14 +13,25 @@ import BongDateSorting from "../../GlobalFunctions/BongDateSorting";
 import "./openentry.css";
 import useFetchOpeningPrincipalReport from "../../store/ShowStore/useFetchOpeningPrincipalReport";
 import useCheckOpeningPrn from "../../store/Checker/useCheckOpeningPrn";
-import useOpeningPrincipalDeleteCheck from "../../store/Checker/useOpeningPrincipalDeleteCheck";
 import useEditOpeningPrincipal from "../../store/UpdateStore/useEditOpeningPrincipal";
 import useOpeningPrnDelete from "../../store/DeleteStore/useOpeningPrnDelete";
 import DeleteConfirmation from "../../Component/ReusableDelete";
+import useOpeningPrincipalDeleteCheck from "../../store/Checker/useOpeningPrincipalDeleteCheck";
 
-function PrincipalEntryView({ id, lotno, SRL, HandleClose, entityType }) {
+function PrincipalEntryView({
+  id,
+  lotno,
+  SRL,
+  HandleClose,
+  entityType,
+  trancode,
+  Valuation,    
+  headerEntryDate,
+}) {
   const editinputref = useRef(null);
   const [filteredData, setFilteredData] = useState([]);
+  const [bongView, setBongView] = useState(false);
+
   const [EditedData, setEditedData] = useState({
     AMOUNT: null,
     ActualWadah: null,
@@ -63,12 +72,11 @@ function PrincipalEntryView({ id, lotno, SRL, HandleClose, entityType }) {
   } = useEditOpeningPrincipal();
 
   const {
-    CheckOpeningPrnMsg,
-    isOpenPrnsuccess,
     isCheckOpeningPrnLoading,
     CheckOpeningPrnErr,
     CheckOpeningPrn,
     ClearCheckOpeningPrn,
+    isCheckOpHeader,
   } = useCheckOpeningPrn();
 
   const {
@@ -89,65 +97,41 @@ function PrincipalEntryView({ id, lotno, SRL, HandleClose, entityType }) {
     ClearCheckOpeningPrincipalDeleteCheck,
   } = useOpeningPrincipalDeleteCheck();
 
-  // Check editable or not then open for edit
   useEffect(() => {
-    if (!isCheckOpeningPrnLoading) {
-      if (isOpenPrnsuccess == 1) {
-        setParams((prev) => ({
-          ...prev,
-          isAction: true,
-          ActionId: params?.SelectedID,
-        }));
-      } else if (isOpenPrnsuccess == 0) {
-        toast.dismiss();
-        if (CheckOpeningPrnErr) {
-          toast.warning(CheckOpeningPrnErr, {
-            position: "top-right",
-            autoClose: 3000,
-          });
-        }
+    if (isCheckOpeningPrincipalDeleteCheck === 1) {
+      // If check passes, show the delete confirmation modal
+      if (itemToDelete) {
+        setShowDeleteModal(true);
       }
-      ClearCheckOpeningPrn();
+    } else if (isCheckOpeningPrincipalDeleteCheck === 0) {
+      toast.dismiss();
+      toast.warning(CheckOpeningPrincipalDeleteCheckErr, {
+        position: "top-right",
+        autoClose: 3000,
+      });
     }
-  }, [isCheckOpeningPrnLoading]);
-
-  // Check deletable or not then show delete modal
-  useEffect(() => {
-    if (!isCheckOpeningPrincipalDeleteCheckLoading) {
-      if (isCheckOpeningPrincipalDeleteCheck == 1) {
-        // If check passes, show the delete confirmation modal
-        if (itemToDelete) {
-          setShowDeleteModal(true);
-        }
-      } else if (isCheckOpeningPrincipalDeleteCheck == 0) {
-        toast.dismiss();
-        if (CheckOpeningPrincipalDeleteCheckErr) {
-          toast.warning(CheckOpeningPrincipalDeleteCheckErr, {
-            position: "top-right",
-            autoClose: 3000,
-          });
-        }
-      }
-      ClearCheckOpeningPrincipalDeleteCheck();
-    }
-  }, [isCheckOpeningPrincipalDeleteCheckLoading]);
+    ClearCheckOpeningPrincipalDeleteCheck();
+  }, [
+    isCheckOpeningPrincipalDeleteCheckLoading,
+    isCheckOpeningPrincipalDeleteCheck,
+  ]);
 
   const { user } = useFetchAuth();
 
-  const ColumnPrincipal = [
+  let ColumnPrincipal = [
     {
       headername: "Srl_Prn",
       fieldname: "SRL_PRN",
       type: "number",
-      width: "45px",
+      width: "80px",
       isNotEditable: true,
     },
     {
       headername: "EntryDate",
       fieldname: "EntryDate",
-      type: "BongDate",
-      width: "45px",
-      isNotEditable: true,
+      type: "text",
+      width: "100px",
+      isBongDate: true,
     },
     {
       headername: "Amount",
@@ -158,6 +142,7 @@ function PrincipalEntryView({ id, lotno, SRL, HandleClose, entityType }) {
     {
       headername: "Mode Of Payment",
       fieldname: "paymode",
+      width: "160px",
       type: "String",
       isSelection: true,
       selectionname: "MODE_OF_PAYMENT",
@@ -171,16 +156,26 @@ function PrincipalEntryView({ id, lotno, SRL, HandleClose, entityType }) {
       headername: "Rem. Wadah",
       fieldname: "ReminderWadah",
       type: "number",
+      width: "120px",
     },
     {
       headername: "Act. Wadah",
       fieldname: "ActualWadah",
       type: "number",
+      width: "120px",
     },
     {
       headername: "Int. Per %",
       fieldname: "InterestPercentage",
       type: "number",
+      width: "100px",
+    },
+    {
+      headername: "Paid Principle",
+      fieldname: "Update_Prn_Paid",
+      type: "number",
+      isNotEditable: true,
+      width: "160px",
     },
   ];
 
@@ -192,14 +187,16 @@ function PrincipalEntryView({ id, lotno, SRL, HandleClose, entityType }) {
 
   const handleDeleteClick = (index) => {
     const selectedObj = filteredData[index];
-    setItemToDelete(selectedObj);
     CheckOpeningPrincipalDeleteCheck({
       ID: selectedObj?.ID,
       LotNo: lotno,
       Srl: SRL,
       Srl_prn: selectedObj?.SRL_PRN,
       Cust_Type: entityType,
+      TranCode: trancode,
     });
+    setItemToDelete(selectedObj);
+    //  setShowDeleteModal(true);
   };
 
   const confirmDelete = () => {
@@ -210,6 +207,7 @@ function PrincipalEntryView({ id, lotno, SRL, HandleClose, entityType }) {
         Srl: SRL,
         Srl_prn: itemToDelete?.SRL_PRN,
         Cust_Type: entityType,
+        TranCode: trancode,
       });
       setShowDeleteModal(false);
       setItemToDelete(null);
@@ -228,11 +226,11 @@ function PrincipalEntryView({ id, lotno, SRL, HandleClose, entityType }) {
     let isDesc = false;
     if (type == "time") {
       for (let i = 0; i < filteredData.length - 1; i++) {
-        const a = Number.parseInt(
+        let a = parseInt(
           (filteredData[i]?.[header]).toString().replace(/:/g, ""),
           10
         );
-        const b = Number.parseInt(
+        let b = parseInt(
           (filteredData[i + 1]?.[header]).toString().replace(/:/g, ""),
           10
         );
@@ -275,14 +273,42 @@ function PrincipalEntryView({ id, lotno, SRL, HandleClose, entityType }) {
   };
 
   const onChangeHandler = (index, e) => {
-    const key = e.target.name;
-    const value = e.target.value;
-    const regex = {
+    let key = e.target.name;
+    let value = e.target.value;
+
+    console.log(key,value,"Key value")
+    if (key == "EntryDate") {
+      if(headerEntryDate > value){
+        toast.warning(`Entry Date Should be greater than ${headerEntryDate}`, {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        return;
+      }
+ }
+    let regex = {
       AMOUNT: /^\d*\.?\d{0,2}$/,
       InterestPercentage: /^\d*\.?\d{0,2}$/,
     };
+
     if (regex[key] && regex[key].test(value)) {
-      setEditedData((prev) => ({ ...prev, [key]: value }));
+      // Special check for AMOUNT < Valuation
+      if (key === "AMOUNT") {
+        const valuation = Valuation || 0; // Assume valuation is already in editedData
+        if (parseFloat(value) <= parseFloat(valuation)) {
+          setEditedData((prev) => ({ ...prev, [key]: value }));
+        } else {
+          toast.warning(
+            `${value} Amount Should be lesser than Valuation ${Valuation}`,
+            {
+              position: "top-right",
+              autoClose: 3000,
+            }
+          );
+        }
+      } else {
+        setEditedData((prev) => ({ ...prev, [key]: value }));
+      }
     } else if (!regex[key]) {
       setEditedData((prev) => ({ ...prev, [key]: value }));
     }
@@ -295,6 +321,7 @@ function PrincipalEntryView({ id, lotno, SRL, HandleClose, entityType }) {
       Srl: SRL,
       Srl_prn: EditedData?.SRL_PRN,
       Cust_Type: entityType,
+      TranCode: trancode,
       ...EditedData,
     });
   };
@@ -302,13 +329,14 @@ function PrincipalEntryView({ id, lotno, SRL, HandleClose, entityType }) {
   //after hit edit button
   const FetchActionId = (index) => {
     setParams((prev) => ({ ...prev, SelectedID: index, isAction: true }));
-    const { createdAt, updatedAt, ...remaining } = filteredData[index];
+    let { createdAt, updatedAt, ...remaining } = filteredData[index];
     setEditedData(remaining);
     CheckOpeningPrn({
       LotNo: lotno,
       Srl: SRL,
       Srl_prn: filteredData[index]?.SRL_PRN,
       Cust_Type: entityType,
+      TranCode: trancode,
     });
   };
 
@@ -318,18 +346,19 @@ function PrincipalEntryView({ id, lotno, SRL, HandleClose, entityType }) {
       DetailID: id,
       CompanyID: user?.CompanyID,
       Cust_Type: entityType,
+      TranCode: trancode,
     });
-  }, [id, OpePrnEditSuccess, isOpnPrnDeleteSucc, entityType]);
+  }, [id, OpePrnEditSuccess, isOpnPrnDeleteSucc, entityType, trancode]);
 
+  //prn data load in filter
   //prn data load in filter
   useEffect(() => {
     if (isOpeningPrincipalListSuccess) {
       if (OpeningPrincipalList && OpeningPrincipalList.length > 0) {
-        const newArray = OpeningPrincipalList?.map((item, index) => {
-          const obj = paymentMode?.find(
+        let newArray = OpeningPrincipalList?.map((item, index) => {
+          let obj = paymentMode?.find(
             (mode) =>
-              Number.parseInt(mode?.Value, 10) ==
-              Number.parseInt(item?.MODE_OF_PAYMENT, 10)
+              parseInt(mode?.Value, 10) == parseInt(item?.MODE_OF_PAYMENT, 10)
           );
           return { ...item, paymode: obj?.label || "UnKnown" };
         });
@@ -356,14 +385,12 @@ function PrincipalEntryView({ id, lotno, SRL, HandleClose, entityType }) {
   //AutoClaculation
   useEffect(() => {
     if (EditedData?.GROSS_WT && EditedData?.RATE && EditedData?.PERCENTAGE) {
-      const netwt = (
-        (Number.parseFloat(EditedData?.GROSS_WT) *
-          Number.parseFloat(EditedData?.PERCENTAGE)) /
+      let netwt = (
+        (parseFloat(EditedData?.GROSS_WT) *
+          parseFloat(EditedData?.PERCENTAGE)) /
         100
       ).toFixed(3);
-      const val = (
-        Number.parseFloat(netwt) * Number.parseFloat(EditedData?.RATE)
-      ).toFixed(2);
+      let val = (parseFloat(netwt) * parseFloat(EditedData?.RATE)).toFixed(2);
       console.log(netwt, val);
       setEditedData((prev) => ({ ...prev, NET_WT: netwt, Valuation: val }));
     }
@@ -396,6 +423,34 @@ function PrincipalEntryView({ id, lotno, SRL, HandleClose, entityType }) {
     ClearStateEditOpePrn();
   }, [isOpePrnEditLoading, OpePrnEditSuccess, OpePrnEditError]);
 
+  //check editable or not then open for edit
+  useEffect(() => {
+    // console.log(
+    //   "hi",
+    //   CheckOpeningPrnErr,
+    //   isCheckOpHeader,
+    //   isCheckOpeningPrnLoading
+    // );
+    if (isCheckOpHeader == 1) {
+      setParams((prev) => ({
+        ...prev,
+        isAction: true,
+        ActionId: params?.SelectedID,
+      }));
+    } else if (isCheckOpHeader == 0) {
+      toast.dismiss();
+      toast.warning(CheckOpeningPrnErr, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      setParams((prev) => ({
+        ...prev,
+        isAction: false,
+        ActionId: -1,
+      }));
+    }
+    ClearCheckOpeningPrn();
+  }, [isCheckOpeningPrnLoading, isCheckOpHeader]);
   //toaster delete
   useEffect(() => {
     if (isOpnPrnDeleteSucc) {
@@ -421,7 +476,7 @@ function PrincipalEntryView({ id, lotno, SRL, HandleClose, entityType }) {
     }, 150);
   }, [EditedData.ID]);
   return (
-    <div className="table-box" style={{ height: "55vh" }}>
+    <div className="table-box" style={{ maxHeight: "55vh" }}>
       <Table
         tab={filteredData || []}
         Col={ColumnPrincipal}
@@ -435,9 +490,16 @@ function PrincipalEntryView({ id, lotno, SRL, HandleClose, entityType }) {
         EditedData={EditedData}
         OnChangeHandler={onChangeHandler}
         OnSaveHandler={SaveHandler}
+        // handleDelete={DeletePrnDetail}
         handleDelete={handleDeleteClick}
         width={"81vw"}
         useInputRef={editinputref}
+        toaster={toast}
+        bongView={bongView}
+        setBongView={setBongView}
+        CloseBongCal={() => {
+          setBongView(false);
+        }}
       />
 
       <DeleteConfirmation

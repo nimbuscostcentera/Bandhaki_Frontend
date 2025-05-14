@@ -59,7 +59,7 @@ function BongCalender({ view, handleclose, handleSave }) {
       fetchBanglaMonth();
     }
   }, [view]);
-//day in month data fetch from api and store in state
+  //day in month data fetch from api and store in state
   useEffect(() => {
     if (Bong?.BongMonth && Bong?.BongYear) {
       fetchDaysInMonth(Bong?.BongYear);
@@ -77,7 +77,7 @@ function BongCalender({ view, handleclose, handleSave }) {
       }));
     }
   }, [Bong?.BongMonth, Bong?.BongYear]);
-//total days in month
+  //total days in month
   useEffect(() => {
     if (Array.isArray(DaysInMonthList)) {
       let obj = DaysInMonthList[0];
@@ -85,7 +85,7 @@ function BongCalender({ view, handleclose, handleSave }) {
       setBong((prev) => ({ ...prev, TotalDays: obj?.[`${Bong?.BongMonth}`] }));
     }
   }, [isDaysInMonthLoading]);
-//calender calculation
+  //calender calculation
   useEffect(() => {
     let obj = DaysInMonthList[0] || {};
     let { ID = 0, updatedAt, createdAt, Year, TotalDays, ...finalObj } = obj;
@@ -157,7 +157,7 @@ function BongCalender({ view, handleclose, handleSave }) {
     Bong?.BongYear,
     Bong?.BongDay,
   ]);
-//set bengali date
+  //set bengali date
   useEffect(() => {
     if (Bong?.BongDay && Bong?.BongMonth && Bong?.BongYear) {
       let bdate = `${Bong?.BongYear}-${(Bong?.MonthNumber).toString().padStart(
@@ -226,7 +226,7 @@ function BongCalender({ view, handleclose, handleSave }) {
             <label>
               Bengali Date
               <InputBox
-                Icon={<i class="bi bi-calendar-check"></i>}
+                Icon={<i className="bi bi-calendar-check"></i>}
                 InputStyle={{ width: "192px" }}
                 Name={"BengaliDate"}
                 error={false}
@@ -243,7 +243,7 @@ function BongCalender({ view, handleclose, handleSave }) {
             <label>
               English Date
               <InputBox
-                Icon={<i class="bi bi-calendar-check"></i>}
+                Icon={<i className="bi bi-calendar-check"></i>}
                 InputStyle={{ width: "192px" }}
                 Name={"EnglishDate"}
                 error={false}
@@ -287,9 +287,9 @@ function BongCalender({ view, handleclose, handleSave }) {
         <br />
         <Row>
           <table>
-            <thead style={{ backgroundColor: "#2f2d66", color: "white" }} >
+            <thead style={{ backgroundColor: "#2f2d66", color: "white" }}>
               <tr>
-                {ColCal?.map((item,colindex) => {
+                {ColCal?.map((item, colindex) => {
                   return (
                     <td style={{ textAlign: "center" }} key={colindex}>
                       {item?.headername}
@@ -299,7 +299,7 @@ function BongCalender({ view, handleclose, handleSave }) {
               </tr>
             </thead>
             <tbody className="tab-body">
-              {Bong?.CalenderTable?.map((item,rowindex) => {
+              {Bong?.CalenderTable?.map((item, rowindex) => {
                 return (
                   <tr key={rowindex}>
                     {ColCal.map((col, colindex) => {

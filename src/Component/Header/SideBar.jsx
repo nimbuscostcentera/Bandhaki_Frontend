@@ -59,7 +59,7 @@ function SideBar() {
               placement="bottom"
               overlay={renderTooltip("Manage Customer")}
             >
-              <i className="bi bi-people me-2" style={{ fontSize: "22px" }}></i>
+              <i className="bi bi-person me-2" style={{ fontSize: "22px" }}></i>
             </OverlayTrigger>
             {Open && <span>Manage Customer</span>}
           </summary>
@@ -68,7 +68,7 @@ function SideBar() {
               // to={"/auth/openentry/form"}
               to={{
                 pathname: "/auth/openentry/form",
-                search: "?type=customer",
+                search: "?type=customer&trancode=0RC",
               }}
               className="border-bottom border-secondary"
             >
@@ -83,18 +83,55 @@ function SideBar() {
             <Link
               to={{
                 pathname: "/auth/openentry/view",
-                search: "?type=customer",
+                search: "?type=customer&trancode=0RC&opening=1",
               }}
               className="border-bottom border-secondary"
             >
               <OverlayTrigger
                 placement="bottom"
-                overlay={renderTooltip("Opening Entry View Report")}
+                overlay={renderTooltip("Opening Entry View")}
               >
-                <i className="bi bi-file-spreadsheet ps-3 pe-1"></i>
+                <i className="bi bi-list-check ps-3 pe-1"></i>
+                {/* <i className="bi bi-file-spreadsheet ps-3 pe-1"></i> */}
               </OverlayTrigger>
               {Open && <span className="ml-2">Opening Entry View</span>}
             </Link>
+
+            {/* for recive dafa interface form  */}
+
+            <Link
+              // to={"/auth/openentry/form"}
+              to={{
+                pathname: "/auth/openentry/form",
+                search: "?type=customer&trancode=RAC",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Recive/Dafa Form")}
+              >
+                <i className="bi bi-box-arrow-in-down pe-2 ps-3"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Recive/Dafa Entry</span>}
+            </Link>
+
+            <Link
+              to={{
+                pathname: "/auth/openentry/view",
+                search: "?type=customer&trancode=RAC&opening=2",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Recive/Dafa View")}
+              >
+                <i className="bi bi-list-ul ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Recive/Dafa View</span>}
+            </Link>
+
             <Link
               // to={}
               to={{
@@ -121,9 +158,9 @@ function SideBar() {
             >
               <OverlayTrigger
                 placement="bottom"
-                overlay={renderTooltip("Opening Entry View Report")}
+                overlay={renderTooltip("Opening Entry View")}
               >
-                <i className="bi bi-file-spreadsheet ps-3 pe-1"></i>
+                <i className="bi bi-list-check ps-3 pe-1"></i>
               </OverlayTrigger>
               {Open && <span className="ml-2">Adjust Dafa View</span>}
             </Link>
@@ -154,9 +191,24 @@ function SideBar() {
                 placement="bottom"
                 overlay={renderTooltip("Return Metal View")}
               >
-                <i className="bi bi-arrow-repeat ps-3 pe-1"></i>
+                <i className="bi bi-list-check ps-3 pe-1"></i>
               </OverlayTrigger>
               {Open && <span className="ml-2">Return Metal View</span>}
+            </Link>
+            <Link
+              to={{
+                pathname: "/auth/ledger-view",
+                search: "?type=customer",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Ledger View ")}
+              >
+                <i className="bi bi-cash-coin ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Ledger View</span>}
             </Link>
           </div>
         </details>
@@ -173,15 +225,19 @@ function SideBar() {
           >
             <OverlayTrigger
               placement="bottom"
-              overlay={renderTooltip("Manage Customer")}
+              overlay={renderTooltip("Manage WholeSaler")}
             >
               <i className="bi bi-people me-2" style={{ fontSize: "22px" }}></i>
             </OverlayTrigger>
-            {Open && <span>Manage WholeSeller</span>}
+            {Open && <span>Manage WholeSaler</span>}
           </summary>
           <div style={{ backgroundColor: "#212121" }}>
             <Link
-              to={"/auth/openentry/form"}
+              // to={"/auth/openentry/form"}
+              to={{
+                pathname: "/auth/openentry/form",
+                search: "?type=wholeseller&trancode=0RW",
+              }}
               className="border-bottom border-secondary"
             >
               <OverlayTrigger
@@ -193,16 +249,70 @@ function SideBar() {
               {Open && <span className="ml-2">Opening Entry</span>}
             </Link>
             <Link
-              to={"/auth/openentry/view"}
+              // to={"/auth/openentry/view"}
+              to={{
+                pathname: "/auth/openentry/view",
+                search: "?type=wholeseller&trancode=0RW&opening=1",
+              }}
               className="border-bottom border-secondary"
             >
               <OverlayTrigger
                 placement="bottom"
-                overlay={renderTooltip("Opening Entry View Report")}
+                overlay={renderTooltip("Opening Entry View")}
               >
-                <i className="bi bi-file-spreadsheet ps-3 pe-1"></i>
+                <i className="bi bi-list-check ps-3 pe-1"></i>
               </OverlayTrigger>
               {Open && <span className="ml-2">Opening Entry View</span>}
+            </Link>
+
+            {/* for recive dafa entry for wholeseller */}
+            <Link
+              to={{
+                pathname: "/auth/openentry/form",
+                search: "?type=wholeseller&trancode=RAW",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Recive/Dafa Form")}
+              >
+                <i className="bi bi-box-arrow-in-down pe-2 ps-3"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Recive/Dafa Entry</span>}
+            </Link>
+            {/* for recive dafa entry for wholeseller */}
+            <Link
+              // to={"/auth/openentry/view"}
+              to={{
+                pathname: "/auth/openentry/view",
+                search: "?type=wholeseller&trancode=RAW&opening=2",
+              }}
+              className="border-bottom border-secondary"
+            >
+              {" "}
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Recive/Dafa View")}
+              >
+                <i className="bi bi-list-ul ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Recive/Dafa View</span>}
+            </Link>
+            <Link
+              // to={"/auth/openentry/form"}
+              to={{
+                pathname: "/auth/pay-wholesaler",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("WholeSaler Pmt.")}
+              >
+                <i className="bi bi-credit-card pe-2 ps-3"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">WholeSaler Pmt.</span>}
             </Link>
             <Link
               to={"/auth/adjust/entry-point"}
@@ -210,7 +320,7 @@ function SideBar() {
             >
               <OverlayTrigger
                 placement="bottom"
-                overlay={renderTooltip("Opening Entry Adjust View")}
+                overlay={renderTooltip("Adjust Receive/Dafa")}
               >
                 <i className="bi bi-calculator ps-3 pe-1"></i>
               </OverlayTrigger>
@@ -222,9 +332,9 @@ function SideBar() {
             >
               <OverlayTrigger
                 placement="bottom"
-                overlay={renderTooltip("Opening Entry View Report")}
+                overlay={renderTooltip("Adjust Dafa View")}
               >
-                <i className="bi bi-file-spreadsheet ps-3 pe-1"></i>
+                <i className="bi bi-list-check ps-3 pe-1"></i>
               </OverlayTrigger>
               {Open && <span className="ml-2">Adjust Dafa View</span>}
             </Link>
@@ -256,9 +366,57 @@ function SideBar() {
                 placement="bottom"
                 overlay={renderTooltip("Return Metal View")}
               >
-                <i className="bi bi-arrow-repeat ps-3 pe-1"></i>
+                <i className="bi bi-list-check ps-3 pe-1"></i>
               </OverlayTrigger>
               {Open && <span className="ml-2">Return Metal View</span>}
+            </Link>
+            <Link
+              // to={}
+              to={{
+                pathname: "/auth/duercv-wholesaler",
+                search: "?type=wholeseller",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Due Rcv. WholeSaler")}
+              >
+                <i className="bi bi-list-check ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Due Rcv. WholeSaler</span>}
+            </Link>
+            <Link
+              // to={}
+              to={{
+                pathname: "/auth/duercv-view",
+                search: "?type=wholeseller",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Due Rcv. Wh. View")}
+              >
+                <i className="bi bi-list-check ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Due Rcv. Wh. View</span>}
+            </Link>
+            <Link
+              to={{
+                pathname: "/auth/ledger-view",
+                search: "?type=wholeseller",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Ledger View")}
+              >
+                <i className="bi bi-cash-coin ps-3 pe-1"></i>
+                {/* <i className="bi bi-arrow-repeat ps-3 pe-1"></i> */}
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Ledger View</span>}
             </Link>
           </div>
         </details>
@@ -275,14 +433,14 @@ function SideBar() {
           >
             <OverlayTrigger
               placement="bottom"
-              overlay={renderTooltip("Master Manager")}
+              overlay={renderTooltip("Manager Master")}
             >
               <i
                 className="bi bi-person-gear me-2"
                 style={{ fontSize: "22px" }}
               ></i>
             </OverlayTrigger>
-            {Open && <span>Master Manager</span>}
+            {Open && <span>Manager Master</span>}
           </summary>
           <div style={{ backgroundColor: "#212121" }}>
             <Link
@@ -293,7 +451,7 @@ function SideBar() {
                 placement="bottom"
                 overlay={renderTooltip("Manage Company")}
               >
-                <i className="bi bi-gear-fill ps-3 pe-1"></i>
+                <i className="bi bi-building ps-3 pe-1"></i>
               </OverlayTrigger>
               {Open && <span className="ml-2">Company</span>}
             </Link>
@@ -305,7 +463,7 @@ function SideBar() {
                 placement="bottom"
                 overlay={renderTooltip("Manage Customer")}
               >
-                <i className="bi bi-gear-fill ps-3 pe-1"></i>
+                <i className="bi bi-person ps-3 pe-1"></i>
               </OverlayTrigger>
               {Open && <span className="ml-2">Customer</span>}
             </Link>
@@ -315,11 +473,11 @@ function SideBar() {
             >
               <OverlayTrigger
                 placement="bottom"
-                overlay={renderTooltip("Manage WholeSeller")}
+                overlay={renderTooltip("Manage WholeSaler")}
               >
-                <i className="bi bi-gear-fill ps-3 pe-1"></i>
+                <i className="bi bi-people ps-3 pe-1"></i>
               </OverlayTrigger>
-              {Open && <span className="ml-2">WholeSeller</span>}
+              {Open && <span className="ml-2">WholeSaler</span>}
             </Link>
             <Link
               to={"/auth/manager/groupcost"}
@@ -327,9 +485,9 @@ function SideBar() {
             >
               <OverlayTrigger
                 placement="bottom"
-                overlay={renderTooltip("Manage Group CC.")}
+                overlay={renderTooltip("Manage Group Cost Center")}
               >
-                <i className="bi bi-gear-fill ps-3 pe-1"></i>
+                <i className="bi bi-columns-gap ps-3 pe-1"></i>
               </OverlayTrigger>
               {Open && <span className="ml-2">Group Cost Center</span>}
             </Link>
@@ -341,7 +499,7 @@ function SideBar() {
                 placement="bottom"
                 overlay={renderTooltip("Manage CostCenter")}
               >
-                <i className="bi bi-gear-fill ps-3 pe-1"></i>
+                <i className="bi bi-columns ps-3 pe-1"></i>
               </OverlayTrigger>
               {Open && <span className="ml-2">Cost Center</span>}
             </Link>
@@ -353,7 +511,7 @@ function SideBar() {
                 placement="bottom"
                 overlay={renderTooltip("Manage Group WH.")}
               >
-                <i className="bi bi-gear-fill ps-3 pe-1"></i>
+                <i className="bi bi-houses ps-3 pe-1"></i>
               </OverlayTrigger>
               {Open && <span className="ml-2">Group Warehouse</span>}
             </Link>
@@ -365,7 +523,7 @@ function SideBar() {
                 placement="bottom"
                 overlay={renderTooltip("Manage WareHouse")}
               >
-                <i className="bi bi-gear-fill ps-3 pe-1"></i>
+                <i className="bi bi-house ps-3 pe-1"></i>
               </OverlayTrigger>
               {Open && <span className="ml-2">Warehouse</span>}
             </Link>
@@ -377,7 +535,7 @@ function SideBar() {
                 placement="bottom"
                 overlay={renderTooltip("Manage Gold Rate")}
               >
-                <i className="bi bi-gear-fill ps-3 pe-1"></i>
+                <i className="bi bi-coin ps-3 pe-1"></i>
               </OverlayTrigger>
               {Open && <span className="ml-2">Gold Rate</span>}
             </Link>
@@ -389,7 +547,7 @@ function SideBar() {
                 placement="bottom"
                 overlay={renderTooltip("Manage User")}
               >
-                <i className="bi bi-gear-fill ps-3 pe-1"></i>
+                <i className="bi bi-person-circle ps-3 pe-1"></i>
               </OverlayTrigger>
               {Open && <span className="ml-2">User</span>}
             </Link>
@@ -401,9 +559,70 @@ function SideBar() {
                 placement="bottom"
                 overlay={renderTooltip("Manage Fine")}
               >
-                <i className="bi bi-gear-fill ps-3 pe-1"></i>
+                <i className="bi bi-scissors ps-3 pe-1"></i>
               </OverlayTrigger>
               {Open && <span className="ml-2">Fine</span>}
+            </Link>
+          </div>
+        </details>
+
+        <details className="py-1 border-bottom border-light">
+          <summary
+            className="border-bottom border-secondary py-1"
+            style={{
+              color: "white",
+              padding: "0 0 0 10px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <OverlayTrigger
+              placement="bottom"
+              overlay={renderTooltip("Admin SetUp")}
+            >
+              <i
+                className="bi bi-shield-lock me-2"
+                style={{ fontSize: "20px" }}
+              ></i>
+            </OverlayTrigger>
+            {Open && <span>Admin SetUp</span>}
+          </summary>
+          <div style={{ backgroundColor: "#212121" }}>
+            <Link
+              to={"/auth/admin/calculator"}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Calculator")}
+              >
+                <i className="bi bi-calculator ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Calculator</span>}
+            </Link>
+            <Link
+              to={"/auth/admin/timing"}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("TimingTable")}
+              >
+                <i className="bi bi-calendar2-week ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Timing</span>}
+            </Link>
+            <Link
+              to={"/auth/admin/credit-setup"}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("TimingTable")}
+              >
+                <i className="bi bi-credit-card-fill ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Credit Setup</span>}
             </Link>
           </div>
         </details>
