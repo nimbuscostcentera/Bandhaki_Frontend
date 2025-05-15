@@ -12,6 +12,7 @@ function ReusableModal({
   handlePrimary,
   PrimaryButtonName,
   SuccessButtonName,
+  isFullScreen
 }) {
   return (
     <Modal
@@ -19,6 +20,7 @@ function ReusableModal({
       aria-labelledby="example-modal-sizes-title-lg"
       show={show}
       onHide={handleClose}
+      fullscreen={isFullScreen||false}
     >
       <Modal.Header closeButton>
         <Modal.Title

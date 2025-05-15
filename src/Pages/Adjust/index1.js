@@ -111,7 +111,14 @@ function AdjustEntry() {
       }
 
       return isChecked
-        ? [...prev, { LotNo: item.LotNo, CustomerId: item.CustomerID }]
+        ? [
+            ...prev,
+            {
+              LotNo: item.LotNo,
+              CustomerId: item.CustomerID,
+              TranCode: item.TRANCODE,
+            },
+          ]
         : prev.filter((i) => i.LotNo !== item.LotNo);
     });
   };
@@ -199,7 +206,20 @@ function AdjustEntry() {
   // Handle save from Calculate component
   const handleSaveCalculation = (data) => {
     // Update state or submit data as needed
-    setCalculationData(data);
+    let arr = [];
+    data?.forEach((item) => {
+      let lastindex = item?.length - 1;
+      if (
+        item[lastindex]?.interfaceName == "Total" &&
+        (item[lastindex]?.interestCr != "" ||
+          item[lastindex]?.principalCr != "")
+      ) {
+        console.log(item);
+        arr.push(item);
+      }
+    });
+    console.log(arr);
+    setCalculationData(arr);
     setShowCalculationModal(false);
     setShowReceiveInterest(true);
   };
@@ -505,6 +525,7 @@ function AdjustEntry() {
           </div>
         }
       />
+      {/* {showReceiveInterest && ( */}
       <ReceiveInterest
         CalculateData={calculationData}
         custId={custId}
@@ -513,8 +534,10 @@ function AdjustEntry() {
         narration={narration}
         onClose={() => setShowReceiveInterest(false)} // Add this prop
         showReceiveInterest={showReceiveInterest}
+        // setShowReceiveInterest={setShowReceiveInterest}
         fineInterestCode={fineInterestCode}
       />
+      {/* )} */}
     </Container>
   );
 }

@@ -95,7 +95,7 @@ const {
   // Convert GroupCostList for dropdown selection
   const GroupWareHouse = useMemo(() => {
     return GroupWareHouseList.map((item) => ({
-      label: `${item?.CODE}`,
+      label: `${item?.CODE}: ${item?.DESCRIPTION}`,
       value: item?.ID,
     }));
   }, [GroupWareHouseList]);

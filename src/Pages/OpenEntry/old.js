@@ -49,7 +49,6 @@ function OpeningEntryViewReport() {
     view: false,
     Lotno: "",
   });
-    const [textDetail, setTextDetail] = useState("");
 
   const { user } = useFetchAuth();
   const {
@@ -94,37 +93,21 @@ function OpeningEntryViewReport() {
 
   const { totalPages, currentPage, totalRecords, limit } = pagination;
 
-const handleDeleteClick = (index) => {
-  const deleteobj = filteredData[index];
-  // Immediately set the item to delete
-  setItemToDelete(deleteobj);
-  // Initiate the delete check
-  CheckOpeningHeaderDeleteCheck({
-    ID: deleteobj.ID,
-    Cust_Type: entityType,
-  });
-};
+  const handleDeleteClick = (index) => {
+    const deleteobj = filteredData[index];
 
-const confirmDelete = async () => {
-  if (itemToDelete) {
-    try {
-      await DeleteOpeningHeader({
-        ID: itemToDelete.ID,
-        Cust_Type: entityType,
-      });
-      // Refresh data after successful deletion
-      fetchOpeningEntryHeader({
-        CompanyID: user?.CompanyID,
-        page: params.page,
-        limit: params.limit,
-        Cust_Type: entityType,
-      });
-    } finally {
-      setShowDeleteModal(false);
-      setItemToDelete(null);
+    // Check if the opening header can be deleted first
+    CheckOpeningHeaderDeleteCheck({ ID: deleteobj.ID, Cust_Type: entityType });
+    setItemToDelete(deleteobj);
+  };
+
+  const confirmDelete = () => {
+    if (itemToDelete) {
+      DeleteOpeningHeader({ ID: itemToDelete.ID, Cust_Type: entityType });
     }
-  }
-};
+    setShowDeleteModal(false);
+    setItemToDelete(null);
+  };
 
   const cancelDelete = () => {
     setShowDeleteModal(false);
@@ -169,18 +152,38 @@ const confirmDelete = async () => {
   useEffect(() => {
     if (isCheckOpHeader == 1) {
       // If check passes, show the delete confirmation modal
-     setParams((prev) => ({ ...prev, IsAction: true, ActionID: selectedId }));
+      if (itemToDelete) {
+        setShowDeleteModal(true);
+      }
     } else if (isCheckOpHeader == 0) {
-    
+      toast.dismiss();
       toast.warning(CheckOpeningHeaderErr, {
         position: "top-right",
         autoClose: 3000,
       });
+      
     }
     ClearCheckOpeningHeader();
   }, [isCheckOpeningHeaderLoading, isCheckOpHeader]);
 
-
+  useEffect(() => {
+    if (isCheckOpeningHeaderDeleteCheck == 1) {
+      // If check passes, show the delete confirmation modal
+      if (itemToDelete) {
+        setShowDeleteModal(true);
+      }
+    } else if (isCheckOpeningHeaderDeleteCheck == 2) {
+      toast.dismiss();
+      toast.warning(CheckOpeningHeaderDeleteCheckErr, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+    ClearCheckOpeningHeaderDeleteCheck();
+  }, [
+    isCheckOpeningHeaderDeleteCheckLoading,
+    CheckOpeningHeaderDeleteCheckErr,
+  ]);
   //after hit edit button
   const FetchActionId = (index) => {
     // setParams((prev) => ({ ...prev, SelectedID: index, isAction: true }));
@@ -217,22 +220,24 @@ const confirmDelete = async () => {
     OpeningHeaderDeleteMsg,
   } = useOpeningHeaderDelete();
 
-
-
-  // Updated useEffect for delete check
   useEffect(() => {
-  if (isCheckOpeningHeaderDeleteCheck === 1 && itemToDelete) {
-    setShowDeleteModal(true);
+    if (isCheckOpeningHeaderDeleteCheck === 1) {
+      // If check passes, show the delete confirmation modal
+      if (itemToDelete) {
+        setShowDeleteModal(true);
+        setItemToDelete(null);
+      }
+    } else if (isCheckOpeningHeaderDeleteCheck === 2) {
+      toast.dismiss();
+      toast.warning(CheckOpeningHeaderDeleteCheckErr, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      setItemToDelete(null);
+    }
     ClearCheckOpeningHeaderDeleteCheck();
-  } else if (isCheckOpeningHeaderDeleteCheck === 0) {
-    toast.warning(CheckOpeningHeaderDeleteCheckErr, {
-      position: "top-right",
-      autoClose: 3000,
-    });
-    ClearCheckOpeningHeaderDeleteCheck();
-    // setItemToDelete(null);
-  }
-}, [isCheckOpeningHeaderDeleteCheck, itemToDelete]);
+  }, [isCheckOpeningHeaderDeleteCheckLoading, isCheckOpeningHeaderDeleteCheck]);
+
 
   useEffect(() => {
     if (OpeningHeaderDeleteMsg) {
@@ -403,62 +408,28 @@ const confirmDelete = async () => {
     }, 150);
   }, [editedData.ID]);
 
-  console.log(showDeleteModal);
+console.log(showDeleteModal);
   return (
     <Container fluid className="pt-5">
       <ToastContainer autoClose={3000} />
       <Row className="pt-2">
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
-          <div className="d-flex align-items-center justify-content-between flex-wrap gap-3">
+          <div className="d-flex align-items-center justify-content-between flex-wrap">
             <div>
-              <h5 className="mt-2 mb-0">Opening Entry View</h5>
+              <h5 className="mt-2">Opening Entry View</h5>
             </div>
-
-            {/* Detail View + Search grouped together */}
-            <div className="d-flex align-items-center gap-3 mt-2">
-              <input
-                value={textDetail}
-                readOnly
-                type="search"
-                placeholder="Detail View"
-                style={{
-                  width: "40vw",
-                  border: "1px solid dodgerblue",
-                  outline: "none",
-                  borderRadius: "8px",
-                  padding: "8px 12px",
-                  fontSize: "1rem",
-                  boxShadow: "0 1px 4px rgba(0, 123, 255, 0.25)",
-                  backgroundColor: "#f9f9f9",
-                  color: "#333",
-                }}
-              />
-
-              <InputGroup>
+            <div>
+              <InputGroup className="mt-2">
                 <Form.Control
                   autoFocus
                   placeholder="Search here..."
                   aria-label="search"
                   aria-describedby="basic-addon1"
-                  style={{
-                    width: "300px",
-                    zIndex: "1",
-                    borderRadius: "8px 0 0 8px",
-                    borderRight: "none",
-                  }}
+                  style={{ width: "300px", zIndex: "1" }}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <InputGroup.Text
-                  id="basic-addon1"
-                  style={{
-                    backgroundColor: "#007bff",
-                    color: "#fff",
-                    borderRadius: "0 8px 8px 0",
-                    borderLeft: "none",
-                    cursor: "pointer",
-                  }}
-                >
+                <InputGroup.Text id="basic-addon1">
                   <i className="bi bi-search"></i>
                 </InputGroup.Text>
               </InputGroup>
@@ -467,7 +438,6 @@ const confirmDelete = async () => {
 
           <hr className="my-1" />
         </Col>
-
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
           <div
             className="table-box"
@@ -501,15 +471,11 @@ const confirmDelete = async () => {
               // handleDelete={handleDelete}
               handleDelete={handleDeleteClick}
               useInputRef={editinputref}
-              getFocusText={(val) => {
-                setTextDetail(val);
-              }}
             />
             <DeleteConfirmation
               show={showDeleteModal}
               onConfirm={confirmDelete}
               onCancel={cancelDelete}
-              isLoading={isOpeningHeaderDeleteLoading}
             />
           </div>
         </Col>

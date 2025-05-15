@@ -28,6 +28,13 @@ import AdjustEntry from "./Pages/Adjust";
 import Calculate from "./Pages/Adjust/Calculate";
 import AdjustEntryHeaderTableView from "./Pages/Adjust/AdjustEntryHeaderTableView";
 import MetalReturnView from "./Pages/MetalReturn/MetalReturnView";
+import LedgerView from "./Pages/Ledger/LedgerView";
+import Calculator from "./Pages/Calculator";
+import TimingTable from "./Pages/Timing";
+import CreditSetUp from "./Pages/CreditSetUp";
+import PaymentToWholeSaler from "./Pages/PaymentToWholeSaler";
+import DueRecWholesaler from "./Pages/DueRecWholesaler";
+import Duerecwhview from "./Pages/DueRecWholesaler/Duerecwhview";
 
 const App = createBrowserRouter([
   {
@@ -86,9 +93,29 @@ const App = createBrowserRouter([
         element: <MetalReturn />,
       },
       {
+        path: "ledger-view",
+        errorElement: <Pagenotfound />,
+        element: <LedgerView />,
+      },
+      {
+        path: "pay-wholesaler",
+        errorElement: <Pagenotfound />,
+        element: <PaymentToWholeSaler />,
+      },
+      {
         path: "metal-return-view",
         errorElement: <Pagenotfound />,
-        element: <MetalReturnView/>,
+        element: <MetalReturnView />,
+      },
+      {
+        path: "duercv-wholesaler",
+        errorElement: <Pagenotfound />,
+        element: <DueRecWholesaler />,
+      },
+      {
+        path: "duercv-view",
+        errorElement: <Pagenotfound />,
+        element: <Duerecwhview />,
       },
 
       {
@@ -153,6 +180,27 @@ const App = createBrowserRouter([
             path: "fine",
             element: <FineListEdit />,
             errorElement: <Pagenotfound />,
+          },
+        ],
+      },
+      {
+        path: "admin",
+        errorElement: <Pagenotfound />,
+        children: [
+          {
+            path: "calculator",
+            errorElement: <Pagenotfound />,
+            element: <Calculator />,
+          },
+          {
+            path: "timing",
+            errorElement: <Pagenotfound />,
+            element: <TimingTable />,
+          },
+          {
+            path: "credit-setup",
+            errorElement: <Pagenotfound />,
+            element: <CreditSetUp />,
           },
         ],
       },

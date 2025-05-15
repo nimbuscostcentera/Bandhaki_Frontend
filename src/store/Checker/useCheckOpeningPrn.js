@@ -3,7 +3,7 @@ import axiosInstance from "../AxiosInterceptor";
 const API = `${process.env.REACT_APP_BASEURL}/transaction-routes/checkedit-openingprincipal`;
 const useCheckOpeningPrn = create((set) => ({
   CheckOpeningPrnMsg: "",
-  isOpenPrnsuccess: 0,
+  isCheckOpHeader: -1,
   isCheckOpeningPrnLoading: false,
   CheckOpeningPrnErr: null,
 
@@ -13,11 +13,12 @@ const useCheckOpeningPrn = create((set) => ({
       const result = await axiosInstance.post(API, userdata);
       const { data } = result;
       const { response, success } = data;
-      set({ CheckOpeningPrnMsg: response, isOpenPrnsuccess: success ? 1 : 0 }); // Update state with fetched data
+      set({ CheckOpeningPrnMsg: response, isCheckOpHeader: success ? 1 : 0 }); // Update state with fetched data
     } catch (error) {
+      console.log(error?.response?.data?.response, "my");
       set({
         CheckOpeningPrnErr: error?.response?.data?.response,
-        isOpenPrnsuccess: 0,
+        isCheckOpHeader: 0,
       }); // Handle errors
     }
     set({ isCheckOpeningPrnLoading: false });
@@ -26,7 +27,7 @@ const useCheckOpeningPrn = create((set) => ({
     set({
       isCheckOpeningPrnLoading: false,
       CheckOpeningPrnErr: null,
-      isOpenPrnsuccess: 0,
+      isCheckOpHeader: -1,
       CheckOpeningPrnMsg: "",
     });
   },

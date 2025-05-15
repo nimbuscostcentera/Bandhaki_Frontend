@@ -1,14 +1,18 @@
+"use client";
+
 import { Row, Col, Button } from "react-bootstrap";
-// import EstimateTable from "../../Component/EstimateTable";
 import Table from "../../Component/Table";
 import SelectOption from "../../Component/SelectOption";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useFetchWallet from "../../store/ShowStore/useFetchWallet";
 import useAddAdjustEntry from "../../store/AddStore/useAddAdjustEntry";
-import { toast, ToastContainer } from "react-toastify";
+import useFetchLotNoNotran from "../../store/ShowStore/useFetchLotNoNotran";
+import { toast } from "react-toastify";
 import moment from "moment";
 import "./Adjust.css";
-import {useNavigate} from "react-router-dom"
+import { useNavigate } from "react-router-dom";
+import SearchableDropDown from "../../Component/SearchableDropDown";
+
 function ReceiveInterest({
   CalculateData = [[]],
   custId,
@@ -21,7 +25,29 @@ function ReceiveInterest({
   const recInputref = useRef(null);
   const navigate = useNavigate();
   const [narration, setNarration] = useState("");
-  //usestate
+  const [selectedLot, setSelectedLot] = useState("");
+  const [principalAmount, setPrincipalAmount] = useState(0);
+// console.log(CalculateData,"CalculateData");
+  // Zustand store for fetching lot data
+  const {
+    LotNoNoTranList,
+    isLoadingLotNoNoTran,
+    fetchLotNoNoTranList,
+    ClearLotNoNoTranList,
+  } = useFetchLotNoNotran();
+
+  const lotNolist = useMemo(() => {
+    // let lotVal = [{ Name: "--Select Lot No--", Value: -1 }];
+    let lotList = LotNoNoTranList.map((item) => ({
+      // Name: `${item?.LotNo}`,
+      // Value: item?.LotNo,
+      label: `${item?.LotNo}`,
+      value: item?.LotNo,
+    }));
+    return [ ...lotList];
+  }, [LotNoNoTranList]);
+
+  // usestate
   const [data, setData] = useState({
     LotNo: "",
     RcvAmt: 0,
@@ -34,14 +60,15 @@ function ReceiveInterest({
     gridData: [],
     narration: "",
     today: moment().format("YYYY-MM-DD"),
-    Cust_Type: 1,
+    Cust_Type: entityType,
     FineId: fineInterestCode,
   });
-
-  //api function call of wallet
+// console.log(data,"Data");
+  // api function call of wallet
   const { WalletBalance, fetchWallet, isWalletLoading, clearWalletList } =
     useFetchWallet();
-  //api function call of adjust entry
+
+  // api function call of adjust entry
   const {
     isAdjustEntryLoading,
     AdjustEntrySuccess,
@@ -49,6 +76,7 @@ function ReceiveInterest({
     AdjustEntryError,
     AdjustEntryAdd,
   } = useAddAdjustEntry();
+
   // Grid1 columns
   const gridColumns = [
     { headername: "Lot No", fieldname: "lotNo", type: "text", width: "120px" },
@@ -78,28 +106,58 @@ function ReceiveInterest({
       width: "150px",
     },
   ];
-  //onChange Handler
+
+  // Fetch lot data when customer ID changes
+  useEffect(() => {
+    if (entityType) {
+      fetchLotNoNoTranList({ Cust_Type: entityType });
+    }
+
+    return () => {
+      ClearLotNoNoTranList();
+    };
+  }, [custId, entityType]);
+
+  // Updated OnChangeHandler for LotNo
   const OnChangeHandler = (e) => {
-    let key = e.target.name;
-    let value = e.target.value;
-    let Regex = {
+    const key = e.target.name;
+    const value = e.target.value;
+    const Regex = {
       RcvAmt: /^\d{0,10}(\.\d{0,2})?$/,
+      LotPrnAmt: /^\d{0,10}(\.\d{0,2})?$/,
       refundAmt: /^\d{0,10}(\.\d{0,2})?$/,
     };
-    let arr = Object.keys(Regex);
+    const arr = Object.keys(Regex);
+
+    if (key === "LotNo") {
+      // Find the selected Lot's details
+      const selectedLot = LotNoNoTranList.find((item) => item.LotNo === value);
+      const principalAmt = selectedLot ? selectedLot.Update_Prn_Rcv : 0;
+
+      // Update both LotNo and LotPrnAmt in the data state
+      setData((prev) => ({
+        ...prev,
+        [key]: value,
+        LotPrnAmt: principalAmt.toFixed(2), // Format to 2 decimals
+      }));
+      setPrincipalAmount(principalAmt); // Update local state if needed
+    }
+
+    // Handle other inputs
     if (arr.includes(key) && Regex[key]?.test(value)) {
-      setData({ ...data, [key]: value });
-    } else if (arr.includes(key) === false) {
-      setData({ ...data, [key]: value });
+      setData((prev) => ({ ...prev, [key]: value }));
+    } else if (!arr.includes(key)) {
+      setData((prev) => ({ ...prev, [key]: value }));
     }
   };
-  //Submit Handler
+
+  // Submit Handler
   const handleSave = (e) => {
     e.preventDefault();
-    let calArray = [];
-    let totarray = [];
+    const calArray = [];
+    const totarray = [];
     CalculateData.forEach((subArr) => {
-      let arr = subArr.filter((item, ind) => {
+      const arr = subArr.filter((item, ind) => {
         if (ind != 0) {
           if (item?.isToggled === true) {
             return item;
@@ -120,11 +178,10 @@ function ReceiveInterest({
 
     for (let i = 0; i < totarray.length; i++) {
       if (
-        totarray[0]?.interestCr !== totarray[0]?.interestDr &&
-        totarray[0]?.principalCr !== 0 &&
-        totarray[0]?.principalCr !== "" &&
-        totarray[0]?.principalCr !== null &&
-        totarray[0]?.principalCr !== undefined
+        totarray[0]?.interestCr > 0 &&
+        totarray[0]?.interestDr > 0 &&
+        totarray[0]?.principalCr > 0 &&
+        totarray[0]?.interestCr < totarray[0]?.interestDr
       ) {
         flag = 1;
         break;
@@ -136,17 +193,19 @@ function ReceiveInterest({
         "Once you pay all the interest you are eligible to pay the principal"
       );
     } else {
-    
+      console.log(calArray,"Calarray");
       AdjustEntryAdd({
         ...data,
         CalculateData: calArray,
         CustomerID: custId,
-        Cust_Type:entityType,
+        Cust_Type: entityType,
         today: moment().format("YYYY-MM-DD"),
+        principalAmount: Number.parseFloat(principalAmount),
       });
     }
   };
-  //toaster controller
+
+  // toaster controller
   useEffect(() => {
     toast.dismiss();
     let timeid;
@@ -167,14 +226,19 @@ function ReceiveInterest({
         totalPaid: 0,
         BalAmt: 0,
         gridData: [],
-        FineId:fineInterestCode||0,
+        FineId: fineInterestCode || 0,
       });
+
+      setSelectedLot("");
+      setPrincipalAmount(0);
 
       // Redirect after 3 seconds
       timeid = setTimeout(() => {
-         ClearStateAdjustEntryAdd();
-         clearWalletList();
-        navigate("/auth/adjust/view", { state: { custId, customertype: entityType } });
+        ClearStateAdjustEntryAdd();
+        clearWalletList();
+        navigate("/auth/adjust/view", {
+          state: { custId, customertype: entityType },
+        });
       }, 3000);
     }
 
@@ -207,9 +271,12 @@ function ReceiveInterest({
     }
   }, [custId, fineInterestCode]);
 
-  //set wallet balance
+  // set wallet balance
   useEffect(() => {
-    setData({ ...data, walletBal: parseFloat(WalletBalance||0).toFixed(2)});
+    setData({
+      ...data,
+      walletBal: Number.parseFloat(WalletBalance || 0).toFixed(2),
+    });
   }, [isWalletLoading, WalletBalance, custId]);
 
   useEffect(() => {
@@ -220,59 +287,128 @@ function ReceiveInterest({
     }, 200);
   }, [showReceiveInterest]);
 
-  //grid1 data
+  // grid1 data
   useEffect(() => {
     if (Array.isArray(CalculateData)) {
-      let arr = CalculateData?.map((item) => {
+      const arr = [];
+      CalculateData?.forEach((item) => {
         let obj = {};
         if (Array?.isArray(item)) {
           item?.forEach((element) => {
-            if (element?.interfaceName == "Total") {
-              obj = { ...element };
-              obj.TotPaidAmt =
-                Number(element?.interestCr) + Number(element?.principalCr);
+            if (element?.interfaceName == "Total" && (element?.interestCr>0 || element?.principalCr>0)) {
+              obj = {
+                ...element,
+                // Format interest and principal to 2 decimals
+                interestCr: Number.parseFloat(element?.interestCr || 0).toFixed(
+                  2
+                ),
+                principalCr: Number.parseFloat(
+                  element?.principalCr || 0
+                ).toFixed(2),
+              };
+              obj.TotPaidAmt = (
+                Number(element?.interestCr) + Number(element?.principalCr)
+              ).toFixed(2);
+               arr.push(obj);
             }
           });
         }
-        return obj;
+       
       });
+      console.log(arr,"i found you")
       setData((prev) => ({ ...prev, gridData: arr }));
     }
   }, [CalculateData]);
 
-  //set total paid
   useEffect(() => {
     let tot = 0;
     if (Array.isArray(data?.gridData)) {
-      let arr = data?.gridData;
-      arr?.forEach((item) => {
-        tot = tot + item?.TotPaidAmt;
+      data.gridData.forEach((item) => {
+        // Convert to number and handle potential NaN values
+        const amount = Number(item?.TotPaidAmt) || 0;
+        tot += amount;
       });
     }
-    setData((prev) => ({ ...prev, totalPaid: (tot||0).toFixed(2) }));
- 
+    // Round to 2 decimal places using toFixed() after addition
+    setData((prev) => ({
+      ...prev,
+      totalPaid: Number(tot.toFixed(2)),
+    }));
   }, [data?.gridData]);
 
-  //Cust Balance Amt Adjust
+  // 1. Update Balance Calculation Effect
   useEffect(() => {
-    let amt = 0;
-    amt =
-      Number(data?.RcvAmt) +
-      Number(data?.walletBal) -
-      Number(data?.totalPaid) -
-      Number(data?.refundAmt);
+    const principal = Number(data.LotPrnAmt) || 0;
+    const received = Number(data.RcvAmt) || 0;
+    const wallet = Number(data.walletBal) || 0;
+    const totalPaid = Number(data.totalPaid) || 0;
+    const refund = Number(data.refundAmt) || 0;
 
-   setData((prev) => ({ ...prev, BalAmt: (amt||0).toFixed(2)}));
-   
-  }, [data?.RcvAmt, data?.refundAmt, data?.walletBal, data?.totalPaid]);
-  //set narration
-  useEffect(() => { 
+    const balance = principal + received + wallet - totalPaid - refund;
+
+    setData((prev) => ({
+      ...prev,
+      BalAmt: balance.toFixed(2),
+    }));
+  }, [
+    data.LotPrnAmt,
+    data.RcvAmt,
+    data.walletBal,
+    data.totalPaid,
+    data.refundAmt,
+  ]);
+
+  // set narration
+  useEffect(() => {
     setData({ ...data, narration: narration });
   }, [narration]);
+  // 3. Add Refund Validation
+  useEffect(() => {
+    if (
+      Number(data.RcvAmt) + Number(data.walletBal) - Number(data.totalPaid) <=
+      0
+    ) {
+      setData((prev) => ({
+        ...prev,
+        refundAmt: "0", // Reset refund if not allowed
+      }));
+    }
+  }, [data.RcvAmt, data.walletBal, data.totalPaid]);
 
-  console.log(data)
   return (
     <Row>
+      <Col s={12} sm={12} md={12} lg={12} xl={12}>
+        {/* <div className="mb-3">
+          <label className="form-label">Select Lot No</label>
+          <select
+            className="form-select"
+            value={selectedLot}
+            onChange={handleLotChange}
+            disabled={isLoadingLotNoNoTran}
+          >
+            <option value="">Select Lot No</option>
+            {LotNoNoTranList &&
+              LotNoNoTranList.map((lot, index) => (
+                <option key={index} value={lot.lotNo}>
+                  {lot.lotNo}
+                </option>
+              ))}
+          </select>
+        </div> */}
+
+        {selectedLot && (
+          <div className="mb-3">
+            <label className="form-label">Principal Amount</label>
+            <input
+              type="text"
+              className="form-control"
+              value={principalAmount}
+              readOnly
+            />
+          </div>
+        )}
+      </Col>
+
       <Col s={12} sm={12} md={12} lg={12} xl={12}>
         <div
           style={{
@@ -284,6 +420,26 @@ function ReceiveInterest({
           <table style={{ width: "100%", overflow: "auto" }}>
             <thead>
               <tr>
+                <th
+                  style={{
+                    backgroundColor: "rgb(110, 98, 221)",
+                    color: "#000000",
+                    border: "1px solid rgb(142, 135, 214)",
+                    textAlign: "center",
+                  }}
+                >
+                  Lot No
+                </th>
+                <th
+                  style={{
+                    backgroundColor: "rgb(110, 98, 221)",
+                    color: "#000000",
+                    border: "1px solid rgb(142, 135, 214)",
+                    textAlign: "center",
+                  }}
+                >
+                  Principal
+                </th>
                 <th
                   style={{
                     backgroundColor: "rgb(255, 197, 72)",
@@ -304,16 +460,6 @@ function ReceiveInterest({
                 >
                   Payment Mode*
                 </th>
-                {/* <th
-                  style={{
-                    backgroundColor: "rgb(235, 142, 154)",
-                    color: "black",
-                    border: "1px solid rgb(11, 82, 158)",
-                    textAlign: "center",
-                  }}
-                >
-                  Wallet Balance
-                </th> */}
                 <th
                   style={{
                     backgroundColor: "rgb(199, 177, 245)",
@@ -342,7 +488,7 @@ function ReceiveInterest({
                     textAlign: "center",
                   }}
                 >
-                  Cust Bal Amt Adjust
+                  Bal Amt Adjust
                 </th>
                 <th
                   style={{
@@ -358,8 +504,42 @@ function ReceiveInterest({
             </thead>
             <tbody className="rcv-tab-body">
               <tr>
-                {/* <td>N/A</td>
-                <td>N/A</td> */}
+                <td>
+                  {/* <SelectOption
+                    OnSelect={OnChangeHandler}
+                    PlaceHolder={"Select Lot No"}
+                    SName={"LotNo"}
+                    SelectStyle={{ width: "100%", padding: "5px 10px" }}
+                    Value={data?.LotNo}
+                    Soptions={lotNolist}
+                  /> */}
+                  <SearchableDropDown
+                    options={lotNolist}
+                    handleChange={OnChangeHandler}
+                    selectedVal={data?.LotNo}
+                    label={"LotNo"}
+                    placeholder={"--Select Lot No--"}
+                    key={2}
+                    defaultval={-1}
+                    width={"100%"}
+                    directSearch={true}
+                  />
+                </td>
+                <td>
+                  <input
+                    placeholder="Principal Amount(₹)"
+                    className="input-cell"
+                    name="LotPrnAmt"
+                    value={data?.LotPrnAmt || ""}
+                    onChange={OnChangeHandler}
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    style={{ width: "100%" }}
+                    // ref={showReceiveInterest ? recInputref : null}
+                    // disabled
+                  />
+                </td>
                 <td>
                   <input
                     placeholder="Receive Amount(₹)"
@@ -388,7 +568,6 @@ function ReceiveInterest({
                     ]}
                   />
                 </td>
-                {/* <td>{data?.walletBal}</td> */}
                 <td>
                   <input
                     placeholder="Refund Amount(₹)"
@@ -427,13 +606,6 @@ function ReceiveInterest({
         </div>
       </Col>
       <Col xs={12} sm={12} md={12} lg={12} xl={12} className="mt-3">
-        {/* <EstimateTable
-          columns={grid1Columns||[]}
-          deleteRow={false}
-          handleChange={() => {}}
-          isDelete={false}
-          rows={grid1Data||[]}
-        /> */}
         <Table
           Col={gridColumns || []}
           tab={data?.gridData || []}
@@ -477,14 +649,12 @@ function ReceiveInterest({
           <Button
             onClick={handleSave}
             disabled={
-              !(
-                (data?.totalPaid == 0 &&
-                  // data?.RcvAmt == 0 &&
-                  data?.BalAmt == 0 &&
-                  data?.walletBal != 0 &&
-                  data?.refundAmt != 0) ||
-                (data?.totalPaid != 0 && data?.BalAmt >= 0)
-              )
+              Number(data.BalAmt) < 0 || // Negative balance not allowed
+              (Number(data.refundAmt) > 0 &&
+                Number(data.RcvAmt) +
+                  Number(data.walletBal) -
+                  Number(data.totalPaid) <=
+                  0)
             }
           >
             Save

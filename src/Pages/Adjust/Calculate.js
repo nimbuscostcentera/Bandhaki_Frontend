@@ -213,7 +213,9 @@ const Calculate = ({
       group.forEach((row, rowIndex) => {
         if (
           row.interfaceName !== "Opening" &&
+          row.interfaceName !== "Receive" &&
           row.interfaceName !== "Total" &&
+          row.interfaceName !== "Payment" &&
           row.interestDr
         ) {
           // Update the row's toggle state
@@ -248,6 +250,8 @@ const Calculate = ({
         (row) =>
           row.interfaceName === "Opening" ||
           row.interfaceName === "Total" ||
+          row.interfaceName === "Receive" ||
+          row.interfaceName === "Payment" ||
           !row.interestDr ||
           row.isToggled
       )
@@ -314,7 +318,9 @@ const Calculate = ({
                         backgroundColor:
                           row.interfaceName === "Total"
                             ? "#f3f3f3" // Updated color for "Total"
-                            : row.interfaceName === "Opening"
+                            : row.interfaceName === "Opening" ||
+                              row.interfaceName === "Receive" ||
+                              row.interfaceName === "Payment"
                             ? "#ffffa0"
                             : "#ffffff",
                         fontWeight:
@@ -335,7 +341,9 @@ const Calculate = ({
                           : Number.parseFloat(row.principalDr).toFixed(2)}
                       </td>
                       <td>
-                        {row.interfaceName == "Opening" ? (
+                        {row.interfaceName === "Opening" ||
+                        row.interfaceName === "Receive" ||
+                        row.interfaceName === "Payment" ? (
                           <Form.Control
                             type="number"
                             value={row.principalCr || ""}
@@ -362,7 +370,9 @@ const Calculate = ({
                           : Number.parseFloat(row.interestCr).toFixed(2)}
                       </td>
                       <td>
-                        {row.interfaceName !== "Opening" &&
+                        {(row.interfaceName !== "Opening" ||
+                          row.interfaceName !== "Receive" ||
+                          row.interfaceName !== "Payment") &&
                         row.interfaceName !== "Total" ? (
                           <Form.Control
                             type="text"
@@ -379,7 +389,9 @@ const Calculate = ({
                         ) : null}
                       </td>
                       <td>
-                        {row.interfaceName !== "Opening" &&
+                        {(row.interfaceName !== "Opening" ||
+                          row.interfaceName !== "Receive" ||
+                          row.interfaceName !== "Payment") &&
                         row.interfaceName !== "Total" ? (
                           <Form.Check
                             type="checkbox"

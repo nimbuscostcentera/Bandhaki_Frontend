@@ -20,7 +20,11 @@ const useFetchLotNoNotran = create((set) => ({
     set({ isLoadingLotNoNoTran: false });
   },
   ClearLotNoNoTranList: () => {
-    set({ isLoadingLotNoNoTran: false, errorLotNoNoTran: null });
+    set({
+      isLoadingLotNoNoTran: false,
+      errorLotNoNoTran: null,
+      LotNoNoTranList : [],
+    });
   },
 }));
 

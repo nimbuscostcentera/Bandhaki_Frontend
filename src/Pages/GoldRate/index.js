@@ -9,20 +9,20 @@ import useAddGoldRate from "../../store/AddStore/useAddGoldRate";
 import useFetchAuth from "../../store/Auth/useFetchAuth";
 
 function GoldRateListEdit() {
-   const inputRef = useRef();
+  const inputRef = useRef();
 
-   useEffect(() => {
-     if (inputRef.current) {
-       inputRef.current.focus();
-     }
-   }, []);
-    const { CompanyID } = useFetchAuth();
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+  const { CompanyID } = useFetchAuth();
   const [goldRateData, setGoldRateData] = useState({
     CompanyID: CompanyID, // Assuming fixed for now
     GOLD_RATE: "",
   });
-    const [searchData, setSearchData] = useState("");
-// console.log(goldRateData);
+  const [searchData, setSearchData] = useState("");
+  // console.log(goldRateData);
   const [isDisable, setIsDisable] = useState(false);
 
   // Fetch Purity List
@@ -43,22 +43,22 @@ function GoldRateListEdit() {
   //     value: item?.ID,
   //   }));
   // }, [PurityList]);
-const validateGoldRate = (value) => {
-  const regex = /^\d{0,10}(\.\d{0,2})?$/; // 5 digits before decimal, up to 2 digits after
-  return regex.test(value);
-};
+  const validateGoldRate = (value) => {
+    const regex = /^\d{0,10}(\.\d{0,2})?$/; // 5 digits before decimal, up to 2 digits after
+    return regex.test(value);
+  };
   // Handle Input Change
-const OnChangeHandler = (e) => {
-  const { name, value } = e.target;
+  const OnChangeHandler = (e) => {
+    const { name, value } = e.target;
 
-  if (name === "GOLD_RATE") {
-    if (validateGoldRate(value)) {
+    if (name === "GOLD_RATE") {
+      if (validateGoldRate(value)) {
+        setGoldRateData((prev) => ({ ...prev, [name]: value }));
+      }
+    } else {
       setGoldRateData((prev) => ({ ...prev, [name]: value }));
     }
-  } else {
-    setGoldRateData((prev) => ({ ...prev, [name]: value }));
-  }
-};
+  };
   // Fetch Purity List on component mount
   // useEffect(() => {
   //   fetchPurityMaster({ CompanyID: CompanyID });
@@ -67,7 +67,7 @@ const OnChangeHandler = (e) => {
   // Save Data
   const SaveData = () => {
     // Validation: Ensure all required fields are filled
-    const requiredFields = ["CompanyID",  "GOLD_RATE"];
+    const requiredFields = ["CompanyID", "GOLD_RATE"];
     const emptyFields = requiredFields.filter((field) => !goldRateData[field]);
 
     if (emptyFields.length > 0) {
@@ -187,7 +187,7 @@ const OnChangeHandler = (e) => {
                 }}
               >
                 <i
-                  class="bi bi-search"
+                  className="bi bi-search"
                   style={{
                     fontSize: "16px",
                   }}

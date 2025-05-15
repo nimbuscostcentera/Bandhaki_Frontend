@@ -15,22 +15,25 @@ import useAddGroupCost from "../../store/AddStore/useAddGroupCost";
 import useFetchAuth from "../../store/Auth/useFetchAuth";
 
 function GroupCostListEdit() {
-   const inputRef = useRef();
+  const inputRef = useRef();
 
-   useEffect(() => {
-     if (inputRef.current) {
-       inputRef.current.focus();
-     }
-   }, []);
-    const { CompanyID } = useFetchAuth();
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+  const { CompanyID } = useFetchAuth();
   const [groupcostData, setGroupCostData] = useState({
     CompanyID: null,
-    Type : null,
+    Type: null,
     CODE: "",
   });
   // console.log(groupcostData);
-    const [searchData, setSearchData] = useState("");
-    const typeArr = [{ label: 1, value: "Customer" }, { label: 2, value: "WholeSeller" }];
+  const [searchData, setSearchData] = useState("");
+  const typeArr = [
+    { label: 1, value: "Customer" },
+    { label: 2, value: "WholeSeller" },
+  ];
   // console.log(companyData);
   const [isDisable, setIsDisable] = useState(false);
 
@@ -47,16 +50,16 @@ function GroupCostListEdit() {
     let key = e.target.name;
     let value = e.target.value;
     setGroupCostData((prev) => ({ ...prev, [key]: value }));
-    };
+  };
 
-    //company list
+  //company list
 
-   const typeList = useMemo(() => {
-     return typeArr.map((item) => ({
-       label: `${item?.value}`,
-       value: item?.label,
-     }));
-   }, [typeArr]);
+  const typeList = useMemo(() => {
+    return typeArr.map((item) => ({
+      label: `${item?.value}`,
+      value: item?.label,
+    }));
+  }, [typeArr]);
 
   // Save Data
   const SaveData = () => {
@@ -71,7 +74,6 @@ function GroupCostListEdit() {
       });
       return;
     }
- 
 
     // Proceed with data submission
     GroupCostAdd({ ...groupcostData, CompanyID: CompanyID });
@@ -214,7 +216,7 @@ function GroupCostListEdit() {
                 }}
               >
                 <i
-                  class="bi bi-search"
+                  className="bi bi-search"
                   style={{
                     fontSize: "16px",
                   }}

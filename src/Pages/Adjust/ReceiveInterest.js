@@ -1,18 +1,26 @@
 "use client";
 
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import moment from "moment";
+
 import { Row, Col, Button } from "react-bootstrap";
+
 import Table from "../../Component/Table";
 import SelectOption from "../../Component/SelectOption";
-import { useEffect, useMemo, useRef, useState } from "react";
+import SearchableDropDown from "../../Component/SearchableDropDown";
+
 import useFetchWallet from "../../store/ShowStore/useFetchWallet";
 import useAddAdjustEntry from "../../store/AddStore/useAddAdjustEntry";
 import useFetchLotNoNotran from "../../store/ShowStore/useFetchLotNoNotran";
-import { toast } from "react-toastify";
-import moment from "moment";
+
 import "./Adjust.css";
-import { useNavigate } from "react-router-dom";
+import useEditCredit from "../../store/UpdateStore/useEditCredit";
+import useFetchAdminSetUp from "../../store/ShowStore/useFetchAdminSetUp";
 
 function ReceiveInterest({
+  LotNo,
   CalculateData = [[]],
   custId,
   onSave,
@@ -21,36 +29,21 @@ function ReceiveInterest({
   showReceiveInterest,
   fineInterestCode,
 }) {
+  // console.log(custId,);
+  //-----------------------------------hooks------------------------------------//
   const recInputref = useRef(null);
   const navigate = useNavigate();
   const [narration, setNarration] = useState("");
-  const [selectedLot, setSelectedLot] = useState("");
   const [principalAmount, setPrincipalAmount] = useState(0);
-
-  // Zustand store for fetching lot data
-  const {
-    LotNoNoTranList,
-    isLoadingLotNoNoTran,
-    fetchLotNoNoTranList,
-    ClearLotNoNoTranList,
-  } = useFetchLotNoNotran();
-
-  const lotNolist = useMemo(() => {
-    let lotVal = [{ Name: "--Select Lot No--", Value: -1 }];
-    let lotList = LotNoNoTranList.map((item) => ({
-      Name: `${item?.LotNo}`,
-      Value: item?.LotNo,
-    }));
-    return [...lotVal, ...lotList];
-  }, [LotNoNoTranList]);
-
-  // usestate
   const [data, setData] = useState({
     LotNo: "",
+    LotPrnAmt: 0,
     RcvAmt: 0,
     RcvAmtPayMode: 1,
     refundAmt: 0,
     RefundAmtPayMode: 1,
+    discountAmt: 0,
+    creditAmt: 0,
     walletBal: 0,
     totalPaid: 0,
     BalAmt: 0,
@@ -59,8 +52,17 @@ function ReceiveInterest({
     today: moment().format("YYYY-MM-DD"),
     Cust_Type: entityType,
     FineId: fineInterestCode,
+    validation: false,
+    isPartial: false,
+    isAllPrnPaid: false,
   });
-console.log(data,"Data");
+  // ------------------------------Zustand store for fetching lot data---------------------------------//
+  const {
+    LotNoNoTranList,
+    isLoadingLotNoNoTran,
+    fetchLotNoNoTranList,
+    ClearLotNoNoTranList,
+  } = useFetchLotNoNotran();
   // api function call of wallet
   const { WalletBalance, fetchWallet, isWalletLoading, clearWalletList } =
     useFetchWallet();
@@ -74,46 +76,17 @@ console.log(data,"Data");
     AdjustEntryAdd,
   } = useAddAdjustEntry();
 
-  // Grid1 columns
-  const gridColumns = [
-    { headername: "Lot No", fieldname: "lotNo", type: "text", width: "120px" },
-    { headername: "Srl", fieldname: "srl", type: "text", width: "80px" },
-    {
-      headername: "Srl_Prn",
-      fieldname: "srl_Prn",
-      type: "text",
-      width: "80px",
-    },
-    {
-      headername: "Principal Amount",
-      fieldname: "principalCr",
-      type: "number",
-      width: "150px",
-    },
-    {
-      headername: "Interest Amount",
-      fieldname: "interestCr",
-      type: "number",
-      width: "150px",
-    },
-    {
-      headername: "Total Paid",
-      fieldname: "TotPaidAmt",
-      type: "number",
-      width: "150px",
-    },
-  ];
 
-  // Fetch lot data when customer ID changes
-  useEffect(() => {
-    if (entityType) {
-      fetchLotNoNoTranList({ Cust_Type: entityType });
-    }
+    const {
+      AdminSetUp,
+      fetchAdminSetUp,
+    } = useFetchAdminSetUp();
+  
+  
+    const { CreditEditSuccess,
+    } = useEditCredit();
 
-    return () => {
-      ClearLotNoNoTranList();
-    };
-  }, [custId, entityType]);
+  //---------------------------------------------function-----------------------------------------//
 
   // Updated OnChangeHandler for LotNo
   const OnChangeHandler = (e) => {
@@ -121,14 +94,18 @@ console.log(data,"Data");
     const value = e.target.value;
     const Regex = {
       RcvAmt: /^\d{0,10}(\.\d{0,2})?$/,
+      LotPrnAmt: /^\d{0,10}(\.\d{0,2})?$/,
       refundAmt: /^\d{0,10}(\.\d{0,2})?$/,
     };
     const arr = Object.keys(Regex);
 
     if (key === "LotNo") {
       // Find the selected Lot's details
-      const selectedLot = LotNoNoTranList.find((item) => item.LotNo === value);
-      const principalAmt = selectedLot ? selectedLot.Update_Prn_Rcv : 0;
+    const selectedLot = LotNoNoTranList.find((item) => item.LotNo === value);
+    let principalAmt = 0;
+    if (selectedLot) {
+      principalAmt = selectedLot.Update_Prn_Rcv;
+    }
 
       // Update both LotNo and LotPrnAmt in the data state
       setData((prev) => ({
@@ -146,7 +123,6 @@ console.log(data,"Data");
       setData((prev) => ({ ...prev, [key]: value }));
     }
   };
-
   // Submit Handler
   const handleSave = (e) => {
     e.preventDefault();
@@ -189,6 +165,7 @@ console.log(data,"Data");
         "Once you pay all the interest you are eligible to pay the principal"
       );
     } else {
+      console.log(calArray, "Calarray");
       AdjustEntryAdd({
         ...data,
         CalculateData: calArray,
@@ -200,6 +177,18 @@ console.log(data,"Data");
     }
   };
 
+  //-------------------------------------------useEffect-----------------------------------------//
+
+  // Fetch lot data when customer ID changes
+  useEffect(() => {
+    if (entityType) {
+      fetchLotNoNoTranList({ Cust_Type: entityType });
+    }
+
+    return () => {
+      ClearLotNoNoTranList();
+    };
+  }, [custId, entityType]);
   // toaster controller
   useEffect(() => {
     toast.dismiss();
@@ -213,6 +202,7 @@ console.log(data,"Data");
 
       setData({
         LotNo: "",
+        LotPrnAmt:0,
         RcvAmt: 0,
         RcvAmtPayMode: "Cash",
         refundAmt: 0,
@@ -224,15 +214,17 @@ console.log(data,"Data");
         FineId: fineInterestCode || 0,
       });
 
-      setSelectedLot("");
       setPrincipalAmount(0);
+      ClearLotNoNoTranList();
+
+      clearWalletList();
 
       // Redirect after 3 seconds
       timeid = setTimeout(() => {
         ClearStateAdjustEntryAdd();
-        clearWalletList();
         navigate("/auth/adjust/view", {
           state: { custId, customertype: entityType },
+          // replace: true,
         });
       }, 3000);
     }
@@ -245,7 +237,7 @@ console.log(data,"Data");
     }
     return () => clearTimeout(timeid);
   }, [isAdjustEntryLoading, AdjustEntrySuccess, AdjustEntryError]);
-
+  //set customer id
   useEffect(() => {
     if (
       custId?.length !== 0 &&
@@ -265,7 +257,6 @@ console.log(data,"Data");
       setData((prev) => ({ ...prev, FineId: fineInterestCode }));
     }
   }, [custId, fineInterestCode]);
-
   // set wallet balance
   useEffect(() => {
     setData({
@@ -273,7 +264,7 @@ console.log(data,"Data");
       walletBal: Number.parseFloat(WalletBalance || 0).toFixed(2),
     });
   }, [isWalletLoading, WalletBalance, custId]);
-
+  //manage focus
   useEffect(() => {
     setTimeout(() => {
       if (recInputref.current && showReceiveInterest) {
@@ -281,37 +272,73 @@ console.log(data,"Data");
       }
     }, 200);
   }, [showReceiveInterest]);
-
   // grid1 data
   useEffect(() => {
+    const arr = [];
+    let isvalidate = false,
+      isPartial = false;
     if (Array.isArray(CalculateData)) {
-      const arr = CalculateData?.map((item) => {
+      CalculateData?.forEach((item) => {
         let obj = {};
         if (Array?.isArray(item)) {
           item?.forEach((element) => {
-            if (element?.interfaceName == "Total") {
+            if (
+              element?.interfaceName == "Total" &&
+              (element?.interestCr > 0 || element?.principalCr > 0)
+            ) {
               obj = {
                 ...element,
                 // Format interest and principal to 2 decimals
                 interestCr: Number.parseFloat(element?.interestCr || 0).toFixed(
                   2
                 ),
+                interestDr: Number.parseFloat(element?.interestDr || 0).toFixed(
+                  2
+                ),
                 principalCr: Number.parseFloat(
                   element?.principalCr || 0
+                ).toFixed(2),
+                principalDr: Number.parseFloat(
+                  element?.principalDr || 0
                 ).toFixed(2),
               };
               obj.TotPaidAmt = (
                 Number(element?.interestCr) + Number(element?.principalCr)
               ).toFixed(2);
+              arr.push(obj);
+            }
+            if (
+              isvalidate == false &&
+              obj?.principalCr > 0 &&
+              ((obj?.interestDr &&
+                obj?.interestCr &&
+                obj?.interestDr !== obj?.interestCr) ||
+                (!obj?.interestDr && !obj?.interestCr))
+            ) {
+              isvalidate = true;
+            }
+            if (
+              isPartial == false &&
+              obj?.principalCr > 0 &&
+              obj?.principalDr !== obj?.principalCr
+            ) {
+              isPartial = true;
             }
           });
         }
-        return obj;
       });
-      setData((prev) => ({ ...prev, gridData: arr }));
     }
+    if (isvalidate) {
+      toast.error("you can not submit Principal before paying all Interest.");
+    }
+    setData((prev) => ({
+      ...prev,
+      gridData: arr,
+      validation: isvalidate,
+      isPartial: isPartial,
+    }));
   }, [CalculateData]);
-
+  //datagrid filter
   useEffect(() => {
     let tot = 0;
     if (Array.isArray(data?.gridData)) {
@@ -328,15 +355,30 @@ console.log(data,"Data");
     }));
   }, [data?.gridData]);
 
-  // 1. Update Balance Calculation Effect
+
+   useEffect(() => {
+        fetchAdminSetUp({});
+      }, [CreditEditSuccess]);
+  //Update Balance Calculation Effect
   useEffect(() => {
     const principal = Number(data.LotPrnAmt) || 0;
     const received = Number(data.RcvAmt) || 0;
     const wallet = Number(data.walletBal) || 0;
     const totalPaid = Number(data.totalPaid) || 0;
     const refund = Number(data.refundAmt) || 0;
+    const discount = Number(data.discountAmt) || 0;
+    const credit = Number(data.creditAmt) || 0;
+    const creditAdjust = Number(data.creditAmtAdjust) || 0;
 
-    const balance = principal + received + wallet - totalPaid - refund;
+    const balance =
+      principal +
+      received +
+      wallet -
+      totalPaid -
+      refund +
+      discount +
+      credit -
+      creditAdjust;
 
     setData((prev) => ({
       ...prev,
@@ -348,13 +390,15 @@ console.log(data,"Data");
     data.walletBal,
     data.totalPaid,
     data.refundAmt,
+    data.discountAmt,
+    data.creditAmt,
+    data.creditAmtAdjust,
   ]);
-
   // set narration
   useEffect(() => {
     setData({ ...data, narration: narration });
   }, [narration]);
-  // 3. Add Refund Validation
+  //Add Refund Validation
   useEffect(() => {
     if (
       Number(data.RcvAmt) + Number(data.walletBal) - Number(data.totalPaid) <=
@@ -367,40 +411,76 @@ console.log(data,"Data");
     }
   }, [data.RcvAmt, data.walletBal, data.totalPaid]);
 
+  //-----------------------------------------others variables and constant------------------------------------//
+  // Modified lotNolist memo
+  const lotNolist = useMemo(() => {
+    return LotNoNoTranList.filter((item) => !LotNo.includes(item.LotNo)).map(
+      (item) => ({
+        label: item.LotNo,
+        value: item.LotNo,
+      })
+    );
+  }, [LotNoNoTranList, LotNo]);
+   useEffect(() => {
+     // Check if the currently selected lot number is now in the excluded list
+     if (data.LotNo && LotNo && LotNo.includes(data.LotNo)) {
+       // Reset LotPrnAmt and principalAmount if the selected lot is now excluded
+       setData((prev) => ({
+         ...prev,
+         LotNo: "",
+         LotPrnAmt: 0,
+       }));
+       setPrincipalAmount(0);
+     }
+   }, [LotNo, data.LotNo]);
+  // Grid1 columns
+  const gridColumns = [
+    {
+      headername: "Lot No",
+      fieldname: "lotNo",
+      type: "text",
+      width: "120px",
+    },
+    { headername: "Srl", fieldname: "srl", type: "text", width: "80px" },
+    {
+      headername: "Srl_Prn",
+      fieldname: "srl_Prn",
+      type: "text",
+      width: "80px",
+    },
+    {
+      headername: "Paybale Principal Amt",
+      fieldname: "principalDr",
+      type: "number",
+      width: "150px",
+    },
+    {
+      headername: "Principal Amount",
+      fieldname: "principalCr",
+      type: "number",
+      width: "150px",
+    },
+    {
+      headername: "Payble Interest Amt",
+      fieldname: "interestDr",
+      type: "number",
+      width: "150px",
+    },
+    {
+      headername: "Interest Amount",
+      fieldname: "interestCr",
+      type: "number",
+      width: "150px",
+    },
+    {
+      headername: "Total Paid",
+      fieldname: "TotPaidAmt",
+      type: "number",
+      width: "150px",
+    },
+  ];
   return (
-    <Row>
-      <Col s={12} sm={12} md={12} lg={12} xl={12}>
-        {/* <div className="mb-3">
-          <label className="form-label">Select Lot No</label>
-          <select
-            className="form-select"
-            value={selectedLot}
-            onChange={handleLotChange}
-            disabled={isLoadingLotNoNoTran}
-          >
-            <option value="">Select Lot No</option>
-            {LotNoNoTranList &&
-              LotNoNoTranList.map((lot, index) => (
-                <option key={index} value={lot.lotNo}>
-                  {lot.lotNo}
-                </option>
-              ))}
-          </select>
-        </div> */}
-
-        {selectedLot && (
-          <div className="mb-3">
-            <label className="form-label">Principal Amount</label>
-            <input
-              type="text"
-              className="form-control"
-              value={principalAmount}
-              readOnly
-            />
-          </div>
-        )}
-      </Col>
-
+    <Row className="my-4">
       <Col s={12} sm={12} md={12} lg={12} xl={12}>
         <div
           style={{
@@ -472,6 +552,26 @@ console.log(data,"Data");
                 >
                   Payment Mode*
                 </th>
+                {/* <th
+                  style={{
+                    backgroundColor: "rgb(152, 223, 138)",
+                    color: "#000000",
+                    border: "1px solid rgb(89, 158, 11)",
+                    textAlign: "center",
+                  }}
+                >
+                  Discount Amt
+                </th>
+                <th
+                  style={{
+                    backgroundColor: "rgb(152, 223, 138)",
+                    color: "#000000",
+                    border: "1px solid rgb(89, 158, 11)",
+                    textAlign: "center",
+                  }}
+                >
+                  Credit Amount
+                </th> */}
                 <th
                   style={{
                     backgroundColor: "rgb(127, 236, 184)",
@@ -480,7 +580,7 @@ console.log(data,"Data");
                     textAlign: "center",
                   }}
                 >
-                  Cust Bal Amt Adjust
+                  Bal Amt Adjust
                 </th>
                 <th
                   style={{
@@ -497,13 +597,16 @@ console.log(data,"Data");
             <tbody className="rcv-tab-body">
               <tr>
                 <td>
-                  <SelectOption
-                    OnSelect={OnChangeHandler}
-                    PlaceHolder={"Select Lot No"}
-                    SName={"LotNo"}
-                    SelectStyle={{ width: "100%", padding: "5px 10px" }}
-                    Value={data?.LotNo}
-                    Soptions={lotNolist}
+                  <SearchableDropDown
+                    options={lotNolist}
+                    handleChange={OnChangeHandler}
+                    selectedVal={data?.LotNo}
+                    label={"LotNo"}
+                    placeholder={"--Select Lot No--"}
+                    key={2}
+                    defaultval={-1}
+                    width={"100%"}
+                    directSearch={true}
                   />
                 </td>
                 <td>
@@ -517,8 +620,6 @@ console.log(data,"Data");
                     min="0"
                     step="0.01"
                     style={{ width: "100%" }}
-                    // ref={showReceiveInterest ? recInputref : null}
-                    disabled
                   />
                 </td>
                 <td>
@@ -559,9 +660,9 @@ console.log(data,"Data");
                     type="number"
                     min="0"
                     step="0.01"
-                    disabled={
-                      data?.RcvAmt + data?.walletBal - data?.totalPaid < 0
-                    }
+                    // disabled={
+                    //   data?.RcvAmt + data?.walletBal - data?.totalPaid < 0
+                    // }
                     style={{ width: "100%" }}
                   />
                 </td>
@@ -579,6 +680,32 @@ console.log(data,"Data");
                     ]}
                   />
                 </td>
+                {/* <td>
+                  <input
+                    placeholder="Discount Amount(₹)"
+                    className="input-cell"
+                    name="discountAmt"
+                    value={data?.discountAmt || ""}
+                    onChange={OnChangeHandler}
+                    type="number"
+                    step="0.01"
+                    style={{ width: "100%" }}
+                  />
+                </td>
+                <td>
+                  <input
+                    placeholder="Credit Amount(₹)"
+                    className="input-cell"
+                    name="creditAmt"
+                    value={data?.creditAmt || ""}
+                    onChange={OnChangeHandler}
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    style={{ width: "100%" }}
+                    disabled={entityType !== "wholesaler"}
+                  />
+                </td> */}
                 <td>{data?.walletBal == 0 ? "-" : data?.walletBal}</td>
                 <td>{data?.BalAmt == 0 ? "-" : data?.BalAmt}</td>
               </tr>
@@ -596,47 +723,110 @@ console.log(data,"Data");
           width={"100%"}
         />
       </Col>
-      <Col xs={12} sm={9} md={9} lg={10} xl={11}>
-        <div className="d-flex flex- justify-content-start align-items-center mt-1 mb-2">
-          <label className="py-1">Narration &nbsp;&nbsp;</label>
-          <textarea
-            as="textarea"
-            placeholder="Enter here..."
-            value={narration}
-            rows={2}
-            style={{
-              width: "100%",
-              borderRadius: "5px",
-              border: "1px solid lightgrey",
-              padding: "8px",
-              fontSize: "16px",
-              transition: "all 0.3s ease",
-              outline: "none",
-            }}
-            onFocus={(e) => {
-              e.target.style.border = "1px solid #4CAF50"; // Green border on focus
-              e.target.style.boxShadow = "0 0 5px rgba(76, 175, 80, 0.5)"; // Subtle green glow
-            }}
-            onBlur={(e) => {
-              e.target.style.border = "1px solid lightgrey"; // Reset border on blur
-              e.target.style.boxShadow = "none"; // Remove glow
-            }}
-            onChange={(e) => setNarration(e.target.value)}
-          />
-        </div>
+      <Col xs={12} sm={12} md={12} lg={12} xl={12}>
+        <textarea
+          placeholder="Narration..."
+          value={narration}
+          rows={2}
+          style={{
+            borderRadius: "5px",
+            border: "1px solid lightgrey",
+            padding: "8px",
+            fontSize: "14px",
+            transition: "all 0.3s ease",
+            outline: "none",
+            resize: "none",
+            width: "100%",
+          }}
+          onFocus={(e) => {
+            e.target.style.border = "1px solid #4CAF50";
+            e.target.style.boxShadow = "0 0 5px rgba(76, 175, 80, 0.5)";
+          }}
+          onBlur={(e) => {
+            e.target.style.border = "1px solid lightgrey";
+            e.target.style.boxShadow = "none";
+          }}
+          onChange={(e) => setNarration(e.target.value)}
+        />
       </Col>
-      <Col xs={12} sm={3} md={3} lg={2} xl={1}>
-        <div className="d-flex justify-content-sm-end justify-content-xs-center align-items-center my-2">
+      <Col xs={12} sm={12} md={9} lg={11} xl={11}>
+        {/* Second Row: Credit & Discount Amounts */}
+        <Row className="mt-3">
+          <Col xs={12} sm={12} md={12} lg={6} xl={6}>
+            {/* Discount Amount */}
+            <div
+              className="d-flex flex-wrap justify-content-start align-items-center"
+              style={{ width: "100%" }}
+            >
+              <label
+                className="me-2 mb-0 fw-medium"
+                style={{ width: "fit-content" }}
+              >
+                Discount Amt.(₹):
+              </label>
+              <div style={{ width: "70%" }}>
+                <input
+                  style={{ width: "100%" }}
+                  placeholder="Discount Amount (₹)"
+                  className="form-control"
+                  name="discountAmt"
+                  value={data?.discountAmt || ""}
+                  onChange={OnChangeHandler}
+                  type="number"
+                  step="0.01"
+                />{" "}
+              </div>
+            </div>
+          </Col>
+          <Col xs={12} sm={12} md={12} lg={6} xl={6}>
+            {/* Credit Amount */}
+            <div
+              className="d-flex flex-wrap justify-content-start align-items-center"
+              style={{ width: "100%" }}
+            >
+              {(entityType !== 2 && AdminSetUp[0]?.Customer_Access === 1) ||
+              (entityType === 2 && AdminSetUp[0]?.WholeSaler_Access === 1) ? (
+                <>
+                  <label
+                    className="me-2 mb-0 fw-medium"
+                    style={{ minWidth: "100px" }}
+                  >
+                    Credit Amt.(₹):
+                  </label>
+                  <div style={{ width: "70%" }}>
+                    <input
+                      placeholder="Credit Amount(₹)"
+                      className="form-control"
+                      name="creditAmt"
+                      value={data?.creditAmt || ""}
+                      onChange={OnChangeHandler}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      // disabled={entityType !== 2}
+                    />
+                  </div>
+                </>
+              ) : (
+                ""
+              )}
+            </div>
+          </Col>
+        </Row>
+      </Col>
+      <Col xs={12} sm={3} md={3} lg={1} xl={1}>
+        <div className="d-flex justify-content-sm-end justify-content-xs-center align-items-center mt-3">
           <Button
             onClick={handleSave}
             disabled={
-              !data.LotNo || // Require LotNo selection
               Number(data.BalAmt) < 0 || // Negative balance not allowed
               (Number(data.refundAmt) > 0 &&
                 Number(data.RcvAmt) +
                   Number(data.walletBal) -
                   Number(data.totalPaid) <=
-                  0)
+                  0) ||
+              data?.validation ||
+              CalculateData?.length == 0
             }
           >
             Save

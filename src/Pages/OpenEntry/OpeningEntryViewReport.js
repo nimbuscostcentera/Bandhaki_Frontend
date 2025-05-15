@@ -8,8 +8,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-
-import { Row, Col, Form, Container, InputGroup } from "react-bootstrap";
+import { Row, Col, Form, Container } from "react-bootstrap";
 
 import checkOrder from "../../GlobalFunctions/Ordercheck";
 import SortArrayByDate from "../../GlobalFunctions/SortArrayByDate";
@@ -30,28 +29,39 @@ import useOpeningHeaderEdit from "../../store/UpdateStore/useOpeningHeaderEdit";
 import useOpeningHeaderDelete from "../../store/DeleteStore/useOpeningHeaderDelete";
 import useFetchOpeningEntryHeader from "../../store/ShowStore/useFetchOpningEntryHeader";
 import useOpeningHeaderDeleteCheck from "../../store/Checker/useOpeningHeaderDeleteCheck";
+import BongDatePicker from "../../Component/BongDatePicker";
 
 function OpeningEntryViewReport() {
   //-----------------------------------hooks-----------------------------------//
   const [searchParams] = useSearchParams();
+  const trancode = searchParams.get("trancode");
   const entityType = searchParams.get("type") === "customer" ? 1 : 2;
+  const rendering = searchParams.get("opening");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const editinputref = useRef(null);
   //------------------------------------useStatehook---------------------------------//
   const [filteredData, setFilteredData] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
+  const [info , setInfo ] = useState({});
   const [originalOrder, setOriginalOrder] = useState([]);
   const [editedData, setEditedData] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
+  const [descripSearch, setDescripSearch] = useState("");
+  const [entryDate, setEntryDate] = useState(null);
   const [params, setParams] = useState({
     ActionID: null,
     IsAction: false,
     page: 1,
     limit: 10,
     view: false,
-    Lotno: "",
-    Status:-1
+    Lotno: null,
+    Status: 2,
+    StartDate: null,
+    EndDate: null,
+    view1: false,
+    view2: false,
+    headerData:{}
   });
   const [textDetail, setTextDetail] = useState("");
   //---------------------------------------------API Call------------------------------------//
@@ -106,6 +116,7 @@ function OpeningEntryViewReport() {
     CheckOpeningHeaderDeleteCheck({
       ID: deleteobj.ID,
       Cust_Type: entityType,
+      TranCode: trancode,
     });
   };
 
@@ -115,15 +126,28 @@ function OpeningEntryViewReport() {
         await DeleteOpeningHeader({
           ID: itemToDelete.ID,
           Cust_Type: entityType,
+          TranCode: trancode,
         });
         // Refresh data after successful deletion
-        fetchOpeningEntryHeader({
-          CompanyID: user?.CompanyID,
-          page: params.page,
-          limit: params.limit,
-          Cust_Type: entityType,
-          Status:params?.Status
-        });
+        if (
+          (params?.StartDate && !params?.EndDate) ||
+          (!params?.StartDate && params?.EndDate)
+        ) {
+          return;
+        } else {
+          fetchOpeningEntryHeader({
+            CompanyID: user?.CompanyID,
+            page: params.page,
+            limit: params.limit,
+            Cust_Type: entityType,
+            TranCode: trancode,
+            Status: params?.Status,
+            StartDate: params?.StartDate,
+            EndDate: params?.EndDate,
+          });
+        }
+      } catch (err) {
+        console.log(err);
       } finally {
         setShowDeleteModal(false);
         setItemToDelete(null);
@@ -169,12 +193,16 @@ function OpeningEntryViewReport() {
     setOriginalOrder(result.map((row) => row.ID));
   };
 
-  //after hit edit button
   const FetchActionId = (index) => {
     // setParams((prev) => ({ ...prev, SelectedID: index, isAction: true }));
     const editableobj = filteredData[index];
-    CheckOpeningHeader({ ID: editableobj.ID, Cust_Type: entityType });
+    CheckOpeningHeader({
+      ID: editableobj.ID,
+      Cust_Type: entityType,
+      TranCode: trancode,
+    });
     setSelectedId(index);
+   
     // Find the warehouse ID based on the warehouse code
     const selectedWarehouse = WareHouseList.find(
       (warehouse) => warehouse.CODE === editableobj.WarehouseCode
@@ -199,8 +227,9 @@ function OpeningEntryViewReport() {
   };
 
   const handleClose = () => {
-    setParams({ ...params, view: false });
+    setParams((prev) => ({ ...prev, view: false }));
   };
+
   const SaveHandler = (index) => {
     // console.log({ ...editedData, LotNo: lotno });
     EditOpeningHeaderFunc({
@@ -208,9 +237,37 @@ function OpeningEntryViewReport() {
       PacketNo: editedData.PacketNo,
       WarehouseID: editedData.WarehouseID,
       Cust_Type: entityType,
+      TranCode: trancode,
     });
   };
+
+  const handleCloseDatePicker = () => {
+    // setParams({ ...params,  });
+    setParams((prev) => ({ ...prev, view1: false, view2: false }));
+  };
+
+  const StartDatePickerOpen = () => {
+    setParams({ ...params, view1: true });
+  };
+
+  const EndDatePickerOpen = () => {
+    setParams({ ...params, view2: true });
+  };
+
+  const handleDatePicker = (value, name) => {
+    let key = name;
+    let val = value;
+    console.log(value, name, "in");
+    if (key === "StartDate") {
+      key = "StartDate";
+    } else if (key === "EndDate") {
+      key = "EndDate";
+    }
+    setParams((prev) => ({ ...prev, [key]: val }));
+  };
+  // console.log(params,"out")
   //----------------------------------------------useEffects------------------------------------------//
+
   useEffect(() => {
     fetchWareHouse({ CompanyID });
   }, []);
@@ -235,24 +292,37 @@ function OpeningEntryViewReport() {
   // Handle search input with debounce
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
-      if (user?.CompanyID) {
-        // If search term exists, use search function
-        searchOpeningEntryHeader({
-          CompanyID: user?.CompanyID,
-          keyword: searchTerm,
-          page: params.page,
-          limit: params.limit,
-          Cust_Type: entityType,
-          Status:params?.Status
-        });
+      if (user?.CompanyID && entityType && trancode) {
+        if (
+          (params?.StartDate && !params?.EndDate) ||
+          (!params?.StartDate && params?.EndDate)
+        ) {
+          return;
+        } else {
+          searchOpeningEntryHeader({
+            CompanyID: user?.CompanyID,
+            keyword: searchTerm,
+            DescKeyword: descripSearch,
+            page: params.page,
+            limit: params.limit,
+            Cust_Type: entityType,
+            TranCode: trancode,
+            Status: params?.Status,
+            StartDate: params?.StartDate,
+            EndDate: params?.EndDate,
+          });
+        }
       }
     }, 500);
 
     return () => clearTimeout(debounceTimer);
   }, [
     searchTerm,
+    descripSearch,
     params.page,
     params.limit,
+    params?.StartDate,
+    params?.EndDate,
     user?.CompanyID,
     OpeningHeaderDeleteMsg,
     OpeningHeaderEditSuccess,
@@ -260,24 +330,38 @@ function OpeningEntryViewReport() {
 
   // Initial data load
   useEffect(() => {
-    if (user?.CompanyID && searchTerm === "") {
-      fetchOpeningEntryHeader({
-        CompanyID: user?.CompanyID,
-        keyword: "",
-        page: params.page,
-        limit: params.limit,
-        Cust_Type: entityType,
-        Status:params?.Status
-      });
+    if (user?.CompanyID && trancode && entityType) {
+      if (
+        (params?.StartDate && !params?.EndDate) ||
+        (!params?.StartDate && params?.EndDate)
+      ) {
+        return;
+      } else {
+        fetchOpeningEntryHeader({
+          CompanyID: user?.CompanyID,
+          keyword: "",
+          page: params.page,
+          limit: params.limit,
+          Cust_Type: entityType,
+          TranCode: trancode,
+          Status: params?.Status,
+          StartDate: params?.StartDate,
+          EndDate: params?.EndDate,
+        });
+      }
     }
   }, [
     params.page,
     params.limit,
     params?.Status,
+    params?.StartDate,
+    params?.EndDate,
     user?.CompanyID,
     OpeningHeaderDeleteMsg,
     OpeningHeaderEditSuccess,
     entityType,
+    trancode,
+    rendering,
   ]);
 
   // Update filtered data when EntryList changes
@@ -292,6 +376,23 @@ function OpeningEntryViewReport() {
     }
     ClearstateEntryList();
   }, [EntryList, OpeningHeaderDeleteMsg, OpeningHeaderEditSuccess]);
+
+  useEffect(() => {
+    setTextDetail("");
+    setParams({
+      ActionID: null,
+      IsAction: false,
+      page: 1,
+      limit: 10,
+      view: false,
+      Lotno: null,
+      Status: 2,
+      StartDate: null,
+      EndDate: null,
+      view1: false,
+      view2: false,
+    });
+  }, [rendering, entityType]);
 
   useEffect(() => {
     if (OpeningHeaderEditSuccess) {
@@ -391,7 +492,7 @@ function OpeningEntryViewReport() {
       isNotEditable: true,
     },
     {
-      headername: entityType == 1 ? "Customer Name" : "WholeSeller Name",
+      headername: entityType == 1 ? "Customer Name" : "Wholesaler Name",
       fieldname: "CustomerName",
       type: "String",
       isNotEditable: true,
@@ -417,84 +518,149 @@ function OpeningEntryViewReport() {
       <ToastContainer autoClose={3000} />
       <Row className="pt-2">
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
-          <div className="d-flex align-items-center justify-content-between flex-wrap gap-3">
-            <div>
-              <h5 style={{ fontSize: "18px" }}>
-                Opening Entries for {entityType == 1 ? "Customer" : "WholeSeller"}
-              </h5>
-            </div>
+          <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+            <h5 style={{ fontSize: "18px", marginBottom: 0 }}>
+              {(trancode === "0RC" || trancode === "0RW"
+                ? "Opening"
+                : "Receive/Dafa") +
+                " Entries for " +
+                (entityType == 1 ? "Customer" : "Wholesaler")}
+            </h5>
 
-            {/* Detail View + Search grouped together */}
-            <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-2">
-              <div>
-                <SelectOption
-                  OnSelect={(e) => {
-                    setParams((prev) => ({
-                      ...prev,
-                      Status: e?.target?.value,
-                    }));
-                  }}
-                  SelectStyle={{
-                    width: "150px",
-                    padding: "7px 8px",
-                  }}
-                  PlaceHolder={"--Select Status--"}
-                  SName={"Status"}
-                  Value={params?.Status}
-                  Soptions={[
-                    { Name: "All", Value: -1 },
-                    { Name: "Running", Value: 2 },
-                    { Name: "Closed", Value: 1 },
-                  ]}
-                />
-              </div>
-              <input
-                value={textDetail}
-                readOnly
-                type="search"
-                placeholder="Detail View"
-                style={{
-                  width: "240px",
-                  border: "1px solid dodgerblue",
-                  outline: "none",
-                  borderRadius: "5px",
-                  padding: "3px 12px",
-                  fontSize: "1rem",
-                  boxShadow: "0 1px 4px rgba(0, 123, 255, 0.25)",
-                  backgroundColor: "#f9f9f9",
-                  color: "#333",
-                }}
+            <div className="d-flex flex-wrap align-items-center gap-3 mt-2">
+              <BongDatePicker
+                startDate={params?.StartDate}
+                endDate={params?.EndDate}
+                handleChange={(e, name) => handleDatePicker(e, name)}
+                handleClose={handleCloseDatePicker}
+                handleOpenEndDate={EndDatePickerOpen}
+                handleOpenStartDate={StartDatePickerOpen}
+                view1={params?.view1}
+                view2={params?.view2}
               />
-
-              <input
-                autoFocus
-                placeholder="Search here..."
-                aria-label="search"
-                aria-describedby="basic-addon1"
-                style={{
-                  width: "280px",
-                  border: "1px solid dodgerblue",
-                  outline: "none",
+              {/* Status Dropdown */}
+              <SelectOption
+                OnSelect={(e) =>
+                  setParams((prev) => ({
+                    ...prev,
+                    Status: e?.target?.value,
+                  }))
+                }
+                SelectStyle={{
+                  width: "150px",
+                  padding: "7px 8px",
                   borderRadius: "5px",
-                  padding: "3px 12px",
-                  fontSize: "1rem",
-                  boxShadow: "0 1px 4px rgba(0, 123, 255, 0.25)",
-                  backgroundColor: "#f9f9f9",
-                  color: "#333",
+                  border: "1px solid #ccc",
+                  fontSize: "14px",
                 }}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                PlaceHolder={"--Select Status--"}
+                SName={"Status"}
+                Value={params?.Status}
+                Soptions={[
+                  { Name: "All", Value: -1 },
+                  { Name: "Running", Value: 2 },
+                  { Name: "Closed", Value: 1 },
+                ]}
               />
             </div>
           </div>
 
-          <hr className="my-1" />
+          <hr className="my-2" />
         </Col>
+        <Col xl={12} lg={12} md={12} sm={12} xs={12}>
+          <div className="d-flex flex-wrap align-items-center gap-3 my-2">
+            {/* Detail View Input */}
+            <input
+              value={textDetail}
+              readOnly
+              type="search"
+              placeholder="Detail View"
+              style={{
+                width: "40vw",
+                border: "2px solid #ced4da",
+                borderRadius: "8px",
+                padding: "10px 16px",
+                fontSize: "14px",
+                backgroundColor: "white",
+                color: "#212529",
+                transition: "all 0.3s ease",
+                outline: "none",
+                boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                "::placeholder": {
+                  color: "#868e96",
+                  opacity: " 1",
+                  fontWeight: "300",
+                },
+                // Focus state
+                ":focus": {
+                  borderColor: "#3b7ddd",
+                  boxShadow: "0 0 0 3px rgba(59, 125, 221, 0.25)",
+                  backgroundColor: "#f8fbff",
+                },
+              }}
+            />
 
+            {/* Search Inputs */}
+            <div className="d-flex flex-wrap gap-2">
+              <input
+                placeholder="Search here..."
+                style={{
+                  width: "20vw",
+                  border: "2px solid #ced4da",
+                  borderRadius: "8px",
+                  padding: "10px 16px",
+                  fontSize: "14px",
+                  backgroundColor: "white",
+                  color: "#212529",
+                  transition: "all 0.3s ease",
+                  outline: "none",
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                  "::placeholder": {
+                    color: "#868e96",
+                    opacity: " 1",
+                    fontWeight: "300",
+                  },
+                  // Focus state
+                  ":focus": {
+                    borderColor: "#3b7ddd",
+                    boxShadow: "0 0 0 3px rgba(59, 125, 221, 0.25)",
+                    backgroundColor: "#f8fbff",
+                  },
+                }}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+
+              <input
+                placeholder="Description search..."
+                style={{
+                  width: "20vw",
+                  border: "2px solid #ced4da",
+                  borderRadius: "8px",
+                  padding: "10px 16px",
+                  fontSize: "14px",
+                  backgroundColor: "white",
+                  color: "#212529",
+                  transition: "all 0.3s ease",
+                  outline: "none",
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                  // Focus state
+                  ":focus": {
+                    borderColor: "#3b7ddd",
+                    boxShadow: "0 0 0 3px rgba(59, 125, 221, 0.25)",
+                    backgroundColor: "#f8fbff",
+                  },
+                }}
+                value={descripSearch}
+                onChange={(e) => setDescripSearch(e.target.value)}
+              />
+            </div>
+          </div>
+        </Col>
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
           <div
             className="table-box"
-            style={{ height: "68vh", border: "1px solid lightgrey" }}
+            style={{ height: "55vh", border: "1px solid lightgrey" }}
           >
             <Table
               Col={columns}
@@ -511,10 +677,15 @@ function OpeningEntryViewReport() {
               handleViewClick={(index) => {
                 const selectedData = filteredData[index];
                 setSelectedId(selectedData.ID);
+                setInfo({
+                  custId: selectedData.CustomerID,
+                  LotNo: selectedData.LotNo,
+                });
                 setParams({
                   ...params,
                   view: true,
                   Lotno: selectedData?.LotNo,
+                  headerData: selectedData,
                 });
               }}
               EditedData={editedData}
@@ -527,6 +698,7 @@ function OpeningEntryViewReport() {
               getFocusText={(val) => {
                 setTextDetail(val);
               }}
+              showScrollButtons={false}
             />
             <DeleteConfirmation
               show={showDeleteModal}
@@ -638,15 +810,22 @@ function OpeningEntryViewReport() {
       <ReusableModal
         show={params?.view}
         handleClose={handleClose}
+        isFullScreen={true}
         body={
           <OpeningEntryDetailTable
             id={selectedId}
             lotno={params?.Lotno}
             onCloseHandler={handleClose}
             entityType={entityType}
+            trancode={trancode}
+            rendering={rendering}
+            info={info}
+            headerData={params?.headerData}
           />
         }
-        Title={"Opening Entry Detail View"}
+        Title={`${
+          trancode === "0RC" || trancode === "0RW" ? "Opening" : "Recive/Dafa"
+        } Entry Detail View`}
         isPrimary={true}
         handlePrimary={handleClose}
         PrimaryButtonName={"Close"}

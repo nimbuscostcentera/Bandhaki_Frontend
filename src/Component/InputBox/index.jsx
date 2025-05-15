@@ -24,11 +24,12 @@ const InputBox = forwardRef(
       isdisable,
       isfrontIconOff,
       onFocusChange,
+      marginYClass = "",
     },
     ref // 👈 Accept ref as a parameter
   ) => {
     return (
-      <div className="Zindex">
+      <div className={`Zindex ${marginYClass}`}>
         <div className="input-group flex-nowrap">
           {!isfrontIconOff && (
             <span
@@ -41,7 +42,7 @@ const InputBox = forwardRef(
 
           <input
             ref={ref} // 👈 Attach ref to input field
-            value={value}
+            value={value || ""}
             type={type}
             className="form-input Zindex"
             placeholder={placeholder}
@@ -61,7 +62,7 @@ const InputBox = forwardRef(
         </div>
         <div
           style={{
-            visibility: error ? "inherit" : "hidden",
+            display: error ? "inherit" : "none",
             color: "red",
             fontSize: "10px",
           }}
