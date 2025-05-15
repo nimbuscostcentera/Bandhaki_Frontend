@@ -3,19 +3,18 @@ import { Container, Row, Col, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-import WholeSellerDetails from "./WholeSellerDetails";
 import AdhaarValidation from "../../GlobalFunctions/AdhaarValidation";
 import PanCardValidation from "../../GlobalFunctions/PanCardValidation";
 import VoterCardValidation from "../../GlobalFunctions/VoterCardValidation";
 import useFetchAuth from "../../store/Auth/useFetchAuth";
 import useRegWholeSeller from "../../store/AddStore/useRegWholeSeller";
 import PhnoValidation from "../../GlobalFunctions/PhnoValidation";
-import EmailValidate from "../../GlobalFunctions/EmailValidation";
 import moment from "moment";
 import SelectOption from "../../Component/SelectOption";
 import useFetchFineHeader from "../../store/ShowStore/useFetchFineHeader";
-function WSListEdit() {
+import MahajonDetails from "./MahajonDetails";
+import useAddMahajon from "../../store/AddStore/useAddMahajon";
+function MahajonListEdit() {
   //---------------------------------useRef-------------------------------------//
   const inputRef = useRef();
   const wsref = useRef();
@@ -40,18 +39,19 @@ function WSListEdit() {
   //---------------------------------------------API----------------------------------------//
   const { CompanyID } = useFetchAuth();
   const {
-    InsertWS,
-    WSRegSuccess,
-    isWSRegLoading,
-    WSRegError,
-    ClearStateInserWS,
-  } = useRegWholeSeller();
+    InsertMahajon,
+    MahajonRegSuccess,
+    isMahajonRegLoading,
+    MahajonRegError,
+    ClearStateInserMahajon,
+  } = useAddMahajon();
   const { FineHeaderList, fetchFineHeader, isFineHeaderLoading } =
     useFetchFineHeader();
   //-------------------------------------function--------------------------------------------//
   const OnChangeHandler = (e) => {
     let key = e.target.name;
     let value = e.target.value;
+  
     if (
       WSData?.IDPROOF != null &&
       WSData?.IDPROOF != undefined &&
@@ -88,17 +88,19 @@ function WSListEdit() {
       IDPROOF_Type,
       IDPROOF,
       IDPROOF_IMG,
-      FineID,
+      FinePercentage,
+      FineID
     } = WSData;
+    console.log(WSData,"Wtf");
 
     // Check if any required field is empty or null
-   if (!Name || !ContactNumber || !Address || !FineID) {
-         toast.error("Missing Fields are required!", {
-           position: "top-right",
-           autoClose: 3000,
-         });
-         return;
-       }
+    if (!Name || !ContactNumber || !Address || !FineID) {
+      toast.error("Missing Fields are required!", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
     if (WSData?.IDPROOF_Type == "Adhaar Card") {
       let check = AdhaarValidation(WSData?.IDPROOF);
       if (!check) {
@@ -144,7 +146,7 @@ function WSListEdit() {
       });
       return;
     }
-    console.log(WSData);
+    // console.log(WSData);
     // Proceed to save data if validation passes
     let newformdata = new FormData();
     for (let key in WSData) {
@@ -159,11 +161,11 @@ function WSListEdit() {
     }
     newformdata.append("IDPROOF_IMG", img);
     newformdata.append("CompanyID", CompanyID);
-    InsertWS(newformdata);
+    InsertMahajon(newformdata);
   };
   //-------------------------------------useMemo--------------------------------------------//
   const SelectOptionIDProof = [
-    { Name: "--Select ID Proof--", Value: -1 },
+    { Name: "--Select ID Proof--", Value: null },
     { Name: "Adhaar Card", Value: "Adhaar Card" },
     { Name: "Voter Card", Value: "Voter Card" },
     { Name: "PAN Card", Value: "PAN Card" },
@@ -180,8 +182,6 @@ function WSListEdit() {
     let arr = [
       // { Name: "--Interest Calculation Type--", Value: -1 },
       { Name: "Monthly", Value: 2 },
-      // { Name: "1st Day of Month", Value: 3 },
-      // { Name: "1st Day of Month", Value: 3 },
     ];
     return arr;
   }, []);
@@ -194,13 +194,13 @@ function WSListEdit() {
   }, []);
   //toaster
   useEffect(() => {
-    if (isWSRegLoading && !WSRegSuccess && !WSRegError) {
+    if (isMahajonRegLoading && !MahajonRegSuccess && !MahajonRegError) {
       toast.play("please wait...", {
         position: "top-right",
         autoClose: 3000,
       });
-    } else if (WSRegSuccess && !isWSRegLoading && !WSRegError) {
-      toast.success("WholeSeller Added Successfully", {
+    } else if (MahajonRegSuccess && !isMahajonRegLoading && !MahajonRegError) {
+      toast.success("Mahajon Added Successfully", {
         position: "top-right",
         autoClose: 3000,
       });
@@ -217,14 +217,14 @@ function WSListEdit() {
         timing: 2,
       });
       wsref.current.value = "";
-    } else if (WSRegError && !isWSRegLoading && !WSRegSuccess) {
-      toast.error(WSRegError, {
+    } else if (MahajonRegError && !isMahajonRegLoading && !MahajonRegSuccess) {
+      toast.error(MahajonRegError, {
         position: "top-right",
         autoClose: 3000,
       });
     }
-    ClearStateInserWS();
-  }, [isWSRegLoading, WSRegSuccess, WSRegError]);
+    ClearStateInserMahajon();
+  }, [isMahajonRegLoading, MahajonRegSuccess, MahajonRegError]);
   //fine header api call
   useEffect(() => {
     fetchFineHeader({ CompanyID, Type: 2 });
@@ -243,7 +243,7 @@ function WSListEdit() {
           style={{ paddingLeft: "15px", margin: "0px" }}
         >
           <div className="d-flex justify-content-between">
-            <h5 style={{ fontSize: "18px" }}>Wholesaler Add</h5>
+            <h5 style={{ fontSize: "18px" }}>Mahajon Add</h5>
           </div>
           <hr style={{ marginTop: "2px" }} />
         </Col>
@@ -273,7 +273,7 @@ function WSListEdit() {
                   >
                     <i className="bi bi-person-circle"></i>
                   </th>
-                  <th>Wholesaler Name*</th>
+                  <th>Mahajon Name*</th>
                   <th>Phone No.*</th>
                   <th>Address*</th>
                   <th>Interest Type</th>
@@ -292,7 +292,7 @@ function WSListEdit() {
                   </td>
                   <td>
                     <input
-                      placeholder="Wholesaler  Name"
+                      placeholder="Mahajon  Name"
                       className="input-cell form-input"
                       name="Name"
                       value={WSData?.Name || ""}
@@ -383,7 +383,7 @@ function WSListEdit() {
 
                     /> */}
                     <SelectOption
-                      defaultval={-1}
+                      defaultval={null}
                       OnSelect={OnChangeHandler}
                       SName={"IDPROOF_Type"}
                       Soptions={SelectOptionIDProof}
@@ -402,6 +402,7 @@ function WSListEdit() {
                       onChange={OnChangeHandler}
                       type="text"
                       maxLength={WSData?.IDProofLength}
+                      disabled={WSData?.IDPROOF_Type == null}
                     />
                   </td>
 
@@ -426,7 +427,7 @@ function WSListEdit() {
             style={{ height: "100%" }}
           >
             <div>
-              <h5 style={{ fontSize: "17px" }}>Wholesaler Edit</h5>
+              <h5 style={{ fontSize: "17px" }}>Mahajon Edit</h5>
             </div>
             <div>
               <Button
@@ -504,7 +505,7 @@ function WSListEdit() {
           xl={12}
           style={{ paddingLeft: "15px" }}
         >
-          <WholeSellerDetails
+          <MahajonDetails
             isDisable={isDisable}
             setIsDisable={setIsDisable}
             setTextDetail={setTextDetail}
@@ -516,4 +517,4 @@ function WSListEdit() {
   );
 }
 
-export default WSListEdit;
+export default MahajonListEdit;

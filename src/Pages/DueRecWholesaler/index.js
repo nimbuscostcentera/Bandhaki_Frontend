@@ -78,7 +78,7 @@ function DueRecWholesaler() {
         Amount: amount,
         DueAmount: filteredData[0]?.DueAmount,
         Cust_Type: 2,
-        mode,
+        mode : mode || 1,
       });
       // Refresh data after successful save
       performSearch(); 
