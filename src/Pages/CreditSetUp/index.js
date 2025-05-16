@@ -10,6 +10,7 @@ function CreditSetUp() {
     {
       Customer_Access: null,
       WholeSaler_Access: null,
+      Mahajan_Access: null,
     },
   ]);
   const [editedData, setEditedData] = useState({});
@@ -23,7 +24,6 @@ function CreditSetUp() {
     ClearAdminSetUp,
     fetchAdminSetUp,
   } = useFetchAdminSetUp();
-
 
   const {
     EditCreditFunc,
@@ -40,9 +40,9 @@ function CreditSetUp() {
     }
   }, [AdminSetUp]);
 
-    useEffect(() => {
-      fetchAdminSetUp({});
-    }, [CreditEditSuccess]);
+  useEffect(() => {
+    fetchAdminSetUp({});
+  }, [CreditEditSuccess]);
 
   const handleCheckboxChange = (rowId, fieldName, value) => {
     const newValue = value ? 1 : 0;
@@ -76,6 +76,7 @@ function CreditSetUp() {
         ...item,
         Customer_Access: newToggleState ? 1 : 0,
         WholeSaler_Access: newToggleState ? 1 : 0,
+        Mahajan_Access: newToggleState ? 1 : 0,
       };
       updates[item.ID] = updatedItem;
       return updatedItem;
@@ -98,7 +99,7 @@ function CreditSetUp() {
       ID: rowId,
       ...editedData[rowId],
     }));
-// console.log(changes, "changes");
+    // console.log(changes, "changes");
     try {
       await EditCreditFunc({ changes });
     } catch (error) {
@@ -118,13 +119,12 @@ function CreditSetUp() {
     }
     if (CreditEditError) {
       toast.error(CreditEditError);
-  
     }
-        ClearStateEditCredit();
+    ClearStateEditCredit();
   }, [CreditEditSuccess, CreditEditError]);
   return (
     <Container fluid className="pt-5">
-      <ToastContainer/>
+      <ToastContainer />
       <Row className="pt-2">
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
           <h5 className="my-1 mx-1 p-0">Credit Setup</h5>
@@ -146,6 +146,7 @@ function CreditSetUp() {
                   <th>Access</th>
                   <th>Customer</th>
                   <th>Wholesaler</th>
+                  <th>Mahajan</th>
                   {/* <th style={{ backgroundColor: "#ffff00" }}>Date to Date</th>
                   <th style={{ backgroundColor: "#00ffff" }}>Monthly</th>
                   <th style={{ backgroundColor: "#00ffff" }}>
@@ -168,11 +169,11 @@ function CreditSetUp() {
                         type="checkbox"
                         checked={
                           editedData[item.ID]?.Customer_Access ??
-                          item.Customer_Access
+                          item?.Customer_Access
                         }
                         onChange={(e) =>
                           handleCheckboxChange(
-                            item.ID,
+                            item?.ID,
                             "Customer_Access",
                             e.target.checked
                           )
@@ -190,6 +191,22 @@ function CreditSetUp() {
                           handleCheckboxChange(
                             item.ID,
                             "WholeSaler_Access",
+                            e.target.checked
+                          )
+                        }
+                      />
+                    </td>
+                    <td>
+                      <Form.Check
+                        type="checkbox"
+                        checked={
+                          editedData[item.ID]?.Mahajan_Access ??
+                          item?.Mahajan_Access
+                        }
+                        onChange={(e) =>
+                          handleCheckboxChange(
+                            item?.ID,
+                            "Mahajan_Access",
                             e.target.checked
                           )
                         }

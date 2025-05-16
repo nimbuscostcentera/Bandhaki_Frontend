@@ -480,6 +480,18 @@ function SideBar() {
               {Open && <span className="ml-2">WholeSaler</span>}
             </Link>
             <Link
+              to={"/auth/manager/mahajon"}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Manage Mahajon")}
+              >
+                <i className="bi bi-people ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Mahajon</span>}
+            </Link>
+            <Link
               to={"/auth/manager/groupcost"}
               className="border-bottom border-secondary"
             >

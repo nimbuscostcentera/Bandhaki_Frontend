@@ -475,8 +475,8 @@ function FineTable({ setIsDisable, search }) {
     if (colKey === "FINE_PERCENTAGE" && !validateFinePercentage(value)) return;
 
     if (colKey === "MONTH") {
-      const monthValue = Number.parseInt(value, 10);
-      if (monthValue < 1 || monthValue > 12) return;
+      // Disallow decimal values
+      if (!Number.isInteger(Number(value))) return;
     }
 
     updatedRows[rowIndex][colKey] = value;
@@ -514,7 +514,7 @@ function FineTable({ setIsDisable, search }) {
 
     if (invalidRows.length > 0) {
       toast.error(
-        "Please fill all required fields correctly. Month must be between 1 and 12."
+        "Please fill all required fields correctly."
       );
       return;
     }

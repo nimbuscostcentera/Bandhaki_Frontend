@@ -35,6 +35,7 @@ import CreditSetUp from "./Pages/CreditSetUp";
 import PaymentToWholeSaler from "./Pages/PaymentToWholeSaler";
 import DueRecWholesaler from "./Pages/DueRecWholesaler";
 import Duerecwhview from "./Pages/DueRecWholesaler/Duerecwhview";
+import MahajonListEdit from "./Pages/Mahajon";
 
 const App = createBrowserRouter([
   {
@@ -133,6 +134,10 @@ const App = createBrowserRouter([
           {
             path: "wholeseller",
             element: <WSListEdit />,
+          },
+          {
+            path: "mahajon",
+            element: <MahajonListEdit />,
           },
 
           {
