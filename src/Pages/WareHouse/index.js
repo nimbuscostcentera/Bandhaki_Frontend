@@ -106,7 +106,7 @@ function WareHouseListEdit() {
   return (
     <Container fluid style={{ width: "98%", padding: 0 }}>
       <ToastContainer />
-      <Row style={{ marginTop: "60px", width: "100%" }}>
+      <Row style={{ marginTop: "50px", width: "100%" }}>
         <Col xs={12}>
           <div className="d-flex justify-content-between">
             <h5>Warehouse Management</h5>
@@ -186,16 +186,11 @@ function WareHouseListEdit() {
         </Col>
 
         {/* Edit Section */}
-        <Col xs={12}>
-          <hr className="mt-3 mb-2" />
-          <div className="d-flex justify-content-between">
-            <h5>Warehouse Edit</h5>
-          </div>
-          <hr className="mt-1 mb-2" />
-        </Col>
+
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
-          <hr className="my-1" />
-          <div className="d-flex justify-content-between align-items-center m-0 flex-wrap">
+          <hr className="mt-3 mb-2" />
+          <div className=" d-flex justify-content-between align-items-center m-0 flex-wrap">
+            <h5>Warehouse Edit</h5>
             <div>
               <label
                 className="form-input"
@@ -231,7 +226,8 @@ function WareHouseListEdit() {
               </label>
             </div>
           </div>
-          <hr className="my-1" />
+          <hr className="mt-2 mb-2" />
+          {/* <hr style={{ marginTop: "2px" }} /> */}
         </Col>
 
         <Col xs={12}>

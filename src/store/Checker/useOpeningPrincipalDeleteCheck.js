@@ -13,7 +13,12 @@ const useOpeningPrincipalDeleteCheck = create((set) => ({
       CheckOpeningPrincipalDeleteCheckErr: null,
     }); // Start loading
     try {
-      const result = await axiosInstance.post(API, userdata);
+
+      const endpoint =
+        userdata?.Cust_Type == 3
+          ? `${process.env.REACT_APP_BASEURL}/mahajon-routes/delcheck-mahajonopeningprn`
+          : `${process.env.REACT_APP_BASEURL}/transaction-routes/delcheck-openingprincipal`;
+      const result = await axiosInstance.post(endpoint, userdata);
       const { data } = result;
       console.log(data, "my");
       const { response, success } = data;

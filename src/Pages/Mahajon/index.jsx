@@ -233,7 +233,7 @@ function MahajonListEdit() {
   return (
     <Container fluid style={{ width: "100%", padding: 0 }}>
       <ToastContainer />
-      <Row style={{ marginTop: "60px", marginLeft: "1px", width: "98%" }}>
+      <Row style={{ marginTop: "50px", marginLeft: "1px", width: "98%" }}>
         <Col
           xs={12}
           sm={12}
@@ -243,7 +243,7 @@ function MahajonListEdit() {
           style={{ paddingLeft: "15px", margin: "0px" }}
         >
           <div className="d-flex justify-content-between">
-            <h5 style={{ fontSize: "18px" }}>Mahajon Add</h5>
+            <h5>Mahajon Add</h5>
           </div>
           <hr style={{ marginTop: "2px" }} />
         </Col>
@@ -427,7 +427,7 @@ function MahajonListEdit() {
             style={{ height: "100%" }}
           >
             <div>
-              <h5 style={{ fontSize: "17px" }}>Mahajon Edit</h5>
+              <h5 >Mahajon Edit</h5>
             </div>
             <div>
               <Button

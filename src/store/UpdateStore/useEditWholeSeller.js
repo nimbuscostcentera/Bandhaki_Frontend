@@ -14,7 +14,12 @@ const useEditWholeSeller = create((set) => ({
       WSEditSuccess: null,
     }); // Start loading
     try {
-      const { data } = await axiosInstance.put(API, userdata);
+      const config = {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      };
+      const { data } = await axiosInstance.put(API, userdata, config);
       const { response } = data;
       set({
         WSEditSuccess: response,

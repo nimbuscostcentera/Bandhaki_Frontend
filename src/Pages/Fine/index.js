@@ -9,7 +9,7 @@ import useFetchAuth from "../../store/Auth/useFetchAuth";
 import useAddFine from "../../store/AddStore/useAddFine";
 import EstimateTable from "../../Component/EstimateTable";
 import FineTable from "./FineTable";
-import ReusableModal from "../../Component/Modal";
+import ReusableModal from "../../Component/ReusableModal";
 
 function FineListEdit() {
   const { CompanyID } = useFetchAuth();
@@ -150,7 +150,6 @@ function FineListEdit() {
     updatedRows[rowIndex][colKey] = value;
     setRows(updatedRows);
   };
-  
 
   const addRow = () => {
     const newRow = {
@@ -173,17 +172,13 @@ function FineListEdit() {
   const saveItem = () => {
     // Validate rows before saving
     const invalidRows = rows.filter(
-      (row) =>
-        !row.MONTH ||
-        !row.FINE_PERCENTAGE 
-        // Number.parseInt(row.MONTH, 10) < 1 ||
-        // Number.parseInt(row.MONTH, 10) > 12
+      (row) => !row.MONTH || !row.FINE_PERCENTAGE
+      // Number.parseInt(row.MONTH, 10) < 1 ||
+      // Number.parseInt(row.MONTH, 10) > 12
     );
 
     if (invalidRows.length > 0) {
-      toast.error(
-        "Please fill all required fields correctly."
-      );
+      toast.error("Please fill all required fields correctly.");
       return;
     }
 
@@ -265,7 +260,7 @@ function FineListEdit() {
   return (
     <Container fluid style={{ width: "98%", padding: 0 }}>
       <ToastContainer />
-      <Row style={{ marginTop: "60px", marginLeft: "3px", width: "100%" }}>
+      <Row style={{ marginTop: "50px", width: "100%" }}>
         <Col xs={12}>
           <div className="d-flex justify-content-between">
             <h5>Fine Management</h5>
@@ -273,14 +268,32 @@ function FineListEdit() {
           <hr className="mt-1 mb-2" />
         </Col>
 
-        <Col xs={12} sm={12} md={11} lg={10} xl={10}>
-          <EstimateTable
-            columns={columns}
-            rows={fineData}
-            handleChange={onChangeHandler}
-            SearchHandler={handleOpen}
-            priorityref={inputRef1}
-          />
+        <Col xs={12} sm={12} md={12} lg={12} xl={12}>
+          <div className="d-flex align-items-start  gap-1 flex-wrap">
+            <div style={{}}>
+              <EstimateTable
+                columns={columns}
+                rows={fineData}
+                handleChange={onChangeHandler}
+                SearchHandler={handleOpen}
+                priorityref={inputRef1}
+              />
+            </div>
+
+            {/* Add Fine Button on the right */}
+            <div style={{ margin: "5px 0px 0px 10px" }}>
+              <Button
+                variant="success"
+                onClick={SaveData}
+                disabled={isFineAddLoading}
+                className="mt-1"
+              >
+                {isFineAddLoading ? "Processing..." : "Add Fine"}
+              </Button>
+            </div>
+          </div>
+
+          {/* Modal stays outside of flex container */}
           <ReusableModal
             show={showModal}
             Title={"Fine Details"}
@@ -307,20 +320,11 @@ function FineListEdit() {
             }
           />
         </Col>
-        <Col xs={12} sm={12} md={1} lg={2} xl={2}>
-          <div className="d-flex justify-content-start mt-3">
-            <Button
-              variant="success"
-              onClick={SaveData}
-              disabled={isFineAddLoading}
-            >
-              {isFineAddLoading ? "Processing..." : "Add Fine"}
-            </Button>
-          </div>
-        </Col>
+
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
-          <hr className="my-1" />
-          <div className="d-flex justify-content-between align-items-center m-0 flex-wrap">
+          <hr className="mt-3 mb-2" />
+          <div className=" d-flex justify-content-between align-items-center m-0 flex-wrap">
+            <h5>Existing Fines</h5>
             <div>
               <label
                 className="form-input"
@@ -356,13 +360,10 @@ function FineListEdit() {
               </label>
             </div>
           </div>
-          <hr className="my-1" />
+          <hr className="mt-2 mb-2" />
         </Col>
 
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
-          <hr className="mt-3 mb-2" />
-          <h5>Existing Fines</h5>
-          <hr className="my-2" />
           <FineTable
             isDisable={isDisable}
             setIsDisable={setIsDisable}

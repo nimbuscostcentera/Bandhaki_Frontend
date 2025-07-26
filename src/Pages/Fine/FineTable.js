@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Table from "../../Component/Table";
-import ReusableModal from "../../Component/Modal";
+import ReusableModal from "../../Component/ReusableModal";
 import { toast } from "react-toastify";
 import { Form, InputGroup } from "react-bootstrap";
 import checkOrder from "../../GlobalFunctions/Ordercheck";
@@ -564,7 +564,7 @@ function FineTable({ setIsDisable, search }) {
   return (
     <div
       className="table-box"
-      style={{ height: "60vh", border: "1px solid lightgrey" }}
+      style={{ height: "55vh",  }}
     >
       <Table
         tab={filteredData}

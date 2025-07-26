@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import moment from "moment";
 
-import { Row, Col, Button } from "react-bootstrap";
+import { Row, Col, Button, Spinner } from "react-bootstrap";
 
 import Table from "../../Component/Table";
 import SelectOption from "../../Component/SelectOption";
@@ -18,7 +18,9 @@ import useFetchLotNoNotran from "../../store/ShowStore/useFetchLotNoNotran";
 import "./Adjust.css";
 import useEditCredit from "../../store/UpdateStore/useEditCredit";
 import useFetchAdminSetUp from "../../store/ShowStore/useFetchAdminSetUp";
-
+import BongCalender from "../../Component/BongCalender";
+import InputBox from "../../Component/InputBox";
+import useFetchAuth from "../../store/Auth/useFetchAuth";
 function ReceiveInterest({
   LotNo,
   CalculateData = [[]],
@@ -28,16 +30,21 @@ function ReceiveInterest({
   entityType,
   showReceiveInterest,
   fineInterestCode,
+  TranCode,
+  searchHeaderID,
 }) {
+  const { user, CompanyID } = useFetchAuth();
   // console.log(custId,);
   //-----------------------------------hooks------------------------------------//
   const recInputref = useRef(null);
   const navigate = useNavigate();
   const [narration, setNarration] = useState("");
   const [principalAmount, setPrincipalAmount] = useState(0);
+  const [gracedate, setGraceDate] = useState("");
   const [data, setData] = useState({
     LotNo: "",
     LotPrnAmt: 0,
+    RcvDate: user?.date,
     RcvAmt: 0,
     RcvAmtPayMode: 1,
     refundAmt: 0,
@@ -56,7 +63,9 @@ function ReceiveInterest({
     isPartial: false,
     isAllPrnPaid: false,
   });
+  const [openBong, setOpenBong] = useState(false);
   // ------------------------------Zustand store for fetching lot data---------------------------------//
+
   const {
     LotNoNoTranList,
     isLoadingLotNoNoTran,
@@ -76,15 +85,9 @@ function ReceiveInterest({
     AdjustEntryAdd,
   } = useAddAdjustEntry();
 
+  const { AdminSetUp, fetchAdminSetUp } = useFetchAdminSetUp();
 
-    const {
-      AdminSetUp,
-      fetchAdminSetUp,
-    } = useFetchAdminSetUp();
-  
-  
-    const { CreditEditSuccess,
-    } = useEditCredit();
+  const { CreditEditSuccess } = useEditCredit();
 
   //---------------------------------------------function-----------------------------------------//
 
@@ -96,17 +99,17 @@ function ReceiveInterest({
       RcvAmt: /^\d{0,10}(\.\d{0,2})?$/,
       LotPrnAmt: /^\d{0,10}(\.\d{0,2})?$/,
       refundAmt: /^\d{0,10}(\.\d{0,2})?$/,
+      RcvDate: /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[0-2])$/,
     };
     const arr = Object.keys(Regex);
 
     if (key === "LotNo") {
       // Find the selected Lot's details
-    const selectedLot = LotNoNoTranList.find((item) => item.LotNo === value);
-    let principalAmt = 0;
-    if (selectedLot) {
-      principalAmt = selectedLot.Update_Prn_Rcv;
-    }
-
+      const selectedLot = LotNoNoTranList.find((item) => item.LotNo === value);
+      let principalAmt = 0;
+      if (selectedLot) {
+        principalAmt = selectedLot.Update_Prn_Rcv;
+      }
       // Update both LotNo and LotPrnAmt in the data state
       setData((prev) => ({
         ...prev,
@@ -115,12 +118,38 @@ function ReceiveInterest({
       }));
       setPrincipalAmount(principalAmt); // Update local state if needed
     }
+    //date validation
+    let obj = AdminSetUp?.find((item) => item?.Field_Name == "Grace Period");
 
+    let ObjKey =
+      entityType == 1
+        ? "Customer_Access"
+        : entityType == 2
+        ? "WholeSaler_Access"
+        : "Mahajan_Access";
     // Handle other inputs
     if (arr.includes(key) && Regex[key]?.test(value)) {
+      if (key == "RcvDate" && obj[ObjKey] == 1) {
+        const [y, m, d] = (user?.date).split("-");
+        let [vy, vm, vd] = value?.split("-");
+        if (parseInt(vm, 10) < parseInt(m, 10)) {
+          toast.warning("Previous month entry is not possible");
+          return;
+        }
+        if (parseInt(vy, 10) < parseInt(y, 10)) {
+          toast.warning("Previous  Year entry is not possible");
+          return;
+        }
+        if (value > user?.date) {
+          toast.warning("Future date entry is not possible");
+          return;
+        }
+      }
       setData((prev) => ({ ...prev, [key]: value }));
     } else if (!arr.includes(key)) {
       setData((prev) => ({ ...prev, [key]: value }));
+    } else {
+      return;
     }
   };
   // Submit Handler
@@ -173,11 +202,34 @@ function ReceiveInterest({
         Cust_Type: entityType,
         today: moment().format("YYYY-MM-DD"),
         principalAmount: Number.parseFloat(principalAmount),
+        TranCode,
+        SearchHeaderID: searchHeaderID,
       });
     }
   };
 
   //-------------------------------------------useEffect-----------------------------------------//
+
+  //grace date
+  useEffect(() => {
+    if (user?.date && AdminSetUp?.length > 0) {
+      const obj = AdminSetUp.find(
+        (item) => item?.Field_Name === "Grace Period"
+      );
+
+      // Check if obj exists and has Days property
+      if (obj && obj.Days !== undefined && obj.Days !== null) {
+        const [y, m] = user.date.split("-");
+        const days = obj.Days.toString().padStart(2, "0");
+        setGraceDate(`${y}-${m}-${days}`);
+      } else {
+        console.warn("Grace Period not found or Days is undefined");
+        // Handle missing data - perhaps set to default value
+        const [y, m] = user.date.split("-");
+        setGraceDate(`${y}-${m}-01`); // Default to first day
+      }
+    }
+  }, [AdminSetUp, user?.date]);
 
   // Fetch lot data when customer ID changes
   useEffect(() => {
@@ -202,7 +254,7 @@ function ReceiveInterest({
 
       setData({
         LotNo: "",
-        LotPrnAmt:0,
+        LotPrnAmt: 0,
         RcvAmt: 0,
         RcvAmtPayMode: "Cash",
         refundAmt: 0,
@@ -210,6 +262,7 @@ function ReceiveInterest({
         walletBal: 0,
         totalPaid: 0,
         BalAmt: 0,
+        RcvDate: user?.date,
         gridData: [],
         FineId: fineInterestCode || 0,
       });
@@ -223,20 +276,25 @@ function ReceiveInterest({
       timeid = setTimeout(() => {
         ClearStateAdjustEntryAdd();
         navigate("/auth/adjust/view", {
-          state: { custId, customertype: entityType },
+          state: {
+            custId,
+            customertype: entityType,
+            trancode: entityType == 1 ? "IAC" : entityType == 2 ? "IAW" : "IAM",
+          },
           // replace: true,
         });
-      }, 3000);
+      }, 1500);
     }
 
     if (AdjustEntryError && !isAdjustEntryLoading && !AdjustEntrySuccess) {
       toast.error(AdjustEntryError, {
         position: "top-right",
-        autoClose: 3000,
+        autoClose: 1500,
       });
     }
     return () => clearTimeout(timeid);
   }, [isAdjustEntryLoading, AdjustEntrySuccess, AdjustEntryError]);
+
   //set customer id
   useEffect(() => {
     if (
@@ -257,6 +315,7 @@ function ReceiveInterest({
       setData((prev) => ({ ...prev, FineId: fineInterestCode }));
     }
   }, [custId, fineInterestCode]);
+
   // set wallet balance
   useEffect(() => {
     setData({
@@ -264,6 +323,7 @@ function ReceiveInterest({
       walletBal: Number.parseFloat(WalletBalance || 0).toFixed(2),
     });
   }, [isWalletLoading, WalletBalance, custId]);
+
   //manage focus
   useEffect(() => {
     setTimeout(() => {
@@ -272,6 +332,7 @@ function ReceiveInterest({
       }
     }, 200);
   }, [showReceiveInterest]);
+
   // grid1 data
   useEffect(() => {
     const arr = [];
@@ -338,6 +399,7 @@ function ReceiveInterest({
       isPartial: isPartial,
     }));
   }, [CalculateData]);
+
   //datagrid filter
   useEffect(() => {
     let tot = 0;
@@ -355,10 +417,10 @@ function ReceiveInterest({
     }));
   }, [data?.gridData]);
 
+  useEffect(() => {
+    fetchAdminSetUp({});
+  }, [CreditEditSuccess]);
 
-   useEffect(() => {
-        fetchAdminSetUp({});
-      }, [CreditEditSuccess]);
   //Update Balance Calculation Effect
   useEffect(() => {
     const principal = Number(data.LotPrnAmt) || 0;
@@ -394,10 +456,12 @@ function ReceiveInterest({
     data.creditAmt,
     data.creditAmtAdjust,
   ]);
+
   // set narration
   useEffect(() => {
     setData({ ...data, narration: narration });
   }, [narration]);
+
   //Add Refund Validation
   useEffect(() => {
     if (
@@ -411,6 +475,18 @@ function ReceiveInterest({
     }
   }, [data.RcvAmt, data.walletBal, data.totalPaid]);
 
+  useEffect(() => {
+    // Check if the currently selected lot number is now in the excluded list
+    if (data.LotNo && LotNo && LotNo.includes(data.LotNo)) {
+      // Reset LotPrnAmt and principalAmount if the selected lot is now excluded
+      setData((prev) => ({
+        ...prev,
+        LotNo: "",
+        LotPrnAmt: 0,
+      }));
+      setPrincipalAmount(0);
+    }
+  }, [LotNo, data.LotNo]);
   //-----------------------------------------others variables and constant------------------------------------//
   // Modified lotNolist memo
   const lotNolist = useMemo(() => {
@@ -421,18 +497,7 @@ function ReceiveInterest({
       })
     );
   }, [LotNoNoTranList, LotNo]);
-   useEffect(() => {
-     // Check if the currently selected lot number is now in the excluded list
-     if (data.LotNo && LotNo && LotNo.includes(data.LotNo)) {
-       // Reset LotPrnAmt and principalAmount if the selected lot is now excluded
-       setData((prev) => ({
-         ...prev,
-         LotNo: "",
-         LotPrnAmt: 0,
-       }));
-       setPrincipalAmount(0);
-     }
-   }, [LotNo, data.LotNo]);
+
   // Grid1 columns
   const gridColumns = [
     {
@@ -449,38 +514,38 @@ function ReceiveInterest({
       width: "80px",
     },
     {
-      headername: "Paybale Principal Amt",
+      headername: "Paybale Prn. Amt",
       fieldname: "principalDr",
       type: "number",
       width: "150px",
     },
     {
-      headername: "Principal Amount",
+      headername: "Paid Prn. Amt.",
       fieldname: "principalCr",
       type: "number",
       width: "150px",
     },
     {
-      headername: "Payble Interest Amt",
+      headername: "Payble Int. Amt",
       fieldname: "interestDr",
       type: "number",
       width: "150px",
     },
     {
-      headername: "Interest Amount",
+      headername: "Paid Int. Amt.",
       fieldname: "interestCr",
       type: "number",
       width: "150px",
     },
     {
-      headername: "Total Paid",
+      headername: "Total Paid Amt.",
       fieldname: "TotPaidAmt",
       type: "number",
       width: "150px",
     },
   ];
   return (
-    <Row className="my-4">
+    <Row className="my-1">
       <Col s={12} sm={12} md={12} lg={12} xl={12}>
         <div
           style={{
@@ -494,19 +559,20 @@ function ReceiveInterest({
               <tr>
                 <th
                   style={{
-                    backgroundColor: "rgb(110, 98, 221)",
+                    backgroundColor: "rgb(142, 135, 214)",
                     color: "#000000",
-                    border: "1px solid rgb(142, 135, 214)",
+                    border: "1px solid rgb(110, 98, 221)",
                     textAlign: "center",
+                    width: "180px",
                   }}
                 >
                   Lot No
                 </th>
                 <th
                   style={{
-                    backgroundColor: "rgb(110, 98, 221)",
+                    backgroundColor: "rgb(142, 135, 214)",
                     color: "#000000",
-                    border: "1px solid rgb(142, 135, 214)",
+                    border: "1px solid rgb(110, 98, 221)",
                     textAlign: "center",
                   }}
                 >
@@ -518,9 +584,10 @@ function ReceiveInterest({
                     color: "#000000",
                     border: "1px solid rgb(158, 89, 11)",
                     textAlign: "center",
+                    width: "110px",
                   }}
                 >
-                  Receive Amt*
+                  Date*
                 </th>
                 <th
                   style={{
@@ -530,7 +597,18 @@ function ReceiveInterest({
                     textAlign: "center",
                   }}
                 >
-                  Payment Mode*
+                  {entityType == 3 ? "Paid" : "Rcv."} Amt.(₹)*
+                </th>
+                <th
+                  style={{
+                    backgroundColor: "rgb(255, 197, 72)",
+                    color: "#000000",
+                    border: "1px solid rgb(158, 89, 11)",
+                    textAlign: "center",
+                    width: "130px",
+                  }}
+                >
+                  Pmt. Mode*
                 </th>
                 <th
                   style={{
@@ -540,7 +618,7 @@ function ReceiveInterest({
                     textAlign: "center",
                   }}
                 >
-                  Refund Amt*
+                  {entityType == 3 ? "Receive" : "Refund"} Amt.(₹)
                 </th>
                 <th
                   style={{
@@ -548,36 +626,19 @@ function ReceiveInterest({
                     color: "black",
                     border: "1px solid rgb(11, 82, 158)",
                     textAlign: "center",
+                    width: "120px",
                   }}
                 >
-                  Payment Mode*
+                  Pmt. Mode*
                 </th>
-                {/* <th
-                  style={{
-                    backgroundColor: "rgb(152, 223, 138)",
-                    color: "#000000",
-                    border: "1px solid rgb(89, 158, 11)",
-                    textAlign: "center",
-                  }}
-                >
-                  Discount Amt
-                </th>
-                <th
-                  style={{
-                    backgroundColor: "rgb(152, 223, 138)",
-                    color: "#000000",
-                    border: "1px solid rgb(89, 158, 11)",
-                    textAlign: "center",
-                  }}
-                >
-                  Credit Amount
-                </th> */}
+
                 <th
                   style={{
                     backgroundColor: "rgb(127, 236, 184)",
                     color: "black",
                     border: "1px solid rgb(11, 82, 158)",
                     textAlign: "center",
+                    width: "140px",
                   }}
                 >
                   Bal Amt Adjust
@@ -605,7 +666,6 @@ function ReceiveInterest({
                     placeholder={"--Select Lot No--"}
                     key={2}
                     defaultval={-1}
-                    width={"100%"}
                     directSearch={true}
                   />
                 </td>
@@ -619,12 +679,49 @@ function ReceiveInterest({
                     type="number"
                     min="0"
                     step="0.01"
-                    style={{ width: "100%" }}
+                    style={{ width: "135px" }}
+                  />
+                </td>
+                <td>
+                  <InputBox
+                    isfrontIconOff={true}
+                    placeholder="YYYY-MM-DD"
+                    className="input-cell"
+                    name="RcvDate"
+                    value={data?.RcvDate || user?.date}
+                    isdisable={true}
+                    type="string"
+                    SearchIcon={<i className="bi bi-calendar-event"></i>}
+                    SearchButton={gracedate >= user?.date ? true : false}
+                    SearchHandler={() => {
+                      setOpenBong(true);
+                    }}
+                    InputStyle={{
+                      width: "100%",
+                      padding: "3px 5px",
+                    }}
+                  />
+                  <BongCalender
+                    handleSave={(b, e) => {
+                      let event = {
+                        target: {
+                          name: "RcvDate",
+                          value: b,
+                        },
+                      };
+                      OnChangeHandler(event);
+                    }}
+                    handleclose={() => {
+                      setOpenBong(false);
+                    }}
+                    view={openBong}
                   />
                 </td>
                 <td>
                   <input
-                    placeholder="Receive Amount(₹)"
+                    placeholder={
+                      entityType == 3 ? "Paid Amount(₹)" : "Receive Amount(₹)"
+                    }
                     className="input-cell"
                     name="RcvAmt"
                     value={data?.RcvAmt || ""}
@@ -632,8 +729,8 @@ function ReceiveInterest({
                     type="number"
                     min="0"
                     step="0.01"
-                    style={{ width: "100%" }}
                     ref={showReceiveInterest ? recInputref : null}
+                    style={{ width: "135px" }}
                   />
                 </td>
                 <td>
@@ -645,14 +742,17 @@ function ReceiveInterest({
                     Value={data?.RcvAmtPayMode}
                     Soptions={[
                       { Name: "Cash", Value: 1 },
-                      { Name: "UPI", Value: 2 },
-                      { Name: "Bank Transfer", Value: 3 },
+                      { Name: "Bank Transfer", Value: 2 },
+                      { Name: "UPI", Value: 3 },
+                      { Name: "Adjust", Value: 4 },
                     ]}
                   />
                 </td>
                 <td>
                   <input
-                    placeholder="Refund Amount(₹)"
+                    placeholder={
+                      entityType == 3 ? "Receive Amt(₹)" : "Refund Amount(₹)"
+                    }
                     className="input-cell"
                     name="refundAmt"
                     value={data?.refundAmt || ""}
@@ -660,10 +760,7 @@ function ReceiveInterest({
                     type="number"
                     min="0"
                     step="0.01"
-                    // disabled={
-                    //   data?.RcvAmt + data?.walletBal - data?.totalPaid < 0
-                    // }
-                    style={{ width: "100%" }}
+                    style={{ width: "135px" }}
                   />
                 </td>
                 <td>
@@ -675,37 +772,13 @@ function ReceiveInterest({
                     Value={data?.RefundAmtPayMode}
                     Soptions={[
                       { Name: "Cash", Value: 1 },
-                      { Name: "UPI", Value: 2 },
-                      { Name: "Bank Transfer", Value: 3 },
+                      { Name: "Bank Transfer", Value: 2 },
+                      { Name: "UPI", Value: 3 },
+                      { Name: "Adjust", Value: 4 },
                     ]}
                   />
                 </td>
-                {/* <td>
-                  <input
-                    placeholder="Discount Amount(₹)"
-                    className="input-cell"
-                    name="discountAmt"
-                    value={data?.discountAmt || ""}
-                    onChange={OnChangeHandler}
-                    type="number"
-                    step="0.01"
-                    style={{ width: "100%" }}
-                  />
-                </td>
-                <td>
-                  <input
-                    placeholder="Credit Amount(₹)"
-                    className="input-cell"
-                    name="creditAmt"
-                    value={data?.creditAmt || ""}
-                    onChange={OnChangeHandler}
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    style={{ width: "100%" }}
-                    disabled={entityType !== "wholesaler"}
-                  />
-                </td> */}
+
                 <td>{data?.walletBal == 0 ? "-" : data?.walletBal}</td>
                 <td>{data?.BalAmt == 0 ? "-" : data?.BalAmt}</td>
               </tr>
@@ -713,17 +786,36 @@ function ReceiveInterest({
           </table>
         </div>
       </Col>
-      <Col xs={12} sm={12} md={12} lg={12} xl={12} className="mt-3">
-        <Table
-          Col={gridColumns || []}
-          tab={data?.gridData || []}
-          isLoading={false}
-          isFooter={true}
-          grandtotal={data?.totalPaid}
-          width={"100%"}
-        />
+      <Col xs={12} sm={12} md={12} lg={12} xl={12} className="mt-1">
+        {data?.gridData?.length > 0 ? (
+          <Table
+            Col={gridColumns || []}
+            tab={data?.gridData || []}
+            isFooter={true}
+            grandtotal={data?.totalPaid}
+            width={"100%"}
+          />
+        ) : (
+          <div
+            className="border border-secondary border-opacity-25"
+            style={{ height: "40vh" }}
+          >
+            <div className="d-flex justify-content-center align-items-center h-100 text-muted">
+              Choose a{" "}
+              {entityType == 1
+                ? "Customer"
+                : entityType == 2
+                ? "Wholesaler"
+                : entityType == 3
+                ? "Mahajon"
+                : null}{" "}
+              and select one or mulptiple lots and press the calculate button to
+              select the interest you want to give then come here again.
+            </div>
+          </div>
+        )}
       </Col>
-      <Col xs={12} sm={12} md={12} lg={12} xl={12}>
+      <Col xs={12} sm={12} md={12} lg={12} xl={12} className="mt-2">
         <textarea
           placeholder="Narration..."
           value={narration}
@@ -751,11 +843,11 @@ function ReceiveInterest({
       </Col>
       <Col xs={12} sm={12} md={9} lg={11} xl={11}>
         {/* Second Row: Credit & Discount Amounts */}
-        <Row className="mt-3">
+        <Row className="mt-2">
           <Col xs={12} sm={12} md={12} lg={6} xl={6}>
             {/* Discount Amount */}
             <div
-              className="d-flex flex-wrap justify-content-start align-items-center"
+              className="d-flex flex-wrap justify-content-start align-items-center mb-2"
               style={{ width: "100%" }}
             >
               <label
@@ -784,18 +876,21 @@ function ReceiveInterest({
               className="d-flex flex-wrap justify-content-start align-items-center"
               style={{ width: "100%" }}
             >
-              {(entityType !== 2 && AdminSetUp[0]?.Customer_Access === 1) ||
-              (entityType === 2 && AdminSetUp[0]?.WholeSaler_Access === 1) ? (
+              {(AdminSetUp[0]?.Customer_Access === 1 && entityType == 1) ||
+              (entityType === 2 && AdminSetUp[0]?.WholeSaler_Access === 1) ||
+              (entityType === 3 && AdminSetUp[0]?.Mahajan_Access === 1) ? (
                 <>
                   <label
                     className="me-2 mb-0 fw-medium"
                     style={{ minWidth: "100px" }}
                   >
-                    Credit Amt.(₹):
+                    {entityType == 3 ? "Debit" : "Credit"} Amt.(₹):
                   </label>
                   <div style={{ width: "70%" }}>
                     <input
-                      placeholder="Credit Amount(₹)"
+                      placeholder={`${
+                        entityType == 3 ? "Debit" : "Credit"
+                      } Amount(₹)`}
                       className="form-control"
                       name="creditAmt"
                       value={data?.creditAmt || ""}
@@ -815,21 +910,26 @@ function ReceiveInterest({
         </Row>
       </Col>
       <Col xs={12} sm={3} md={3} lg={1} xl={1}>
-        <div className="d-flex justify-content-sm-end justify-content-xs-center align-items-center mt-3">
+        <div className="d-flex justify-content-sm-end justify-content-xs-center align-items-center mt-2">
           <Button
             onClick={handleSave}
             disabled={
               Number(data.BalAmt) < 0 || // Negative balance not allowed
               (Number(data.refundAmt) > 0 &&
-                Number(data.RcvAmt) +
+                Number(data.RcvAmt || data?.LotPrnAmt) +
                   Number(data.walletBal) -
                   Number(data.totalPaid) <=
                   0) ||
               data?.validation ||
-              CalculateData?.length == 0
+              CalculateData?.length == 0 ||
+              isAdjustEntryLoading
             }
           >
-            Save
+            {isAdjustEntryLoading ? (
+              <Spinner animation="border" size="sm" />
+            ) : (
+              "Save"
+            )}
           </Button>
         </div>
       </Col>

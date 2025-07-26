@@ -2,7 +2,7 @@
 
 import { useRef, useState, useMemo, useEffect } from "react";
 import { Container, Row, Col, Button } from "react-bootstrap";
-
+import {useSearchParams} from "react-router-dom";
 import SearchableDropDown from "../../Component/SearchableDropDown";
 import InputBox from "../../Component/InputBox";
 import Table from "../../Component/Table";
@@ -17,8 +17,10 @@ import SortArrayByString from "../../GlobalFunctions/SortarrayByString";
 import checkOrder from "../../GlobalFunctions/Ordercheck";
 
 import useFetchWS from "../../store/ShowStore/useFetchWS";
+import useFetchCust from "../../store/ShowStore/useFetchCust"
 import useFetchCostCenter from "../../store/ShowStore/useFetchCostCenter";
 import useFetchAuth from "../../store/Auth/useFetchAuth";
+import useFetchMahajon from "../../store/ShowStore/useFetchMahajon";
 import useFetchWholesalerLoan from "../../store/ShowStore/useFetchWholesalerLoan";
 import useAddPaymentWholsaler from "../../store/AddStore/useAddPaymentWholsaler";
 import { toast, ToastContainer } from "react-toastify";
@@ -29,6 +31,14 @@ import usePMWDelete from "../../store/DeleteStore/usePMWDelete";
 import SelectOption from "../../Component/SelectOption";
 
 function PaymentToWholeSaler() {
+  const [searchParams] = useSearchParams();
+  const entityType =  searchParams.get("type") === "wholeseller"
+    ? 2
+    : searchParams.get("type") === "customer"
+  ?1
+  : 3;
+  const trancode = searchParams.get("trancode");
+  const { CompanyID, user } = useFetchAuth();
   //------------------------------------useRef-------------------------------------------//
   const inputRef = useRef(null);
   //--------------------------------------useState--------------------------------------//
@@ -38,7 +48,7 @@ function PaymentToWholeSaler() {
     CostCenterID: -1,
     Amount: "",
     Interest: "",
-    EntryDate: "",
+    EntryDate: user?.date,
     OpeningCheck: 0,
   });
   const [originalOrder, setOriginalOrder] = useState([]);
@@ -58,9 +68,37 @@ function PaymentToWholeSaler() {
 
   const [itemToDelete, setItemToDelete] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+
+  useEffect(() => {
+    return () => {
+      setParams({
+        view1: false,
+        view2: false,
+        view: false,
+      });
+      setFilters({
+        keyword: "",
+        StartDate: "",
+        EndDate: "",
+        TransStatus: 2,
+      });
+      setWholesalerloan({
+        WholeSalerID: -1,
+        Narration: "",
+        CostCenterID: -1,
+        Amount: "",
+        Interest: "",
+        EntryDate: user?.date,
+        OpeningCheck: 0,
+      });
+      setOriginalOrder([]);
+      setFilteredData([]);
+    };
+  }, [entityType, trancode]);
   //----------------------------------------API-------------------------------------------//
   const { fetchWSomrData, WholeSellerList } = useFetchWS();
-  const { CompanyID, user } = useFetchAuth();
+
   const { fetchCostCenter, CostCenterList } = useFetchCostCenter();
   const {
     fetchWholeSalerLoanList,
@@ -70,6 +108,7 @@ function PaymentToWholeSaler() {
     isLoadingWholeSalerLoanList,
     ClearWholeSalerLoanList,
   } = useFetchWholesalerLoan();
+  const {fetchCustomrData,errorCustList,isLoadingCustList,CustomerList}=useFetchCust()
   const {
     PaymentWholsalerAdd,
     PaymentWholsalerError,
@@ -93,7 +132,8 @@ function PaymentToWholeSaler() {
     DeletePMW,
     ClearPMWDelete,
   } = usePMWDelete();
-
+  const { fetchMahajonData, MahajonList, isLoadingMahajon, errorMahajon } =
+    useFetchMahajon();
   //----------------------------------------------function------------------------------------//
   const OnChangeHandler = (e) => {
     const key = e.target.name;
@@ -134,17 +174,20 @@ function PaymentToWholeSaler() {
     // Initiate the delete check
     CheckPMWDeleteCheck({
       ID: deleteobj.ID,
-      // Cust_Type: entityType,
+      Cust_Type: entityType,
       LotNo: deleteobj.LotNo,
-      // TranCode: trancode,
+      TranCode: trancode,
     });
   };
   const confirmDelete = async () => {
     if (itemToDelete) {
       try {
+        console.log(itemToDelete);
         await DeletePMW({
           ID: itemToDelete.ID,
           LotNo: itemToDelete.LotNo,
+          Cust_Type: entityType,
+          TranCode: trancode,
         });
         // Refresh data after successful deletion
         if (
@@ -153,7 +196,7 @@ function PaymentToWholeSaler() {
         ) {
           return;
         } else {
-          fetchWholeSalerLoanList({ CompanyID, ...Filters });
+          fetchWholeSalerLoanList({TranCode:trancode, Cust_Type: entityType, CompanyID, ...Filters });
         }
       } catch (err) {
         // console.log(err);
@@ -163,12 +206,10 @@ function PaymentToWholeSaler() {
       }
     }
   };
-
   const cancelDelete = () => {
     setShowDeleteModal(false);
     setItemToDelete(null);
   };
-
   const AddLoan = () => {
     const {
       WholeSalerID,
@@ -184,16 +225,14 @@ function PaymentToWholeSaler() {
       CostCenterID === -1 ||
       Amount === "" ||
       Interest === "" ||
-      Narration === "" ||
       EntryDate === ""
     ) {
       toast.error("Please fill all required fields!");
       return;
     }
 
-    PaymentWholsalerAdd(wholesalerloan);
+    PaymentWholsalerAdd({...wholesalerloan,TranCode:trancode,Cust_Type:entityType});
   };
-
   const SortingFunc = (header, type) => {
     if (!filteredData || filteredData.length === 0) return;
 
@@ -218,12 +257,16 @@ function PaymentToWholeSaler() {
 
   //api fetch
   useEffect(() => {
-    fetchWholeSalerLoanList({ CompanyID, ...Filters });
+    fetchWholeSalerLoanList({ CompanyID, ...Filters, Cust_Type: entityType });
   }, [Filters, PaymentWholsalerSuccess]);
+
   useEffect(() => {
     fetchWSomrData({ CompanyID });
-    fetchCostCenter({ CompanyID, Type: 2 });
+    fetchCostCenter({ CompanyID, Type:entityType });
+    fetchMahajonData({ CompanyID, Cust_Type: entityType, TranCode: trancode });
+    fetchCustomrData({ CompanyID, Cust_Type: entityType, TranCode: trancode });
   }, []);
+
   useEffect(() => {
     if (PaymentWholsalerSuccess) {
       toast.success(PaymentWholsalerSuccess);
@@ -236,7 +279,7 @@ function PaymentToWholeSaler() {
         CostCenterID: -1,
         Amount: "",
         Interest: "",
-        EntryDate: "",
+        EntryDate: user?.date,
         OpeningCheck: 0,
       });
     }
@@ -290,6 +333,10 @@ function PaymentToWholeSaler() {
     ClearPMWDelete();
   }, [PMWDeleteErr, isPMWDeleteLoading, PMWDeleteMsg]);
 
+
+
+  
+
   //--------------------------------------------useMemo-----------------------------------------//
 
   const WholeSalerOption = useMemo(() => {
@@ -298,6 +345,14 @@ function PaymentToWholeSaler() {
       value: item?.ID,
     }));
   }, [WholeSellerList]);
+
+  const CustomerOption = useMemo(() => {
+    return CustomerList?.map((item) => ({
+      label: `${item?.Name}`,
+      value: item?.ID,
+    }));
+  }, [CustomerList]);
+
   const CostCenterOption = useMemo(() => {
     return CostCenterList?.map((item) => ({
       label: `${item?.CODE}`,
@@ -310,52 +365,61 @@ function PaymentToWholeSaler() {
       headername: "Lot No",
       fieldname: "LotNo",
       type: "String",
-      width: "140px",
+      width: "120px",
     },
     {
-      headername: "WholeSaler",
+      headername: `${entityType==1?"Customer":entityType==2?"WholeSaler":"Mahajon"}`,
       fieldname: "WholeSellerName",
       type: "String",
-      width: "140px",
+      width: "130px",
     },
 
     {
       headername: "Amount",
       fieldname: "AMOUNT",
       type: "number",
-      width: "140px",
+      width: "100px",
     },
     {
       headername: "Interest",
       fieldname: "InterestPercentage",
       type: "number",
-      width: "140px",
+      width: "90px",
     },
     {
       headername: "CostCenter",
       fieldname: "CostCenterName",
       type: "String",
-      width: "140px",
+      width: "90px",
     },
     {
       headername: "EntryDate",
       fieldname: "EntryDate",
       type: "BongDate",
-      width: "140px",
+      width: "100px",
     },
     {
       headername: "Narration",
       fieldname: "Description",
       type: "String",
-      width: "140px",
+      width: "300px",
     },
   ];
+  const MahaJonOption=useMemo(()=>{
+    return MahajonList?.map((item) => ({
+      label: `${item?.Name}`,
+      value: item?.ID,
+    }));
+  },[MahajonList]);
   return (
-    <Container fluid style={{ marginTop: "60px" }}>
+    <Container fluid style={{ marginTop: "50px" }}>
       <ToastContainer autoClose={3000} />
       <Row>
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
-          <h5 style={{ fontSize: "18px" }}>Payment To WholeSaler</h5>
+          <h5>Payment {
+            entityType == 2 ?
+              " To WholeSaler" :
+              entityType == 1 ? "To Customer" : " Rcv. From Mahajon"}</h5>
           <hr />
         </Col>
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
@@ -375,13 +439,15 @@ function PaymentToWholeSaler() {
                 >
                   <i className="bi bi-person-circle"></i>
                 </th>
-                <th>WholeSaler*</th>
-                <th>Amount(₹)*</th>
-                <th>Interest(%)*</th>
-                <th>Cost Center*</th>
-                <th>EntryDate*</th>
+                <th style={{ width: "160px" }}>
+                  {entityType ==1 ?"Customer":entityType == 2 ? "WholeSaler" : "Mahajon"}*
+                </th>
+                <th style={{ width: "140px" }}>Amount(₹)*</th>
+                <th style={{ width: "140px" }}>Interest(%)*</th>
+                <th style={{ width: "160px" }}>Cost Center*</th>
+                <th style={{ width: "160px" }}>EntryDate*</th>
                 <th>Narration</th>
-                <th>Opening Entry</th>
+                <th style={{ width: "120px" }}>Opening Entry</th>
               </tr>
             </thead>
 
@@ -392,14 +458,20 @@ function PaymentToWholeSaler() {
                 </td>
                 <td>
                   <SearchableDropDown
-                    options={WholeSalerOption}
+                    options={entityType ==1? CustomerOption : entityType == 2 ? WholeSalerOption : MahaJonOption}
                     handleChange={OnChangeHandler}
                     selectedVal={wholesalerloan?.WholeSalerID}
                     label={"WholeSalerID"}
-                    placeholder={"--Select WholeSaler--"}
+                    placeholder={
+                      entityType == 1 ?
+                        "--Select Customer--" :
+                      entityType == 2
+                        ? "--Select WholeSaler--"
+                        : "--Select Mahajon--"
+                    }
                     key={2}
                     defaultval={-1}
-                    width={"100%"}
+                    width={"160px"}
                     directSearch={true}
                   />
                 </td>
@@ -416,7 +488,7 @@ function PaymentToWholeSaler() {
                     errorMsg={""}
                     maxlen={""}
                     value={wholesalerloan?.Amount}
-                    InputStyle={{ padding: "8px 10px", width: "100%" }}
+                    InputStyle={{  padding: "5px 8px", width: "120px" }}
                   />
                 </td>
                 <td>
@@ -432,7 +504,7 @@ function PaymentToWholeSaler() {
                     errorMsg={""}
                     maxlen={""}
                     value={wholesalerloan?.Interest}
-                    InputStyle={{ padding: "8px 10px", width: "100%" }}
+                    InputStyle={{  padding: "5px 8px", width: "100%" }}
                   />
                 </td>
                 <td>
@@ -464,7 +536,7 @@ function PaymentToWholeSaler() {
                     SearchHandler={handleEntryDate}
                     isfrontIconOff={true}
                     value={wholesalerloan?.EntryDate}
-                    InputStyle={{ padding: "8px 10px", width: "100%" }}
+                    InputStyle={{  padding: "5px 8px", width: "100%" }}
                   />
                   <BongCalender
                     handleSave={EntryDateHandler}
@@ -486,7 +558,7 @@ function PaymentToWholeSaler() {
                     errorMsg={""}
                     maxlen={""}
                     value={wholesalerloan?.Narration}
-                    InputStyle={{ padding: "8px 10px", width: "100%" }}
+                    InputStyle={{  padding: "5px 8px", width: "100%" }}
                   />
                 </td>
                 <td>
@@ -622,13 +694,13 @@ function PaymentToWholeSaler() {
             }}
           />
         </Col>
-        <Col xs={12} sm={12} md={12} lg={12} xl={12}>
+        <Col xs={12} sm={12} md={12} lg={12} xl={12} className="mb-3">
           <Table
             tab={filteredData || []}
             Col={Column}
             OnChangeHandler={OnChangeHandler}
             isLoading={isLoadingWholeSalerLoanList}
-            height={"300px"}
+            height={"85vh"}
             width={"100%"}
             onSorting={SortingFunc}
             getFocusText={(value) => {

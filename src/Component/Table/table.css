@@ -10,27 +10,26 @@
   font-size: smaller;
   text-align: center;
   border: 1px solid rgb(231, 231, 231);
+  font-size: small;
 }
-
-
 
 .tab-head tr th:first-child {
   position: sticky;
   left: 0;
   color: white !important;
   background-color: #2f2d66 !important;
-  z-index: 2;
+  z-index: 3;
   text-align: center;
-  font-size: "10px" !important;
+  font-size:small;
   padding-bottom: 5px !important;
 }
 .tab-head tr th {
-  font-weight: 500;
-  font-size: 14px;
+  font-weight:normal;
+  font-size: small;
   text-align: center;
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 2;
   background-color: #2f2d66 !important;
   color: rgb(255, 255, 255) !important;
 }
@@ -38,10 +37,9 @@
   position: sticky;
   left: 0;
   color: white !important;
-    background-color: #2f2d66 !important;
+  background-color: #2f2d66 !important;
   z-index: 1;
   text-align: center;
-  font-size: "10px" !important;
   padding-bottom: 5px !important;
   border-bottom: "grey" !important;
   border-bottom-color: gray;
@@ -59,7 +57,7 @@
 /* width */
 ::-webkit-scrollbar {
   width: 2px;
-  height: 4px;
+  height: 2px;
 }
 
 /* Track */

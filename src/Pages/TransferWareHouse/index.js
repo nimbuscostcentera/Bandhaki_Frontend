@@ -628,8 +628,9 @@ const TransferWareHouse = () => {
       PlaceHolder: "Select Payment Mode",
       data: [
         { label: "Cash", value: 1 },
-        { label: "Bank", value: 2 },
+        { label: "Bank Transfer", value: 2 },
         { label: "UPI", value: 3 },
+        { label: "Adjust", value: 4 },
       ],
       width: "180px",
     },
@@ -748,7 +749,7 @@ const TransferWareHouse = () => {
           style={{ paddingLeft: "15px", margin: "0px" }}
         >
           <div className="d-flex justify-content-between">
-            <h5 style={{ fontSize: "18px" }}>
+            <h5>
               {trancode === "0RC" || trancode === "0RW"
                 ? "Opening"
                 : "Recive/Dafa"}{" "}

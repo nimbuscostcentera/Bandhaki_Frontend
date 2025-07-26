@@ -1,10 +1,11 @@
 import { create } from "zustand";
-import axios from "axios";
 import axiosInstance from "./../AxiosInterceptor";
 const API = `${process.env.REACT_APP_BASEURL}/transaction-routes/openingentry-add`;
 const useAddOpenEntry = create((set) => ({
   OpenEntrySuccess: null,
   isOpenEntryLoading: false,
+  isOpenEntrySucc: false,
+  isOpenEntryError:false,
   OpenEntryError: null,
 
   InsertOpenEntry: async (userdata) => {
@@ -14,10 +15,14 @@ const useAddOpenEntry = create((set) => ({
       OpenEntrySuccess: null,
     }); // Start loading
     try {
+      // const endpoint =
+      //   userdata?.Cust_Type == 3
+      //     ? `${process.env.REACT_APP_BASEURL}/mahajon-routes/mahajonopeningheaders-show`
+      //     : `${process.env.REACT_APP_BASEURL}/transaction-routes/openingentry-add`;
       const { data } = await axiosInstance.post(API, userdata);
       const { response } = data;
       //   //console.log(response);
-      set({ OpenEntrySuccess: response, isOpenEntryLoading: false }); // Update state with fetched data
+      set({isOpenEntrySucc: true, OpenEntrySuccess: response, isOpenEntryLoading: false }); // Update state with fetched data
     } catch (error) {
       //console.log(error);
       set({

@@ -68,6 +68,7 @@ function GroupWareHouseTable({ setIsDisable, search }) {
   }, [
     GroupWareHouseEditSuccess,
     GroupWareHouseDeleteMsg,
+    GroupWareHouseSuccess,
   ]);
 
 
@@ -88,16 +89,16 @@ function GroupWareHouseTable({ setIsDisable, search }) {
 
   useEffect(() => {
     handleSearch();
-  },[search])
+  }, [search, GroupWareHouseSuccess]);
   useEffect(() => {
-     let updatedData = GroupWareHouseList.map((item) => ({ ...item }));
-     if (originalOrder.length > 0) {
-       updatedData = originalOrder
-         .map((id) => updatedData.find((row) => row.ID === id))
-         .filter(Boolean);
-     }
-     setFilteredData([...updatedData]);
-  }, [GroupWareHouseList, isGroupWareHouseFetchLoading, GroupWareHouseEditSuccess]);
+    let updatedData = GroupWareHouseList.map((item) => ({ ...item }));
+    if (originalOrder.length > 0) {
+      updatedData = originalOrder
+        .map((id) => updatedData.find((row) => row.ID === id))
+        .filter(Boolean);
+    }
+    setFilteredData([...updatedData]);
+  }, [GroupWareHouseList, GroupWareHouseSuccess, GroupWareHouseEditSuccess]);
 
   // Column configuration for the table headers
    const GroupWareHouse = useMemo(() => {
@@ -105,7 +106,7 @@ function GroupWareHouseTable({ setIsDisable, search }) {
        label: `${item?.CODE}`,
        value: item?.ID,
      }));
-   }, [GroupWareHouseList]);
+   }, [GroupWareHouseList, GroupWareHouseSuccess]);
 
   const Col = [
     {
@@ -244,7 +245,7 @@ console.log(editedData);
   return (
     <div
       className="table-box"
-      style={{ height: "60vh", border: "1px solid lightgrey" }}
+      style={{ height: "60vh" }}
     >
       <Table
         tab={filteredData}

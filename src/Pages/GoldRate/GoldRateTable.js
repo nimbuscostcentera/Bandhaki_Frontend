@@ -191,7 +191,7 @@ function GoldRateTable({ setIsDisable, search }) {
   return (
     <div
       className="table-box"
-      style={{ height: "60vh", border: "1px solid lightgrey" }}
+      style={{ height: "60vh",  }}
     >
       <Table
         tab={filteredData}

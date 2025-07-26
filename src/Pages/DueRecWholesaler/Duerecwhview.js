@@ -30,7 +30,7 @@ function Duerecwhview() {
 
   //------use state hooks----------//
   const [searchParams] = useSearchParams();
-  let entityType = searchParams.get("type") === "customer" ? 1 : 2;
+  let entityType = searchParams.get("type") === "wholeseller" ? 2 : searchParams.get("type") === "customer" ? 1 : 3;
   entityType = customertype ? customertype : entityType;
   const [Filters, setFilters] = useState({
     StartDate: null,
@@ -121,14 +121,7 @@ function Duerecwhview() {
     setOriginalOrder(result.map((row) => row.ID));
   };
 
-  //detail view Open
-  const handleViewClick = (tabindex) => {
-    const selectedData = filteredData[tabindex];
-    // console.log(selectedData, "selectedData");
-    setInitialCustId((prev) => selectedData?.id_Customer);
-    setSelectedId(selectedData.ID);
-    setParams(true);
-  };
+ 
   // Calendar handlers
   const handleShow1 = () => {
     setView({ ...view, View1: true });
@@ -181,7 +174,9 @@ function Duerecwhview() {
         return () => clearTimeout(debounceTimer);
       }
     
-  }, [searchDate, searchTerm, Filters]);
+    }, [searchDate, searchTerm, Filters]);
+  
+  
   //debouncing
   useEffect(() => {
     if (isAdjustDetailError) {
@@ -195,13 +190,12 @@ function Duerecwhview() {
       setFilteredData([]);
     } else {
       const updatedList = DueRcvWhViewList.map((item) => {
-        const mode = paymentMode.find(
-          (mode) => mode.Value == item.Payment_Mode
-        );
+        const rcvmode = paymentMode.find((mode) => mode.Value == item.rcv_Mode);
+        const refmode = paymentMode.find((mode) => mode.Value == item.ref_Mode);
         return {
-            ...item,
-            Payment_Mode: mode?.label,
-       
+          ...item,
+          Rcv_Mode: rcvmode?.label,
+          Ref_Mode: refmode?.label,
         };
       });
       if (searchDate || searchTerm || initialCustId ) {
@@ -230,12 +224,13 @@ function Duerecwhview() {
   //-------------------------variables call-----------------------------
   const paymentMode = [
     { label: "Cash", Value: 1 },
-    { label: "UPI", Value: 2 },
-    { label: "Bank Transfer", Value: 3 },
+    { label: "Bank Transfer", Value: 2 },
+    { label: "UPI",Value: 3 },
+    { label: "Adjust", Value: 4 },
   ];
   const columns = [
     {
-      headername: "Wholesaler Name",
+      headername: "Name",
       fieldname: "Wholesaler_Name",
       type: "String",
     },
@@ -245,23 +240,73 @@ function Duerecwhview() {
       type: "number",
     },
     {
-      headername: "Paid Amount",
-      fieldname: "Paid_Amount",
+      headername: "Entry Date",
+      fieldname: "own_date",
+      type: "BongDate",
+    },
+    {
+      headername: "Adjust Date",
+      fieldname: "adjust_date",
+      type: "BongDate",
+    },
+    {
+      headername: "Lot No",
+      fieldname: "LotNo",
+      type: "String",
+    },
+    {
+      headername: "Lot Amount",
+      fieldname: "LotPrnAmount",
+      type: "number",
+    },
+    {
+      headername: "Interest %",
+      fieldname: "int_percent",
       type: "number",
       //   max: 100,
       //   width: 135,
     },
     {
-      headername: "Payment Mode",
-      fieldname: "Payment_Mode",
-      type: "String",
-      //   max: 100,
-      //   width: 135,
+      headername: "Months",
+      fieldname: "months",
+      type: "number",
     },
     {
-      headername: "Entry Date",
-      fieldname: "EntryDate",
-      type: "BongDate",
+      headername: "Interest Amt.",
+      fieldname: "int_amount",
+      type: "number",
+    },
+    {
+      headername: entityType == 2 || entityType == 1 ? "Rcv. Mode" : "Paid Mode",
+      fieldname: "Rcv_Mode",
+      type: "String",
+      options: [
+        { label: "Cash", value: 1 },
+        { label: "Bank Transfer", value: 2 },
+        { label: "UPI", value: 3 },
+        { label: "Adjust", value: 4 },
+      ],
+    },
+    {
+      headername: entityType == 2  || entityType == 1 ? "Rcv. Amt." : "Paid Amt.",
+      fieldname: "rcv_Amount",
+      type: "number",
+    },
+    {
+      headername:  entityType == 2  || entityType == 1? "Ref. Mode" : "Rcv. Mode",
+      fieldname: "Ref_Mode",
+      type: "String",
+      options: [
+        { label: "Cash", value: 1 },
+        { label: "Bank Transfer", value: 2 },
+        { label: "UPI", value: 3 },
+        { label: "Adjust", value: 4 },
+      ],
+    },
+    {
+      headername: entityType == 2 || entityType == 1? "Ref. Amt." : "Rcv. Amt.",
+      fieldname: "ref_Amount",
+      type: "number",
     },
   ];
 
@@ -272,8 +317,12 @@ function Duerecwhview() {
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
           <div className="d-flex align-items-center justify-content-between flex-wrap">
             <div>
-              <h5 className="mt-2" style={{ fontSize: "18px" }}>
-                Due Rcv. For Wholesaler
+              <h5 className="mt-2">
+                {entityType == 2
+                  ? "OutStanding Wholesaler View"
+                  : entityType == 3
+                  ? "OutStanding Mahajon View"
+                  : entityType == 1 && "OutStanding Customer View"}
               </h5>
             </div>
             <div className="d-flex justify-content-between flex-wrap align-items-end">
@@ -311,7 +360,7 @@ function Duerecwhview() {
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
           <div
             className="table-box"
-            style={{ height: "55vh", border: "1px solid lightgrey" }}
+            style={{ border: "1px solid lightgrey"}}
           >
             {filteredData?.length > 0 ? (
               <Table
@@ -320,9 +369,7 @@ function Duerecwhview() {
                 OnChangeHandler={OnChangeHandler}
                 tab={filteredData || []}
                 isLoading={isDueRcvWhViewListLoading}
-                // isView={true}
-                // handleViewClick={handleViewClick}
-                // EditedData={editedData}
+                height={"80vh"}
               />
             ) : isDueRcvWhViewListLoading ? (
               <div className="d-flex justify-content-center align-items-center h-100">
@@ -330,11 +377,13 @@ function Duerecwhview() {
                   <span className="visually-hidden">Loading...</span>
                 </div>
               </div>
-            ) : (
+              ) : (
+              <div className="border-secondary border-opacity-25 w-100" style={{ height: "75vh"}}>
               <div className="d-flex justify-content-center align-items-center h-100 text-muted">
                 {searchTerm || searchDate
                   ? "No results found. Try a different search."
                   : "Use the search bar or date picker to find entries."}
+                    </div>
               </div>
             )}
           </div>

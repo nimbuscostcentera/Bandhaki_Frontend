@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import axiosInstance from "../AxiosInterceptor";
-const API = `${process.env.REACT_APP_BASEURL}/transaction-routes/openingheaders-show`;
+// let API = `${process.env.REACT_APP_BASEURL}/transaction-routes/openingheaders-show`;
 
 const useFetchOpeningEntryHeader = create((set) => ({
   EntryList: [],
@@ -16,7 +16,11 @@ const useFetchOpeningEntryHeader = create((set) => ({
   fetchOpeningEntryHeader: async (userdata) => {
     set({ isEntryListLoading: true, isEntryListError: null });
     try {
-      const result = await axiosInstance.post(API, userdata);
+      const endpoint =
+        userdata?.Cust_Type == 3
+          ? `${process.env.REACT_APP_BASEURL}/transaction-routes/mahajonopeningheaders-show`
+          : `${process.env.REACT_APP_BASEURL}/transaction-routes/openingheaders-show`;
+      const result = await axiosInstance.post(endpoint, userdata);
       const { data } = result;
 
       set({
@@ -42,7 +46,11 @@ const useFetchOpeningEntryHeader = create((set) => ({
   searchOpeningEntryHeader: async (searchParams) => {
     set({ isEntryListLoading: true, isEntryListError: null });
     try {
-      const result = await axiosInstance.post(API, searchParams);
+      const endpoint =
+        searchParams?.Cust_Type == 3
+          ? `${process.env.REACT_APP_BASEURL}/transaction-routes/mahajonopeningheaders-show`
+          : `${process.env.REACT_APP_BASEURL}/transaction-routes/openingheaders-show`;
+      const result = await axiosInstance.post(endpoint, searchParams);
       const { data } = result;
 
       set({
@@ -57,7 +65,7 @@ const useFetchOpeningEntryHeader = create((set) => ({
       });
     } catch (error) {
       set({
-        isEntryListError: error.message,
+        isEntryListError: error?.response?.data?.response,
         isEntryListLoading: false,
       });
     }

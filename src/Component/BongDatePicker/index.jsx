@@ -23,15 +23,15 @@ function BongDatePicker({
     }
   },[startDate,endDate])
   return (
-    <div className="d-flex justify-content-center align-items-center">
-      <div className="mx-1">
+    <div className="d-flex justify-content-center align-items-center mx-1">
+      <div className="mr-2">
         <InputBox
           Icon={<i className="bi bi-calendar-event"></i>}
           type={"text"}
           placeholder={"Start Date"}
           label={"Start Date"}
           Name={startDate}
-          InputStyle={{ padding: "5px 10px", width: "150px" }}
+          InputStyle={{ padding: "5px 10px", width: "130px" }}
           onChange={() => {
             return;
           }}
@@ -49,14 +49,14 @@ function BongDatePicker({
           }}
         />
       </div>
-      <div className="mx-1">
+      <div className="ms-2">
         <InputBox
           Icon={<i className="bi bi-calendar-event"></i>}
           type={"text"}
           placeholder={"End Date"}
           label={"End Date"}
           Name={"EndDate"}
-          InputStyle={{ padding: "5px 10px", width: "150px" }}
+          InputStyle={{ padding: "5px 10px", width: "130px" }}
           onChange={() => {
             return;
           }}

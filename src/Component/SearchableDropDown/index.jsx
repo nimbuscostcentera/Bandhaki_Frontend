@@ -120,7 +120,9 @@ const SearchableDropDown = ({
 
   return (
     <div style={{ width: width || "auto", position: "relative", zIndex: 1 }}>
-      <InputGroup style={{ width: width || "100%" }}>
+      <InputGroup
+        style={{ width: width || "100%",}}
+      >
         <Form.Control
           ref={inputRef}
           placeholder={placeholder}
@@ -142,8 +144,8 @@ const SearchableDropDown = ({
           }
           aria-describedby="basic-addon2"
           style={{
-            padding: "4px 5px",
-            borderRadius: "3px",
+            borderRadius: "8px 0 0 8x" ,
+            padding: "6px 8px",
             fontSize: "13px",
             color: "rgba(75, 75, 75, 0.62)",
           }}
@@ -166,8 +168,6 @@ const SearchableDropDown = ({
         show={show}
         onHide={handleClose}
         size="lg"
-        aria-labelledby="contained-modal-title-vcenter"
-        centered
         backdrop="static"
       >
         <Modal.Header closeButton>

@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Button } from "react-bootstrap";
 import { ToastContainer, toast } from "react-toastify";
 
-import useFetchAuth from "../../store/Auth/useFetchAuth";
-import useAddPurity from "../../store/AddStore/useAddPurity";
+// import useFetchAuth from "../../store/Auth/useFetchAuth";
+// import useAddPurity from "../../store/AddStore/useAddPurity";
 import useFetchSetup from "../../store/ShowStore/useFetchSetup";
 import useSetupEdit from "../../store/Auth/useSetupEdit";
 
@@ -15,7 +15,7 @@ function Setup() {
     CustPrefix: "",
     RegularPrefix: "",
     PartyPrefix: "",
-    Days: "",
+    Days: "", 
   });
 
   const { SetupList, isSetupLoading, SetupError, fetchSetupMaster } =
@@ -43,7 +43,7 @@ function Setup() {
 
   useEffect(() => {
     if (isSetupEditLoading && !SetupEditSuccess && !SetupEditError) {
-      toast.play("pleaes wait...", { position: "top-right", autoClose: 3000 });
+      // toast.play("pleaes wait...", { position: "top-right", autoClose: 3000 });
     } else if (SetupEditSuccess && !isSetupEditLoading && !SetupEditError) {
       toast.success(SetupEditSuccess, {
         position: "top-right",
@@ -100,7 +100,6 @@ function Setup() {
         >
           <div className="d-flex justify-content-between">
             <div>
-              {" "}
               <h5>Serial info</h5>
             </div>
           </div>

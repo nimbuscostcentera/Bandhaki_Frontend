@@ -4,7 +4,6 @@ const API = `${process.env.REACT_APP_BASEURL}/transaction-routes/del-openingprin
 const useOpeningPrnDelete = create((set) => ({
   isOpnPrnDeleteSucc:false,
   OpeningPrnDeleteMsg: "",
-  
   isOpeningPrnDeleteLoading: false,
   OpeningPrnDeleteErr: null,
   

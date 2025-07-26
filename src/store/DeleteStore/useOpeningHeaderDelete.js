@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import axiosInstance from "./../AxiosInterceptor";
 const API = `${process.env.REACT_APP_BASEURL}/transaction-routes/del-openingheader`;
+// /del-mahajonopeningheader
 const useOpeningHeaderDelete = create((set) => ({
   OpeningHeaderDeleteMsg: "",
   isOpeningHeaderDeleteLoading: false,
@@ -9,7 +10,11 @@ const useOpeningHeaderDelete = create((set) => ({
   DeleteOpeningHeader: async (userdata) => {
     set({ isOpeningHeaderDeleteLoading: true, OpeningHeaderDeleteErr: null }); // Start loading
     try {
-      const result = await axiosInstance.delete(API,{data: userdata});
+      const endpoint =
+        userdata?.Cust_Type == 3
+          ? `${process.env.REACT_APP_BASEURL}/mahajon-routes/del-mahajonopeningheader`
+          : `${process.env.REACT_APP_BASEURL}/transaction-routes/del-openingheader`;
+      const result = await axiosInstance.delete(endpoint, { data: userdata });
       const { data } = result;
       const { response } = data;
       set({ OpeningHeaderDeleteMsg: response }); // Update state with fetched data

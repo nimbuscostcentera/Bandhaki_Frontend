@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import useControlSidebar from "../../store/useControlSidebar";
 import { Offcanvas, Nav, Button, Container, Navbar } from "react-bootstrap";
@@ -12,15 +12,13 @@ function AuthNavBar() {
   const { Open } = useControlSidebar();
   useEffect(() => {
     const logoimg = document.getElementById("logoNimbus");
-     const head = document.getElementById("head-nav");
-    if (!Open)
-    {
+    const head = document.getElementById("head-nav");
+    if (!Open) {
       head.classList.add("close");
-    }
-    else {
+    } else {
       head.classList.remove("close");
     }
-  },[Open])
+  }, [Open]);
   return (
     <nav
       className="navbar px-0 mx-0 d-flex justify-content-between"
@@ -42,9 +40,6 @@ function AuthNavBar() {
         </Link>
         <Link to={"/auth/setup"}>
           <i className="bi bi-gear-fill white-icon"></i>
-        </Link>
-        <Link>
-          <i className="bi bi-bell-fill white-icon"></i>
         </Link>
         <Button
           style={{ padding: 0, margin: 0 }}

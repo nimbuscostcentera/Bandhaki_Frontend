@@ -1,0 +1,84 @@
+.bong-table-wrapper {
+    max-height: inherit !important;
+    padding: 0px;
+    overflow: auto !important;
+    display: block;
+}
+
+.bong-tab-body tr td {
+  
+    color: #252525;
+    font-size: smaller;
+    text-align: center;
+    border: 1px solid rgb(231, 231, 231);
+    font-size: small;
+}
+
+.bong-tab-head tr th:first-child {
+    position: sticky;
+    left: 0;
+    color: white !important;
+    background-color: #2f2d66 !important;
+    z-index: 2;
+    text-align: center;
+    font-size: small;
+    padding-bottom: 5px !important;
+}
+
+.bong-tab-head tr th {
+    font-weight: normal;
+    font-size: small;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #2f2d66 !important;
+    color: rgb(255, 255, 255) !important;
+}
+
+/* .bong-tab-body tr td:first-child {
+    position: sticky;
+    left: 0;
+    color: rgb(185, 0, 0) !important;
+    background-color: #ff9696 !important;
+    z-index: 1;
+    text-align: center;
+    padding-bottom: 5px !important;
+    border:1px solid rgb(253, 107, 107);
+} */
+
+.bi-pencil-square {
+    color: rgb(2, 2, 2);
+    font-size: larger;
+    outline: none;
+}
+
+.bi-pencil-square:hover {
+    color: rgb(0, 102, 255);
+}
+
+/* width */
+::-webkit-scrollbar {
+    width: 2px;
+    height: 2px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #dbdbdb9d;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #90909150;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #858484;
+}
+
+.form-input:focus {
+    border: 1px solid #25a353 !important;
+    outline: 3px solid #25a35367;
+}

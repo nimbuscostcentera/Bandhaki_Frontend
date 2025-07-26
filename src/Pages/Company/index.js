@@ -127,7 +127,7 @@ function CompanyListEdit() {
   return (
     <Container fluid style={{ width: "98%", padding: 0 }}>
       <ToastContainer />
-      <Row style={{ marginTop: "58px", marginLeft: "3px", width: "100%" }}>
+      <Row style={{ marginTop: "40px", width: "100%" }}>
         <Col
           xs={12}
           sm={12}
@@ -153,7 +153,7 @@ function CompanyListEdit() {
           >
             <table
               style={{
-                width: "100vw",
+                width: "100%",
                 overflow: "auto",
               }}
             >
@@ -184,7 +184,7 @@ function CompanyListEdit() {
                   <td>
                     <i className="bi bi-caret-right-fill"></i>
                   </td>
-                  <td style={{ width: "180px" }}>
+                  <td style={{ width: "150px" }}>
                     <input
                       placeholder="Company Name"
                       className="input-cell form-input"
@@ -197,7 +197,7 @@ function CompanyListEdit() {
                       ref={inputRef}
                     />
                   </td>
-                  <td style={{ width: "130px" }}>
+                  <td style={{ width: "150px" }}>
                     <input
                       placeholder="Phone No"
                       className="input-cell"
@@ -209,7 +209,7 @@ function CompanyListEdit() {
                       style={{ width: "100%" }}
                     />
                   </td>
-                  <td style={{ width: "180px" }}>
+                  <td style={{ width: "140px" }}>
                     <input
                       placeholder="Email"
                       className="input-cell"
@@ -260,7 +260,7 @@ function CompanyListEdit() {
                   </td>
                   <td style={{ width: "100px" }}>
                     <input
-                      placeholder="Fine Percentage"
+                      placeholder="Fine(%)"
                       className="input-cell"
                       name="DefaultFinePercentage"
                       value={companyData?.DefaultFinePercentage || ""}
@@ -279,7 +279,7 @@ function CompanyListEdit() {
                       onChange={OnChangeHandler}
                       type="text"
                       maxLength={100}
-                      style={{ width: "100%" }}
+                      style={{ width: "100%"}}
                     />
                   </td>
                   <td style={{ width: "170px" }}>
@@ -300,36 +300,40 @@ function CompanyListEdit() {
           </div>
         </Col>
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
-          <div className="d-flex justify-content-end align-items-center mt-2">
-            <Button
-              variant="success"
-              onClick={() => SaveData()}
-              disabled={isDisable}
-            >
-              {isCompanyRegLoading ? "Please wait..." : "Register"}
-            </Button>
-          </div>
-        </Col>
-        <Col xs={12} sm={12} md={12} lg={12} xl={12}>
-          <hr className="my-1" />
-          <div className="d-flex justify-content-between flex-wrap">
+          <div
+            className="d-flex justify-content-between align-items-center my-1"
+            style={{
+              height: "100%",
+              borderTop: "1px solid lightgrey",
+              borderBottom: "1px solid lightgrey",
+            }}
+          >
             <div>
-              <h5>Company Edit</h5>
+              <h5>Company List</h5>
+            </div>
+            <div>
+              <Button
+                variant="success"
+                style={{ padding: "1px 9px", display: "block" }}
+                onClick={(e) => SaveData(e)}
+                disabled={isDisable}
+              >
+                {isCompanyRegLoading ? "Please wait..." : "Register"}
+              </Button>
             </div>
           </div>
-          <hr className="my-1" />
         </Col>
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
-          <hr className="my-1" />
-          <div className="d-flex justify-content-between align-items-center m-0 flex-wrap">
-            <div>
+          {/* <hr className="my-1" /> */}
+          <div className="d-flex justify-content-between align-items-center flex-wrap">
+            <div className="mt-3" style={{ width: "50%" }}>
               <textarea
                 value={textDetail}
                 type="search"
                 readOnly
                 placeholder="Detail View"
                 style={{
-                  width: "50vw",
+                  width: "100%",
                   border: "1px solid dodgerblue",
                   outline: "1px solid dodgerblue",
                   borderRadius: "5px",
@@ -372,7 +376,7 @@ function CompanyListEdit() {
               </label>
             </div>
           </div>
-          <hr className="my-1" />
+          {/* <hr className="my-1" /> */}
         </Col>
         <Col
           xs={12}
@@ -380,7 +384,6 @@ function CompanyListEdit() {
           md={12}
           lg={12}
           xl={12}
-          style={{ paddingLeft: "15px", margin: "0px" }}
         >
           <CompanyTable
             isDisable={isDisable}

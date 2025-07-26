@@ -1,68 +1,54 @@
 import React, { useState } from "react";
 import Select from "react-select";
 import { Modal, InputGroup, Form, Button } from "react-bootstrap";
+
 const MultipleSelection = ({
   options,
   handleChange,
-  selectedVal,
-  label,
+  selectedVal = [],
   placeholder,
   defaultval,
+  style = { width: "250px" },
+  onRemove, // New prop for removal handling
 }) => {
   const [show, setShow] = useState(false);
+
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
-  //console.log(selectedVal,"Selected value");
-  const findSelectedValue = () => {
-    // //console.log(selectedVal)
-    // //console.log(options,"optins");
-    // options=options.filter((ite))
-    let big = options?.map((item) => Number(item?.value));
-    // //console.log(big,"Value");
-    const selectedIds = selectedVal?.map((item) => Number(item?.value)) || [];
-    // //console.log(selectedIds, "selectedIds");
 
-    const filteredData = options.filter(
-      (item) => !selectedIds.includes(Number(item?.value))
-    );
-    // //console.log(filteredData, "filteredData");
-    options = filteredData;
-    // let filteredData=options.filter(item=>  !big.includes(Number(item?.value)))
-    // //console.log(filteredData,"filtereddata")
-    let vl =
-      selectedVal?.filter((item, index) => {
-        return big.includes(Number(item?.value));
-      }) || [];
-    // //console.log(vl,"v1");
-    // let filteredData= vl.filter((item)=>{
-    //   return  !big.includes(item?.value)
-    // })
-    // //console.log(filteredData,"filtered")
-    let val = vl.map((element) => element?.label);
-    // //console.log(val, big, vl,"findme");
-    return val.join(", ");
+  const findSelectedValue = () => {
+    return selectedVal.map((element) => element?.label).join(", ");
   };
+
+  const handleSelectionChange = (selected, actionMeta) => {
+    if (actionMeta.action === "remove-value") {
+      // Call removal handler when a value is removed
+      onRemove(actionMeta.removedValue);
+    }
+    handleChange(selected);
+  };
+
   return (
-    <div style={{ width: "250px" }}>
+    <div style={style}>
       <InputGroup onClick={handleShow}>
         <Form.Control
           placeholder={placeholder}
           value={findSelectedValue()}
-          type="textarea"
-          aria-describedby="basic-addon2"
+          readOnly
           style={{
             padding: "4px 5px",
             borderRadius: "3px",
             fontSize: "13px",
-            color: "rgba(75, 75, 75, 0.62);",
+            color: "rgba(75, 75, 75, 0.62)",
+            cursor: "pointer",
           }}
         />
         <InputGroup.Text
-          id="basic-addon2"
           style={{
             padding: "4px 5px",
             borderTopRightRadius: "3px",
-            borderBottonRightRadius: "3px",
+            borderBottomRightRadius: "3px",
+            cursor: "pointer",
           }}
         >
           <i className="bi bi-search"></i>
@@ -72,36 +58,30 @@ const MultipleSelection = ({
         show={show}
         onHide={handleClose}
         size="lg"
-        aria-labelledby="contained-modal-title-vcenter"
-        centered
       >
         <Modal.Header closeButton>
-          <Modal.Title id="contained-modal-title-vcenter">
-            {placeholder}
-          </Modal.Title>
+          <Modal.Title>{placeholder}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Select
             defaultValue={defaultval}
             isMulti
             value={selectedVal}
-            isClearable={false}
             options={options}
-            isSearchable={true}
-            onChange={(e) => {
-              handleChange(e);
-            }}
+            onChange={handleSelectionChange} // Use the modified handler
             placeholder={`--${placeholder}--`}
-            label={label}
+            isSearchable
+            closeMenuOnSelect={false}
           />
         </Modal.Body>
         <Modal.Footer>
           <Button variant="primary" onClick={handleClose}>
-            Save
+            Done
           </Button>
         </Modal.Footer>
       </Modal>
     </div>
   );
 };
+
 export default MultipleSelection;

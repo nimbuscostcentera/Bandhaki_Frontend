@@ -1,13 +1,10 @@
 :root {
-  --sidebar-width: 220px;
-  --sidebar-collapsed-width: 55px;
   --background-light: #f8f8ff;
   --background-dark: #192532;
   --text-light: rgb(199, 199, 199);
   --text-dark: white;
 }
-
- .base-container {
+.base-container {
   height: 100vh;
   width: 100vw;
   margin: 0;
@@ -36,7 +33,7 @@
   width: 90vw;
 }
 
- .header {
+.header {
   position: fixed;
   top: 0 !important;
 }
@@ -63,8 +60,9 @@
 .navbar {
   box-shadow: 1px 1px 2px lightgray;
   position: absolute;
-  z-index: 3;
+  z-index: 5;
   width: calc(100vw - var(--sidebar-width));
+  padding: 2px 5px;
 }
 
 .navbar.close {
@@ -192,7 +190,6 @@
 .sidebar a {
   padding: 8px 3px;
   text-decoration: none;
-  font-size: 16px;
   color: var(--text-dark);
   display: flex;
   align-items: center;
@@ -205,7 +202,7 @@
 
 .sidebar a i {
   min-width: 30px;
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .footer {
@@ -217,20 +214,22 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  /* background-color: red; */
+  text-align: center;
 }
 
 .footer.close {
   width: calc(100vw - var(--sidebar-collapsed-width));
 }
 
- .vanishing-div {
+.vanishing-div {
   height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
- @media (max-width: 992px) {
+@media (max-width: 992px) {
   .vanishing-div {
     display: none;
   }

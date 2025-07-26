@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import axiosInstance from "../AxiosInterceptor";
-const API = `${process.env.REACT_APP_BASEURL}/transaction-routes/delcheck-openingdetail`;
+// let API = `${process.env.REACT_APP_BASEURL}/transaction-routes/delcheck-openingdetail`;
 const useOpeningDetailDeleteCheck = create((set) => ({
   CheckOpeningDetailDeleteCheckMsg: "",
   isCheckOpeningDetailDeleteCheck: -1,
@@ -14,7 +14,11 @@ const useOpeningDetailDeleteCheck = create((set) => ({
       CheckOpeningDetailDeleteCheckErr: null,
     }); // Start loading
     try {
-      const result = await axiosInstance.post(API, userdata);
+      const endpoint =
+        userdata?.Cust_Type == 3
+          ? `${process.env.REACT_APP_BASEURL}/mahajon-routes/delcheck-mahajonopeningdetail`
+          : `${process.env.REACT_APP_BASEURL}/transaction-routes/delcheck-openingdetail`;
+      const result = await axiosInstance.post(endpoint, userdata);
       const { data } = result;
       console.log(data, "my");
       const { response, success } = data;

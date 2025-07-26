@@ -4,3 +4,41 @@
     font-weight: 600;
     font-size: 15px;
 }
+
+/* ledger.css */
+.detail-view-textarea {
+    width: 100%;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    background-color: white;
+    color: #212529;
+    transition: all 0.3s ease;
+    outline: none;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    min-height: 30px;
+    resize: vertical;
+}
+
+.detail-view-textarea:focus {
+    border-color: #3b7ddd;
+    box-shadow: 0 0 0 3px rgba(59, 125, 221, 0.25);
+    background-color: #f8fbff;
+}
+
+.table-container {
+    padding: 0;
+    margin-bottom: 0;
+}
+
+.summary-view-container .table-container,
+.detail-view-container .table-container {
+    padding: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .detail-view-container .table-container {
+        max-height: 50vh !important;
+    } }

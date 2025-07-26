@@ -1,21 +1,27 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import useFetchOpeningDetailReport from "../../store/ShowStore/useFetchOpeningDetailReport";
-import useFetchAuth from "../../store/Auth/useFetchAuth";
-import Table from "../../Component/Table";
-import ReusableModal from "../../Component/ReusableModal";
 import "./openentry.css";
+
+import AddItem from "./AddItem";
+import Table from "../../Component/Table";
 import PrincipalEntryView from "./PrincipalEntryView";
+import ReusableModal from "../../Component/ReusableModal";
+import DeleteConfirmation from "../../Component/ReusableDelete";
+
+import useFetchAuth from "../../store/Auth/useFetchAuth";
+import useAddExtraItem from "../../store/AddStore/useAddExtraItem";
 import useCheckOpeningDetails from "../../store/Checker/useCheckOpeningDetails";
 import useEditOpeningDetail from "../../store/UpdateStore/useEditOpeningDetail";
 import useOpeningDetailDelete from "../../store/DeleteStore/useOpeningDetailDelete";
-import useFetchOpeningPrincipalReport from "../../store/ShowStore/useFetchOpeningPrincipalReport";
-import DeleteConfirmation from "../../Component/ReusableDelete";
 import useOpeningDetailDeleteCheck from "../../store/Checker/useOpeningDetailDeleteCheck";
-import { useNavigate } from "react-router-dom";
-import AddItem from "./AddItem";
-import useAddExtraItem from "../../store/AddStore/useAddExtraItem";
+import useFetchOpeningDetailReport from "../../store/ShowStore/useFetchOpeningDetailReport";
+import useFetchOpeningPrincipalReport from "../../store/ShowStore/useFetchOpeningPrincipalReport";
+import useEditOpeningPrincipal from "../../store/UpdateStore/useEditOpeningPrincipal";
+import useOpeningPrnDelete from "../../store/DeleteStore/useOpeningPrnDelete";
+import useAddPrn from "../../store/AddStore/useAddPrn";
+
 function OpeningEntryDetailTable({
   id,
   lotno,
@@ -29,9 +35,15 @@ function OpeningEntryDetailTable({
   //-----------------------------------useref hook-----------------------------------//
   const editinputref = useRef(null);
   const navigate = useNavigate();
-  console.log(headerData, "headerData");
   //--------------------------------------useState--------------------------------------//
   const [focusText, setfocusText] = useState("");
+  const [trackchange, setTrackChange] = useState({
+    index: 0,
+    value: 0,
+    name: 0,
+  });
+
+  const [lastSrl , setLastSrl] = useState(0);
   const [filteredData, setFilteredData] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [originalOrder, setOriginalOrder] = useState([]);
@@ -114,9 +126,11 @@ function OpeningEntryDetailTable({
   } = useOpeningDetailDeleteCheck();
   const { isOpeningPrincipalError, OpenPrnDelErrMsg } =
     useFetchOpeningPrincipalReport();
-  
-    const { ExtraItemAddSuccess } = useAddExtraItem();
- 
+  const { ExtraItemAddSuccess } = useAddExtraItem();
+  const { OpePrnEditSuccess, isOpeningPrnEditSucc } = useEditOpeningPrincipal;
+  const { isOpnPrnDeleteSucc } = useOpeningPrnDelete;
+  const { AddPrnSuccess } = useAddPrn;
+
   //------------------------------------function---------------------------------------------------//
   const handleDeleteClick = (index) => {
     const selectedData = filteredData[index];
@@ -167,8 +181,6 @@ function OpeningEntryDetailTable({
     }));
   };
   const handleClickClose = (srl) => {
-    // onCloseHandler();
-    console.log(srl, "info");
     if (entityType == 1) {
       navigate("/auth/metal-return-view?type=customer", {
         state: {
@@ -189,18 +201,14 @@ function OpeningEntryDetailTable({
       });
     }
   };
-
   // Cancel delete action
   const cancelDelete = () => {
     setShowDeleteModal(false);
     setItemToDelete(null);
   };
   const handleViewClick = (tabindex) => {
-    //  console.log(tabindex);
     const selectedData = filteredData[tabindex];
-    // console.log(selectedData, "ID");
     setSelectedId(selectedData.ID);
-    // console.log(selectedData?.SRL);
     setParams((prev) => ({
       ...prev,
       SRL: selectedData?.SRL,
@@ -214,7 +222,6 @@ function OpeningEntryDetailTable({
   };
   const EditCheckfunc = async (tabindex) => {
     const selectedData = filteredData[tabindex];
-    // console.log(selectedData);
     CheckOpeningDetails({
       LotNo: lotno,
       Srl: selectedData.SRL,
@@ -231,17 +238,60 @@ function OpeningEntryDetailTable({
     let value = e.target.value;
     let regex = {
       GROSS_WT: /^\d*\.?\d{0,3}$/,
+      NET_WT: /^\d*\.?\d{0,3}$/,
       RATE: /^\d*\.?\d{0,2}$/,
+      Valuation: /^\d*\.?\d{0,2}$/,
       PERCENTAGE: /^\d*\.?\d{0,2}$/,
     };
+
+    if (key == "NET_WT" && value > editedData?.GROSS_WT) {
+      value = "";
+      setEditedData((prev) => ({
+        ...prev,
+        ["Valuation"]: "",
+        ["PERCENTAGE"]: "",
+      }));
+      toast.error("Net Weight should be less than or equal to Gross Weight");
+    }
+
+    if (key == "GROSS_WT" && value < editedData?.NET_WT) {
+      value = "";
+      setEditedData((prev) => ({
+        ...prev,
+        ["NET_WT"]: "",
+        ["PERCENTAGE"]: "",
+        ["Valuation"]: "",
+      }));
+      toast.error("Net Weight should be less than or equal to Gross Weight");
+    }
+
+    if (key == "PERCENTAGE" && value > 100) {
+      setEditedData((prev) => ({ ...prev, ["NET_WT"]: "", ["Valuation"]: "" }));
+      value = "";
+      toast.error("Purity can not be greater than 100%");
+    }
+
     if (regex[key] && regex[key].test(value)) {
       setEditedData((prev) => ({ ...prev, [key]: value }));
     } else if (!regex[key]) {
       setEditedData((prev) => ({ ...prev, [key]: value }));
     }
+    console.log(key, value);
+    // Track the change to trigger calculations
+    setTrackChange(() => ({
+      index,
+      name: key,
+      value,
+    }));
   };
   const SaveHandler = (index) => {
-    console.log({ ...editedData, LotNo: lotno });
+    console.log(editedData,"save in");
+    if (editedData?.Update_Prn_Rcv > editedData?.Valuation) {
+      toast.error(
+        `Valuation should not be less than Total Principle Amount ${editedData?.Update_Prn_Rcv}`
+      );
+      return;
+}
     EditOpeningDetailFunc({
       ...editedData,
       LotNo: lotno,
@@ -249,29 +299,105 @@ function OpeningEntryDetailTable({
       TranCode: trancode,
     });
   };
-  // const DeleteDetailData = (index) => {
-  //   let selectedData = filteredData[index];
-  //   DeleteOpeningDetail({
-  //     ID: selectedData.ID,
-  //     LotNo: lotno,
-  //     Srl: selectedData.SRL,
-  //     Cust_Type: entityType,
-  //     TranCode: trancode,
-  //   });
-  // };
+//-----------------------------------------useEffcets---------------------------------//
   //AutoClaculation
   useEffect(() => {
-    if (editedData?.GROSS_WT && editedData?.RATE && editedData?.PERCENTAGE) {
-      let netwt = (
-        (parseFloat(editedData?.GROSS_WT) *
-          parseFloat(editedData?.PERCENTAGE)) /
-        100
-      ).toFixed(3);
-      let val = (parseFloat(netwt) * parseFloat(editedData?.RATE)).toFixed(2);
-      console.log(netwt, val);
-      setEditedData((prev) => ({ ...prev, NET_WT: netwt, Valuation: val }));
+    if (trackchange.index === undefined || !trackchange.name) return;
+
+    const { index, name, value } = trackchange;
+    let row = { ...editedData };
+    // eslint-disable-next-line default-case
+    switch (name) {
+      case "RATE":
+        row.Valuation = "";
+        break;
+      case "NET_WT":
+        row.Valuation = "";
+        row.PERCENTAGE = "";
+        break;
+      case "GROSS_WT":
+        row.Valuation = "";
+        row.NET_WT = "";
+        row.PERCENTAGE = "";
+        break;
+      case "PERCENTAGE":
+        row.NET_WT = "";
+        row.Valuation = "";
+        break;
+      case "Valuation":
+        row.RATE = "";
+        // Don't reset percentage when valuation changes
+        break;
+      // Don't reset any fields when description changes
+      case "description":
+        break;
     }
-  }, [editedData?.GROSS_WT, editedData?.RATE, editedData?.PERCENTAGE]);
+
+    // Get current values (use updated values where available)
+    const grossWeight =
+      name === "GROSS_WT"
+        ? Number.parseFloat(value) || 0
+        : Number.parseFloat(row.GROSS_WT) || 0;
+    const netWeight =
+      name === "NET_WT"
+        ? Number.parseFloat(value) || 0
+        : Number.parseFloat(row.NET_WT) || 0;
+    const percentage =
+      name === "PERCENTAGE"
+        ? Number.parseFloat(value > 100 ? 0 : value) || 0
+        : Number.parseFloat(row.PERCENTAGE) || 0;
+    const rate =
+      name === "RATE"
+        ? Number.parseFloat(value) || 0
+        : Number.parseFloat(row.RATE) || 0;
+
+    // Skip calculations if we're just changing the description
+    if (name === "description") return;
+
+    if (netWeight != "" && grossWeight != "" && netWeight > grossWeight) {
+      row.Valuation = "";
+      row.PERCENTAGE = "";
+    }
+
+    let calculatedNetWeight = netWeight,
+      recalculatedPercentage = 0,
+      val = 0;
+
+    // Calculate netWeight if grossWeight and percentage are provided
+    if (
+      grossWeight !== "" &&
+      netWeight !== "" &&
+      name !== "NET_WT" &&
+      name == "PERCENTAGE"
+    ) {
+      calculatedNetWeight = grossWeight * (percentage / 100);
+      row.NET_WT = calculatedNetWeight.toFixed(2);
+    }
+    if (
+      grossWeight > 0 &&
+      (calculatedNetWeight > 0 || netWeight > 0) &&
+      name !== "PERCENTAGE" &&
+      (name == "GROSS_WT" || name == "NET_WT")
+    ) {
+      // Recalculate percentage based on the new netWeight (to ensure consistency)
+      recalculatedPercentage =
+        ((calculatedNetWeight > 0 ? calculatedNetWeight : netWeight) /
+          grossWeight) *
+        100;
+      row.PERCENTAGE = Number.parseFloat(recalculatedPercentage.toFixed(2));
+      // row.Valuation = ((calculatedNetWeight || netWeight) * rate).toFixed(2);
+    }
+
+    // Calculate valuation if netWeight and rate are provided
+    if ((calculatedNetWeight > 0 || netWeight > 0) && rate > 0) {
+      console.log(row.Valuation, "row.Valuation");
+      val = (calculatedNetWeight <= 0 ? netWeight : calculatedNetWeight) * rate;
+      row.Valuation = val.toFixed(2);
+    }
+    setEditedData(row);
+  }, [trackchange]);
+
+  
   //toaster of edit detail
   useEffect(() => {
     if (OpeningDetailEditSuccess) {
@@ -314,12 +440,16 @@ function OpeningEntryDetailTable({
     });
   }, [
     id,
+    params?.view,
     ExtraItemAddSuccess,
     OpeningDetailEditSuccess,
     OpeningDetailDeleteMsg,
     isOpeningPrincipalError,
     entityType,
     trancode,
+    AddPrnSuccess,
+    isOpnPrnDeleteSucc,
+    isOpeningPrnEditSucc, 
   ]);
   //set filtered data
   useEffect(() => {
@@ -332,10 +462,12 @@ function OpeningEntryDetailTable({
         );
         setFilteredData(sortedData);
       }
+
+
+      setLastSrl(OpeningDetailList[OpeningDetailList?.length - 1]?.SRL);
     }
     // if (isOpeningDetailError || isOpeningPrincipalError) {
     if (isOpeningDetailError) {
-      // console.log("hi");
       setOriginalOrder((prev) => []);
       setFilteredData((prev) => []);
       onCloseHandler();
@@ -356,11 +488,6 @@ function OpeningEntryDetailTable({
     isOpeningPrincipalError,
     ExtraItemAddSuccess,
   ]);
-  // useEffect(() => {
-  //   if (OpnDetailErrMsg) {
-  //       toast.error(OpnDetailErrMsg, { position: "top-right", autoClose: 3000 });
-  //     }
-  //   }, [OpnDetailErrMsg]);
   //check editable or not then open for edit
   useEffect(() => {
     if (isCheckOpDetail == 1) {
@@ -389,9 +516,7 @@ function OpeningEntryDetailTable({
         autoClose: 3000,
       });
     }
-    // let timeid = setTimeout(() => {
-    //   ClearOpeningDetailDelete();
-    // }, 2000);
+
     ClearOpeningDetailDelete();
     // return () => clearTimeout(timeid);
   }, [
@@ -399,7 +524,7 @@ function OpeningEntryDetailTable({
     OpeningDetailDeleteErr,
     isOpeningDetailDeleteLoading,
   ]);
-
+  //delete check
   useEffect(() => {
     if (isCheckOpeningDetailDeleteCheck === 1) {
       // If check passes, show the delete confirmation modal
@@ -415,7 +540,7 @@ function OpeningEntryDetailTable({
     }
     ClearCheckOpeningDetailDeleteCheck();
   }, [isCheckOpeningDetailDeleteCheckLoading, isCheckOpeningDetailDeleteCheck]);
-
+  //focus manager
   useEffect(() => {
     setTimeout(() => {
       if (editinputref.current) {
@@ -423,13 +548,13 @@ function OpeningEntryDetailTable({
       }
     }, 150);
   }, [editedData.ID]);
-
+  //search handler calling
   useEffect(() => {
     // if (search.length > 0) {
     handleSearch();
     // }
   }, [search]);
-
+  //clear all
   useEffect(() => {
     setParams((prev) => ({
       ...prev,
@@ -452,7 +577,7 @@ function OpeningEntryDetailTable({
       headername: "Description",
       fieldname: "Description",
       type: "string",
-      width: "145px",
+      width: "160px",
       isShortingOff: true,
       isUseInputRef: true,
     },
@@ -470,19 +595,17 @@ function OpeningEntryDetailTable({
       headername: "Net Weight",
       fieldname: "NET_WT",
       type: "number",
-      isReadOnly: true,
     },
 
     {
       headername: "Rate",
-      fieldname: "GOLD_RATE",
+      fieldname: "RATE",
       type: "number",
     },
     {
       headername: "Valuation",
       fieldname: "Valuation",
       type: "number",
-      isReadOnly: true,
     },
     {
       headername: "Closing Status",
@@ -492,10 +615,10 @@ function OpeningEntryDetailTable({
       isShortingOff: true,
       isIconicData: true,
       iconError: (rowData) => (
-        <button className="btn btn-link" type="button">
+        <button className="btn btn-link m-0 p-0" type="button">
           <i
             className="bi bi-bootstrap-reboot"
-            style={{ color: "orange", fontSize: "25px" }}
+            style={{ color: "orange", fontSize: "20px" }}
           ></i>
         </button>
       ),
@@ -507,7 +630,30 @@ function OpeningEntryDetailTable({
         >
           <i
             className="bi bi-check2-circle"
-            style={{ color: "green", fontSize: "25px" }}
+            style={{ color: "green", fontSize: "20px" }}
+          ></i>
+        </button>
+      ),
+    },
+    {
+      headername: "Mahajon",
+      fieldname: "Update_Mahajon_Voucher",
+      type: "number",
+      isReadOnly: true,
+      isShortingOff: true,
+      isIconicData: true,
+      iconError: (rowData) => (
+        <></>
+      ),
+      iconSuccess: (rowData) => (
+        <button
+          className="btn btn-link"
+          type="button"
+          onClick={() => handleClickClose(rowData.SRL)} // Pass SRL here
+        >
+          <i
+            className="bi bi-check2-circle"
+            style={{ color: "red", fontSize: "20px" }}
           ></i>
         </button>
       ),
@@ -566,8 +712,7 @@ function OpeningEntryDetailTable({
           </label>
         </div>
       </div>
-      <div
-        className="table-box">
+      <div className="table-box">
         <Table
           tab={filteredData || []}
           Col={ColumnDetail}
@@ -588,13 +733,39 @@ function OpeningEntryDetailTable({
           // handleDelete={DeleteDetailData}
           handleDelete={handleDeleteClick}
           useInputRef={editinputref}
-          height={"50vh"}
+          height={"80vh"}
         />
         <DeleteConfirmation
           show={showDeleteModal}
           onConfirm={confirmDelete}
           onCancel={cancelDelete}
         />
+      </div>
+      <div className="d-flex justify-content-end mt-1">
+        <button
+          className="btn btn-success py-1 px-2"
+          type="button"
+          onClick={handleAdd}
+        >
+          <i className="bi bi-plus-lg"></i>
+        </button>
+      </div>
+      <div>
+        {params?.isAdd && (
+          <AddItem
+            newRow={newRow}
+            params={params}
+            setParams={setParams}
+            headerData={headerData}
+            entityType={entityType}
+            trancode={trancode}
+            headerid={id}
+            lotno={lotno}
+            lastSrl={Number.parseFloat(lastSrl)}
+          />
+        )}
+      </div>
+      <>
         {/* <Modal/> */}
         <ReusableModal
           show={params?.view}
@@ -609,7 +780,7 @@ function OpeningEntryDetailTable({
               entityType={entityType}
               trancode={trancode}
               Valuation={params.Valuation}
-              headerEntryDate={headerData?.EntryDate}
+              headerEntryDate={headerData?.EntryDate || user?.date}
             />
           }
           Title={`${
@@ -619,31 +790,7 @@ function OpeningEntryDetailTable({
           handlePrimary={handleClose}
           PrimaryButtonName={"Close"}
         />
-      </div>
-      <div className="d-flex justify-content-end mt-1">
-        <button
-          className="btn btn-success py-1 px-2"
-          type="button"
-          onClick={handleAdd}
-        >
-          +
-        </button>
-      </div>
-      <div>
-        {params?.isAdd && (
-          <AddItem
-            newRow={newRow}
-            params={params}
-            setParams={setParams}
-            headerData={headerData}
-            entityType={entityType}
-            trancode={trancode}
-            headerid={id}
-            lotno={lotno}
-            lastSrl={filteredData?.length}
-          />
-        )}
-      </div>
+      </>
     </div>
   );
 }

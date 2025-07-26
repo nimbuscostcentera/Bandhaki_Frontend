@@ -95,16 +95,15 @@ function GroupWareHouseListEdit() {
   //   fetchGroupWareHouse({ CompanyID: CompanyID, isTable: false });
   //  },[])
   const ParentCodeOptions = useMemo(() => {
- return GroupWareHouseList?.map((item) => ({
-            label: `${item?.CODE}`,
-            value: item?.ID,
-          }));
-      
-}, [GroupWareHouseList]);
+    return GroupWareHouseList?.map((item) => ({
+      label: `${item?.CODE}`,
+      value: item?.ID,
+    }));
+  }, [GroupWareHouseList]);
   return (
     <Container fluid style={{ width: "98%", padding: 0 }}>
       <ToastContainer />
-      <Row style={{ marginTop: "60px", width: "100%" }}>
+      <Row style={{ marginTop: "50px", width: "100%" }}>
         <Col xs={12} style={{ paddingLeft: "15px", margin: "0px" }}>
           <div className="d-flex justify-content-between">
             <h5>Group WareHouse</h5>
@@ -113,74 +112,72 @@ function GroupWareHouseListEdit() {
         </Col>
 
         {/* Form Section */}
-        <Col xs={12} sm={12} md={6} lg={6} xl={6}>
-          <div style={{ width: "100%", overflow: "auto" }}>
-            <table style={{ width: "100%", overflow: "auto" }}>
-              <thead className="tab-head">
-                <tr>
-                  <th
-                    style={{
-                      padding: "3px 10px",
-                      borderBottom: "1px solid lightgrey",
-                    }}
-                  >
-                    <i className="bi bi-person-circle"></i>
-                  </th>
-                  <th>Group WareHouse Code*</th>
-                  <th>Description*</th>
-                  <th>Parent WareHouse</th>
-                </tr>
-              </thead>
-              <tbody className="tab-body">
-                <tr>
-                  <td>
-                    <i className="bi bi-caret-right-fill"></i>
-                  </td>
-                  <td>
-                    <input
-                      placeholder="Group WareHouse Code"
-                      className="input-cell form-input"
-                      name="CODE"
-                      value={groupWareHouseData?.CODE}
-                      onChange={OnChangeHandler}
-                      type="text"
-                      maxLength={100}
-                      style={{ width: "100%" }}
-                      ref={inputRef}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      placeholder="Description"
-                      className="input-cell"
-                      name="DESCRIPTION"
-                      value={groupWareHouseData?.DESCRIPTION}
-                      onChange={OnChangeHandler}
-                      type="text"
-                      maxLength={255}
-                      style={{ width: "100%" }}
-                    />
-                  </td>
-                  <td>
-                    <SearchableDropDown
-                      options={ParentCodeOptions || []}
-                      handleChange={(e) => OnChangeHandler(e)}
-                      selectedVal={groupWareHouseData?.ParentCode}
-                      label={"ParentCode"}
-                      placeholder={"--Select Parent Code--"}
-                      key={2}
-                      defaultval={-1}
-                      width={"100%"}
-                    />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <Col xs={12} sm={6} md={8} lg={9} xl={10}>
+          <table style={{ width: "100%", overflow: "auto" }}>
+            <thead className="tab-head">
+              <tr>
+                <th
+                  style={{
+                    padding: "3px 10px",
+                    borderBottom: "1px solid lightgrey",
+                  }}
+                >
+                  <i className="bi bi-person-circle"></i>
+                </th>
+                <th>Group WareHouse Code*</th>
+                <th>Description*</th>
+                <th>Parent WareHouse</th>
+              </tr>
+            </thead>
+            <tbody className="tab-body">
+              <tr>
+                <td>
+                  <i className="bi bi-caret-right-fill"></i>
+                </td>
+                <td>
+                  <input
+                    placeholder="Group WareHouse Code"
+                    className="input-cell form-input"
+                    name="CODE"
+                    value={groupWareHouseData?.CODE}
+                    onChange={OnChangeHandler}
+                    type="text"
+                    maxLength={100}
+                    style={{ width: "100%" }}
+                    ref={inputRef}
+                  />
+                </td>
+                <td>
+                  <input
+                    placeholder="Description"
+                    className="input-cell"
+                    name="DESCRIPTION"
+                    value={groupWareHouseData?.DESCRIPTION}
+                    onChange={OnChangeHandler}
+                    type="text"
+                    maxLength={255}
+                    style={{ width: "100%" }}
+                  />
+                </td>
+                <td>
+                  <SearchableDropDown
+                    options={ParentCodeOptions || []}
+                    handleChange={(e) => OnChangeHandler(e)}
+                    selectedVal={groupWareHouseData?.ParentCode}
+                    label={"ParentCode"}
+                    placeholder={"--Select Parent Code--"}
+                    key={2}
+                    defaultval={-1}
+                    width={"100%"}
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </Col>
 
         {/* Submit Button */}
-        <Col xs={12} sm={12} md={6} lg={6} xl={6}>
+        <Col xs={12} sm={6} md={4} lg={3} xl={2}>
           <div className="d-flex justify-content-start align-items-center mt-2">
             <Button variant="success" onClick={SaveData} disabled={isDisable}>
               {isGroupWareHouseLoading ? "Please wait..." : "Add"}
@@ -189,16 +186,11 @@ function GroupWareHouseListEdit() {
         </Col>
 
         {/* Table Section */}
-        <Col xs={12}>
-          <hr className="mt-3 mb-2" />
-          <div className="d-flex justify-content-between">
-            <h5>Group WareHouse Edit</h5>
-          </div>
-          <hr className="mt-1 mb-2" />
-        </Col>
+
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
-          <hr className="my-1" />
-          <div className="d-flex justify-content-between align-items-center m-0 flex-wrap">
+          <hr className="mt-3 mb-2" />
+          <div className=" d-flex justify-content-between align-items-center m-0 flex-wrap">
+            <h5>Group WareHouse Edit</h5>
             <div>
               <label
                 className="form-input"
@@ -234,7 +226,8 @@ function GroupWareHouseListEdit() {
               </label>
             </div>
           </div>
-          <hr className="my-1" />
+          <hr className="mt-2 mb-2" />
+          {/* <hr style={{ marginTop: "2px" }} /> */}
         </Col>
 
         <Col xs={12}>

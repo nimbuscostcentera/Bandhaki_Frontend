@@ -144,15 +144,8 @@ const {
       headername: "WareHouse Code",
       fieldname: "CODE",
       type: "String",
-      width: "200px",
+      width: "120px",
       isNotEditable: true,
-    },
-    {
-      headername: "Description",
-      fieldname: "DESCRIPTION",
-      type: "String",
-      width: "200px",
-      isUseInputRef: true,
     },
     {
       headername: "Group WH.",
@@ -160,7 +153,15 @@ const {
       selectionname: "ParentCode",
       type: "String",
       isSelection: true,
+      width: "120px",
       options: GroupWareHouse,
+    },
+    {
+      headername: "Description",
+      fieldname: "DESCRIPTION",
+      type: "String",
+      width: "200px",
+      isUseInputRef: true,
     },
   ];
 

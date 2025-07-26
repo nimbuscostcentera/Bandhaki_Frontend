@@ -27,7 +27,8 @@ function CostCenterListEdit() {
 
   const parentCodeOptions = [
     { label: "Customer", value: 1 },
-    { label: "WholeSeller", value: 2 },
+    { label: "WholeSaler", value: 2 },
+    { label: "Mahajon", value: 3 },
   ];
 
   const [isDisable, setIsDisable] = useState(false);
@@ -124,7 +125,7 @@ function CostCenterListEdit() {
   return (
     <Container fluid style={{ width: "98%", padding: 0 }}>
       <ToastContainer />
-      <Row style={{ marginTop: "60px", width: "100%" }}>
+      <Row style={{ marginTop: "50px", width: "100%" }}>
         <Col xs={12}>
           <div className="d-flex justify-content-between">
             <h5>Cost Center</h5>
@@ -219,14 +220,8 @@ function CostCenterListEdit() {
         {/* Edit Section */}
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
           <hr className="mt-3 mb-2" />
-          <div className="d-flex justify-content-between">
-            <h5>Cost Center Edit</h5>
-          </div>
-          <hr className="my-1" />
-        </Col>
-        <Col xs={12} sm={12} md={12} lg={12} xl={12}>
-          <hr className="my-1" />
-          <div className="d-flex justify-content-between align-items-center m-0 flex-wrap">
+          <div className=" d-flex justify-content-between align-items-center m-0 flex-wrap">
+            <h5>CostCenter Edit</h5>
             <div>
               <label
                 className="form-input"
@@ -262,8 +257,16 @@ function CostCenterListEdit() {
               </label>
             </div>
           </div>
-          <hr className="my-1" />
+          <hr className="mt-2 mb-1" />
+          {/* <hr style={{ marginTop: "2px" }} /> */}
         </Col>
+        {/* <Col xs={12} sm={12} md={12} lg={12} xl={12}>
+          <hr className="my-1" />
+          <div className="d-flex justify-content-between align-items-center m-0 flex-wrap">
+          
+          </div>
+          <hr className="my-1" />
+        </Col> */}
 
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
           <CostCenterTable

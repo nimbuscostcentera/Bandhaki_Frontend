@@ -1,60 +1,52 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.min.js";
 import "./ledger.css";
 import { toast, ToastContainer } from "react-toastify";
+import getReports from "./getReports";
 
 import { Row, Col, Container } from "react-bootstrap";
 import Table from "../../Component/Table";
 import BongDatePicker from "../../Component/BongDatePicker";
 import SelectOption from "../../Component/SelectOption";
 import SearchableDropDown from "../../Component/SearchableDropDown/index";
-
-import checkOrder from "../../GlobalFunctions/Ordercheck";
-import SortArrayByString from "../../GlobalFunctions/SortarrayByString";
-import SortArrayByDate from "../../GlobalFunctions/SortArrayByDate";
-import SortArrayByNumber from "../../GlobalFunctions/SortArrayByNumber";
-import BongDateSorting from "../../GlobalFunctions/BongDateSorting";
-import SortArrayByTime from "../../GlobalFunctions/SortArrayByTime";
+import useFetchMahajon from "../../store/ShowStore/useFetchMahajon";
 
 import useFetchAuth from "../../store/Auth/useFetchAuth";
 import useFetchAdjustDetailReport from "../../store/ShowStore/useFetchAdjustDetailReport";
-// import useFetchFineHeader from "../../store/ShowStore/useFetchMetalReturnView";
-import useFetchCust from "../../store/ShowStore/useFetchCust"; // Assuming you have these hooks
-import useFetchWS from "../../store/ShowStore/useFetchWS"; // Assuming you have these hooks
+import useFetchCust from "../../store/ShowStore/useFetchCust";
+import useFetchWS from "../../store/ShowStore/useFetchWS";
 import useFetchLedgerView from "../../store/ShowStore/useFetchLedgerView";
 
 function LedgerView() {
-  //---------other state-------
-
-  // const location = useLocation();
-  // const { custId, customertype } = location?.state || {};
-
   //------use state hooks----------//
   const [searchParams] = useSearchParams();
-  const entityType = searchParams.get("type") === "customer" ? 1 : 2;
-  // entityType = customertype === undefined ? entityType : customertype ;
-  // console.log(entityType, "entityType");
-  // console.log(customertype, "customertype");
+  const entityType =
+    searchParams.get("type") === "customer"
+      ? 1
+      : searchParams.get("type") === "wholeseller"
+      ? 2
+      : 3;
   const [Filters, setFilters] = useState({
     StartDate: null,
     EndDate: null,
   });
   const [textDetail, setTextDetail] = useState("");
   const [filteredData, setFilteredData] = useState([]);
-  const [originalOrder, setOriginalOrder] = useState([]);
+  const [advanceData, setAdvanceData] = useState([]);
+  const [outstandingData, setOutstandingData] = useState([]);
   const [editedData, setEditedData] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [params, setParams] = useState({
     viewStartDatePicker: false,
     viewEndDatePicker: false,
+    SearchFor:""
   });
 
-  // const [entityTypeSelection, setEntityTypeSelection] = useState(entityType);
-  const [viewType, setViewType] = useState(1); // Default to summary
+  const [viewType, setViewType] = useState(1);
   const [customer, setCustomer] = useState([]);
   const [wholeseller, setWholeseller] = useState([]);
   const [selectedEntityId, setSelectedEntityId] = useState(-1);
@@ -64,10 +56,10 @@ function LedgerView() {
     IntCr: 0,
     IntDr: 0,
     PrnCr: 0,
-    PrnDr:0
+    PrnDr: 0,
   });
-  //-----------------------api calls--------------------------------
 
+  //-----------------------api calls--------------------------------
   const { user, CompanyID } = useFetchAuth();
   const { isAdjustDetailError } = useFetchAdjustDetailReport();
   const {
@@ -77,79 +69,70 @@ function LedgerView() {
     ClearstateLedgerViewList,
     fetchLedgerViewHeader,
     searchLedgerViewHeader,
+    AdvanceReport,
+    OutstandingReport,
   } = useFetchLedgerView();
   const { CustomerList, fetchCustomrData } = useFetchCust();
   const { WholeSellerList, fetchWSomrData } = useFetchWS();
+  const { MahajonList, fetchMahajonData, isLoadingMahajon } = useFetchMahajon();
 
   //--------------------------function call-----------------------------
 
-  //edit input handler
+
+    // Calculate net balance
+    const calculateNetBalance = useMemo(() => {
+      try {
+        let drAdjustments = 0;
+        let crAdjustments = 0;
+
+        // Safely process advance and outstanding data
+        const processData = (data) => {
+          if (!Array.isArray(data)) return;
+          data.forEach((item) => {
+            drAdjustments += parseFloat(item?.DR_Amt) || 0;
+            crAdjustments += parseFloat(item?.CR_Amt) || 0;
+          });
+        };
+
+        processData(advanceData);
+        processData(outstandingData);
+
+        // Safely get due amounts with fallbacks
+        const duePrn = Math.abs(parseFloat(Total?.DuePrn)) || 0;
+        const dueInt = Math.abs(parseFloat(Total?.DueInt)) || 0;
+
+        // Calculate net amount with NaN prevention
+        const netAmount = Number.isFinite(
+          crAdjustments - (duePrn + dueInt + drAdjustments)
+        )
+          ? crAdjustments - (duePrn + dueInt + drAdjustments)
+          : 0;
+        console.log(crAdjustments, drAdjustments, duePrn, dueInt, netAmount, "balance");
+
+        return {
+          amount: Math.abs(netAmount),
+          type: netAmount >= 0 && entityType == 3 ? "Debit" : netAmount >= 0 && (entityType == 1 || entityType == 2) ? "Credit" : 
+          netAmount < 0 && entityType == 3 ? "Debit":"Credit",
+        };
+      } catch (error) {
+        console.error("Error calculating net balance:", error);
+        return {
+          amount: 0,
+          type: "Credit",
+        };
+      }
+    }, [advanceData, outstandingData, Total]);
   const OnChangeHandler = (index, e) => {
     const key = e.target.name;
     const value = e.target.value;
     setEditedData({ ...editedData, [key]: value });
   };
-  //sorting
-  // const SortingFunc = (header, type) => {
-  //   if (!filteredData || filteredData.length === 0) return;
-  //   let currentOrder = "";
-  //   let isAsc = false;
-  //   let isDesc = false;
-  //   if (type == "time") {
-  //     for (let i = 0; i < filteredData.length - 1; i++) {
-  //       const a = Number.parseInt(
-  //         (filteredData[i]?.[header]).toString().replace(/:/g, ""),
-  //         10
-  //       );
-  //       const b = Number.parseInt(
-  //         (filteredData[i + 1]?.[header]).toString().replace(/:/g, ""),
-  //         10
-  //       );
-  //       if (a > b) {
-  //         isAsc = true;
-  //       }
-  //       if (b > a) {
-  //         isDesc = true;
-  //       }
-  //     }
-  //     if (isAsc) {
-  //       currentOrder = "Desc";
-  //     }
-  //     if (isDesc) {
-  //       currentOrder = "Asc";
-  //     }
-  //   } else {
-  //     currentOrder = checkOrder(filteredData, header);
-  //   }
-  //   const newOrder = currentOrder === "Asc" ? "Desc" : "Asc";
 
-  //   let result;
-  //   if (type === "String") {
-  //     result = SortArrayByString(newOrder, filteredData, header);
-  //   } else if (type === "Date") {
-  //     result = SortArrayByDate(newOrder, filteredData, header);
-  //   } else if (type === "number") {
-  //     result = SortArrayByNumber(newOrder, filteredData, header);
-  //   } else if (type == "BongDate") {
-  //     result = BongDateSorting(newOrder, filteredData, header);
-  //   } else if (type == "time") {
-  //     result = SortArrayByTime(newOrder, filteredData, header);
-  //   }
-
-  //   setFilteredData(result);
-  //   setOriginalOrder(result.map((row) => row.ID));
-  // };
-
-  // Search functionality
-  // Modified performSearch to only handle API calls
   const performSearch = () => {
-    console.log("hello 3")
-    // Clear previous data
     setFilteredData([]);
+    setAdvanceData([]);
+    setOutstandingData([]);
     ClearstateLedgerViewList();
-
- 
-
     fetchLedgerViewHeader({
       CustomerID: selectedEntityId,
       CompanyID: user?.CompanyID,
@@ -160,16 +143,13 @@ function LedgerView() {
     });
   };
 
-  // // 4. Update handleGoClick to force refresh
-  // const handleGoClick = () => {
-  //   performSearch();
-  // };
   const HandleCloseDatePicker = () => {
     setParams({
       viewStartDatePicker: false,
       viewEndDatePicker: false,
     });
   };
+
   const HandleOpenStartDatePicker = () => {
     setParams({
       viewStartDatePicker: true,
@@ -185,8 +165,8 @@ function LedgerView() {
     });
     return;
   };
+
   const FilterHandler = (e, key) => {
-    console.log(e, key);
     setFilters({ ...Filters, [key]: e });
   };
 
@@ -196,8 +176,6 @@ function LedgerView() {
   };
 
   //--------------------------useEffects-----------------------------
-
-  // Add this useEffect to fetch data when entityTypeSelection changes
   useEffect(() => {
     if (entityType == 1) {
       fetchCustomrData({ CompanyID: user?.CompanyID });
@@ -206,8 +184,9 @@ function LedgerView() {
     }
     setSelectedEntityId(-1);
     setFilteredData([]);
+    setAdvanceData([]);
+    setOutstandingData([]);
   }, [entityType, user?.CompanyID]);
-  // console.log(entityType, "entityTypeSelection");
 
   useEffect(() => {
     if (CustomerList?.length > 0) {
@@ -229,15 +208,8 @@ function LedgerView() {
     }
   }, [WholeSellerList]);
 
-  // 3. Modify useEffect dependencies (remove viewType)
   useEffect(() => {
     toast.dismiss();
-    // console.log(
-    //   viewType,
-    //   selectedEntityId !== -1,
-    //   Filters?.StartDate && Filters?.EndDate,
-    //   searchTerm.trim() !== ""
-    // );
     if (
       selectedEntityId !== -1 ||
       (Filters?.StartDate && Filters?.EndDate) ||
@@ -248,32 +220,35 @@ function LedgerView() {
         performSearch();
       }, 500);
       return () => clearTimeout(debounceTimer);
-    } else {
-      return;
     }
-  }, [searchTerm, Filters?.StartDate, Filters?.EndDate, selectedEntityId,viewType]);
-  // Reset state when entityType changes
+  }, [
+    searchTerm,
+    Filters?.StartDate,
+    Filters?.EndDate,
+    selectedEntityId,
+    viewType,
+  ]);
+
   useEffect(() => {
     setFilteredData([]);
+    setAdvanceData([]);
+    setOutstandingData([]);
     setSearchTerm("");
-    // setSearchDate("");
     ClearstateLedgerViewList();
-    // Trigger initial API call for new entityType
-    // performSearch();
   }, [entityType]);
-  // Update filtered data when EntryList changes
-  // Update filtered data when API response comes
+
   useEffect(() => {
     if (isLedgerViewListError) {
       setFilteredData([]);
+      setAdvanceData([]);
+      setOutstandingData([]);
     } else if (LedgerViewList.length > 0) {
-      const updatedList =
+      let updatedList =
         viewType === 1
           ? LedgerViewList.map(processSummaryData)
           : LedgerViewList;
 
       if (viewType !== 1) {
-        // Initialize accumulator with all required properties set to 0
         const initialTotal = {
           PrnCr: 0,
           PrnDr: 0,
@@ -283,12 +258,35 @@ function LedgerView() {
           DueInt: 0,
         };
 
+        updatedList = updatedList.map((item) => {
+          const isPresentadvance = AdvanceReport?.some(
+            (reportItem) => reportItem.Header_ID === item.Header_ID
+          );
+          const isPresentoutstanding = OutstandingReport?.some(
+            (reportItem) => reportItem.Header_ID === item.Header_ID
+          );
+          let isPresent = isPresentadvance || isPresentoutstanding;
+          
+          // You can use `isPresent` if needed here
+       let idstr = isPresent
+         ? `(ID:${item?.Header_ID}*)`
+         : `(ID:${item?.Header_ID})`;
+          return item?.Description
+            ? {
+                ...item,
+                Description: `${idstr}${item?.Description}`,
+              }
+            : {
+                ...item,
+                Description: idstr,
+              };
+        });
+
         const obj = updatedList.reduce((acc, item) => {
-          // Parse values with fallback to 0 if invalid/undefined
-          const principalDR = Number.parseFloat(item.Principal_DR) || 0;
-          const principalCR = Number.parseFloat(item.Principal_CR) || 0;
-          const intDR = Number.parseFloat(item.Int_DR) || 0;
-          const intCR = Number.parseFloat(item.Int_CR) || 0;
+          const principalDR = parseFloat(item.Principal_DR) || 0;
+          const principalCR = parseFloat(item.Principal_CR) || 0;
+          const intDR = parseFloat(item.Int_DR) || 0;
+          const intCR = parseFloat(item.Int_CR) || 0;
 
           acc.PrnCr += principalCR;
           acc.PrnDr += principalDR;
@@ -298,23 +296,25 @@ function LedgerView() {
           acc.DueInt += intDR - intCR;
 
           return acc;
-        }, initialTotal); // Initialize with properly structured object
+        }, initialTotal);
 
-        console.log("Calculated Totals:", obj);
         setTotal(obj);
       }
+
       setFilteredData(updatedList);
+      setAdvanceData(AdvanceReport);
+      setOutstandingData(OutstandingReport);
     }
   }, [LedgerViewList, viewType, isLedgerViewListError]);
-
+  
 
   useEffect(() => {
     return () => {
-      // Cleanup on unmount
       setFilters({ StartDate: null, EndDate: null });
       setTextDetail("");
       setFilteredData([]);
-      setOriginalOrder([]);
+      setAdvanceData([]);
+      setOutstandingData([]);
       setEditedData({});
       setSearchTerm("");
       setParams({ viewStartDatePicker: false, viewEndDatePicker: false });
@@ -322,11 +322,14 @@ function LedgerView() {
       setCustomer([]);
       setWholeseller([]);
       setSelectedEntityId(-1);
-      ClearstateLedgerViewList(); // Clear API-related store state
+      ClearstateLedgerViewList();
     };
   }, []);
 
-  // Helper function for summary data processing
+  useEffect(() => {
+    fetchMahajonData({ Cust_Type: 3, CompanyID });
+  }, []);
+
   const processSummaryData = (item) => ({
     ...item,
     TotalPrincipalDR: item.TotalPrincipalDR || 0,
@@ -334,7 +337,32 @@ function LedgerView() {
     TotalIntDR: item.TotalIntDR || 0,
     TotalIntCR: item.TotalIntCR || 0,
   });
+
+  useEffect(() => {
+    let str = "";
+    let arr=entityType==1 ?customer:entityType==2?wholeseller:Mahajon;
+    arr?.forEach((item) => {
+      console.log(item);
+      if (item?.value == selectedEntityId) {
+        str = item?.label;
+        return;
+      }
+    });
+    console.log(str);
+    setParams((prev) => ({ ...prev,SearchFor:str}));
+  }, [selectedEntityId]);
+
   //-------------------------variables call-----------------------------
+  const Mahajon = useMemo(() => {
+    let arr = [];
+    MahajonList?.forEach((element) => {
+      let obj = {};
+      obj.label = element?.Name;
+      obj.value = element?.ID;
+      arr.push(obj);
+    });
+    return arr || [];
+  }, [MahajonList, isLoadingMahajon]);
 
   const columns = [
     {
@@ -343,18 +371,8 @@ function LedgerView() {
       type: "String",
       width: "75px",
     },
-    {
-      headername: "Lot No",
-      fieldname: "LotNo",
-      type: "String",
-      width: "92px",
-    },
-    {
-      headername: "Srl",
-      fieldname: "SRL",
-      type: "String",
-      width: "50px",
-    },
+    { headername: "Lot No", fieldname: "LotNo", type: "String", width: "92px" },
+    { headername: "Srl", fieldname: "SRL", type: "String", width: "50px" },
     {
       headername: "SRL_Prn",
       fieldname: "SRL_Prn",
@@ -377,13 +395,13 @@ function LedgerView() {
       headername: "Interface",
       fieldname: "Interface",
       type: "String",
-      width: "160px",
+      width: "130px",
     },
     {
       headername: "Description",
       fieldname: "Description",
       type: "String",
-      width: "170px",
+      width: "190px",
     },
     {
       headername: "Prn_DR",
@@ -409,25 +427,11 @@ function LedgerView() {
       type: "number",
       width: "65px",
     },
-    // {
-    //   headername: "Cust. Name",
-    //   fieldname: "CustomerName",
-    //   type: "String",
-    // width: "200px",
-    // },
   ];
+
   const summaryColumns = [
-    {
-      headername: "Lot No",
-      fieldname: "LotNo",
-      type: "String",
-    },
-    {
-      headername: "SRL",
-      fieldname: "SRL",
-      type: "String",
-      width: "50px",
-    },
+    { headername: "Lot No", fieldname: "LotNo", type: "String" },
+    { headername: "SRL", fieldname: "SRL", type: "String", width: "50px" },
     {
       headername: "SRL_Prn",
       fieldname: "SRL_Prn",
@@ -466,6 +470,60 @@ function LedgerView() {
     },
   ];
 
+  const advanceColumns = [
+    {
+      headername: "Entry Date",
+      fieldname: "EntryDate",
+      type: "String",
+      width: "100px",
+    },
+    {
+      headername: "Description",
+      fieldname: "Description",
+      type: "String",
+      width: "100px",
+    },
+    {
+      headername: "Others Cr.",
+      fieldname: "CR_Amt",
+      type: "String",
+      width: "100px",
+    },
+    {
+      headername: "Others Dr.",
+      fieldname: "DR_Amt",
+      type: "number",
+      width: "100px",
+    },
+  ];
+
+  const outstandingColumns = [
+    {
+      headername: "Entry Date",
+      fieldname: "EntryDate",
+      type: "String",
+      width: "100px",
+    },
+    {
+      headername: "Description",
+      fieldname: "Description",
+      type: "String",
+      width: "100px",
+    },
+    {
+      headername: "Others Cr.",
+      fieldname: "CR_Amt",
+      type: "String",
+      width: "100px",
+    },
+    {
+      headername: "Others Dr.",
+      fieldname: "DR_Amt",
+      type: "number",
+      width: "100px",
+    },
+  ];
+
   return (
     <Container fluid className="pt-5">
       <ToastContainer />
@@ -476,11 +534,13 @@ function LedgerView() {
             style={{ rowGap: "10px" }}
           >
             <div>
-              <h5
-                className="mt-2 mb-0"
-                style={{ fontSize: "18px", whiteSpace: "nowrap" }}
-              >
-                Ledger View for {entityType == 1 ? " Customer" : " WholeSeller"}
+              <h5 className="mb-0" style={{ whiteSpace: "nowrap" }}>
+                Ledger View for
+                {entityType == 1
+                  ? " Customer"
+                  : entityType == 2
+                  ? " WholeSeller"
+                  : " Mahajon"}
               </h5>
             </div>
 
@@ -488,7 +548,7 @@ function LedgerView() {
               className="d-flex align-items-center flex-wrap gap-3"
               style={{ flex: "1", justifyContent: "flex-end", flexShrink: 1 }}
             >
-              <BongDatePicker
+              {/* <BongDatePicker
                 handleClose={HandleCloseDatePicker}
                 handleOpenStartDate={HandleOpenStartDatePicker}
                 handleOpenEndDate={HandleOpenEndDatePicker}
@@ -497,18 +557,26 @@ function LedgerView() {
                 view2={params?.viewEndDatePicker}
                 startDate={Filters?.StartDate}
                 endDate={Filters?.EndDate}
-              />
+              /> */}
 
               <div style={{ width: "220px", minWidth: "180px" }}>
                 <SearchableDropDown
-                  options={entityType == 1 ? customer : wholeseller}
+                  options={
+                    entityType == 1
+                      ? customer
+                      : entityType == 2
+                      ? wholeseller
+                      : Mahajon
+                  }
                   handleChange={handleHeaderChange}
                   selectedVal={selectedEntityId}
                   label={"selectedEntityId"}
                   placeholder={
                     entityType == 1
                       ? "--Select Customer--"
-                      : "--Select Wholeseller--"
+                      : entityType == 2
+                      ? "--Select Wholesaler--"
+                      : "--Select Mahajon--"
                   }
                   key={entityType}
                   defaultval={-1}
@@ -520,11 +588,13 @@ function LedgerView() {
                 OnSelect={(e) => {
                   setViewType(e?.target?.value);
                   setFilteredData([]);
+                  setAdvanceData([]);
+                  setOutstandingData([]);
                   ClearstateLedgerViewList();
                 }}
                 SelectStyle={{
                   width: "150px",
-                  padding: "7px 8px",
+                  padding: "5px 8px",
                   borderRadius: "5px",
                   border: "1px solid #ccc",
                   fontSize: "14px",
@@ -542,43 +612,29 @@ function LedgerView() {
 
           <hr className="my-1" />
         </Col>
-        {/* Form Fields */}
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
-          {/* Detail View Input */}
           <textarea
             value={textDetail}
             readOnly
             type="search"
             placeholder="Detail View"
-            style={{
-              width: "100%",
-              border: "2px solid #ced4da",
-              borderRadius: "8px",
-              padding: "5px 8px",
-              fontSize: "14px",
-              backgroundColor: "white",
-              color: "#212529",
-              transition: "all 0.3s ease",
-              outline: "none",
-              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
-              "::placeholder": {
-                color: "#868e96",
-                opacity: " 1",
-                fontWeight: "300",
-              },
-              // Focus state
-              ":focus": {
-                borderColor: "#3b7ddd",
-                boxShadow: "0 0 0 3px rgba(59, 125, 221, 0.25)",
-                backgroundColor: "#f8fbff",
-              },
-            }}
+            className="detail-view-textarea"
           />
         </Col>
-        {/* Table */}
-        <Col xl={12} lg={12} md={12} sm={12} xs={12} style={{height: "calc(100vh - 200px)"}}>         
-            {filteredData?.length > 0 ? (
-              viewType == 1 ? (
+      </Row>
+
+      {filteredData?.length > 0 ? (
+        viewType == 1 ? (
+          <div className="summary-view-container">
+            <Row className="mb-0">
+              <Col
+                xl={12}
+                lg={12}
+                md={12}
+                sm={12}
+                xs={12}
+                className="table-container"
+              >
                 <Table
                   Col={summaryColumns}
                   OnChangeHandler={OnChangeHandler}
@@ -587,9 +643,23 @@ function LedgerView() {
                   getFocusText={(val) => {
                     setTextDetail(val);
                   }}
-                  showScrollButtons={true}
+                  showScrollButtons={filteredData?.length > 10}
                 />
-              ) : (
+              </Col>
+            </Row>
+          </div>
+        ) : (
+          <div className="detail-view-container">
+            <Row className="mb-0">
+              <Col
+                xl={12}
+                lg={12}
+                md={12}
+                sm={12}
+                xs={12}
+                className="table-container"
+                style={{ maxHeight: "55vh" }}
+              >
                 <Table
                   Col={columns}
                   OnChangeHandler={OnChangeHandler}
@@ -598,6 +668,7 @@ function LedgerView() {
                   getFocusText={(val) => {
                     setTextDetail(val);
                   }}
+                  height={"55vh"}
                   FooterBody={
                     <tr
                       className="td-class"
@@ -622,26 +693,103 @@ function LedgerView() {
                       <td>{Total?.IntCr}</td>
                     </tr>
                   }
-                  height={"65vh"}
                   isFooter={true}
-                  showScrollButtons={true}
+                  showScrollButtons={filteredData?.length > 10}
                 />
-              )
-            ) : isLedgerViewListLoading ? (
-              <div className="d-flex justify-content-center align-items-center h-100">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              </div>
-            ) : (
-              <div className="d-flex justify-content-center align-items-center h-100 text-muted">
-                {isLedgerViewListError
-                  ? "No results found . "
-                  : "Use the filters to find ledger data."}
-              </div>
+              </Col>
+            </Row>
+            <hr />
+            {(advanceData?.length > 0 || outstandingData?.length > 0) && (
+              <Row className="mt-3">
+                {advanceData?.length > 0 && (
+                  <Col xl={6} lg={6} md={12} sm={12} xs={12}>
+                    <h6 className="mb-2 px-2">Advance Report</h6>
+                    <Table
+                      Col={advanceColumns}
+                      tab={advanceData}
+                      isLoading={isLedgerViewListLoading}
+                      showScrollButtons={advanceData?.length > 10}
+                    />
+                  </Col>
+                )}
+
+                {outstandingData?.length > 0 && (
+                  <Col xl={6} lg={6} md={12} sm={12} xs={12}>
+                    <h6 className="mb-2 px-2">Outstanding Report</h6>
+                    <Table
+                      Col={outstandingColumns}
+                      tab={outstandingData}
+                      isLoading={isLedgerViewListLoading}
+                      showScrollButtons={outstandingData?.length > 10}
+                    />
+                  </Col>
+                )}
+              </Row>
             )}
-        </Col>
-      </Row>
+            {/* Net Balance Row - Add this new section */}
+            <Row className="mt-4">
+              <Col xl={12} lg={12} md={12} sm={12} xs={12}>
+                <div className="net-balance-container p-3 bg-light border rounded">
+                  <div className="d-flex justify-flex-start align-items-center">
+                    <span className="fw-bold">Net Balance:</span>
+                    <div>
+                      <span className="me-2 m-2">
+                        {calculateNetBalance.amount.toFixed(2)}
+                      </span>
+                      <span
+                        className={
+                          calculateNetBalance.type === "Dr"
+                            ? "text-danger"
+                            : "text-success"
+                        }
+                      >
+                        {calculateNetBalance.type}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Col>
+            </Row>
+          </div>
+        )
+      ) : isLedgerViewListLoading ? (
+        <div className="d-flex justify-content-center align-items-center h-100">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      ) : (
+        <div
+          className="d-flex justify-content-center align-items-center border border-secondary border-opacity-25"
+          style={{ height: "calc(100vh - 200px)" }}
+        >
+          <div className="text-muted">
+            {isLedgerViewListError
+              ? "No results found."
+              : "Use the filters to find ledger data."}
+          </div>
+        </div>
+      )}
+      <div className="d-flex justify-content-end my-2">
+        {
+          viewType !== 1 ?<button className="btn btn-success" onClick={()=>{getReports(
+            filteredData,
+            columns,
+            advanceData,
+            advanceColumns,
+            outstandingData,
+            outstandingColumns,
+            entityType,
+            params?.SearchFor,
+            Total,calculateNetBalance
+          );}}>
+          <i className="bi bi-floppy-fill">
+
+          </i>
+</button>:null
+        }
+        
+      </div>
     </Container>
   );
 }

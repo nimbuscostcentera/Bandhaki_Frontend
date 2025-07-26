@@ -9,7 +9,12 @@ const useOpeningDetailDelete = create((set) => ({
   DeleteOpeningDetail: async (userdata) => {
     set({ isOpeningDetailDeleteLoading: true, OpeningDetailDeleteErr: null }); // Start loading
     try {
-      const result = await axiosInstance.delete(API, { data: userdata });
+
+      const endpoint =
+        userdata?.Cust_Type == 3
+          ? `${process.env.REACT_APP_BASEURL}/mahajon-routes/del-mahajonopeningdetail`
+          : `${process.env.REACT_APP_BASEURL}/transaction-routes/del-openingdetail`;
+      const result = await axiosInstance.delete(endpoint, { data: userdata });
       const { data } = result;
       const { response } = data;
       set({ OpeningDetailDeleteMsg: response }); // Update state with fetched data
