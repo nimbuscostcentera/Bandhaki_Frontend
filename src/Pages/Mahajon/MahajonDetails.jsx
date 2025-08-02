@@ -23,6 +23,7 @@ import useEditMahajon from "../../store/UpdateStore/useEditMahajon";
 import useMahajonDelete from "../../store/DeleteMasterStore/useMahajonDelete";
 function MahajonDetails({ isDisable, setIsDisable, setTextDetail, search }) {
   const editinputref = useRef(null);
+  const [Img, setImg] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [originalOrder, setOriginalOrder] = useState([]);
   const [params, SetParams] = useState({
@@ -113,7 +114,10 @@ function MahajonDetails({ isDisable, setIsDisable, setTextDetail, search }) {
     setFilteredData(result);
     setOriginalOrder(result.map((row) => row.ID));
   };
-
+  const PictureHandler = (index, e) => {
+    let value = e.target.files[0];
+    setImg(value);
+  };
   const OnChangeHandler = (index, e) => {
     let key = e.target.name;
     let value = e.target.value;
@@ -178,6 +182,9 @@ function MahajonDetails({ isDisable, setIsDisable, setTextDetail, search }) {
       ) {
         newFormData.append(key, editedData[key]);
       }
+    }
+    if (Img !== "" && Img) {
+      newFormData.append("IDPROOF_IMG", Img);
     }
     EditMahajonFunc(newFormData);
   };
@@ -318,11 +325,11 @@ function MahajonDetails({ isDisable, setIsDisable, setTextDetail, search }) {
 
   const Col = [
     {
-      headername: "WholeSeller Name",
+      headername: "MJ. Name",
       fieldname: "Name",
       type: "String",
       max: 50,
-      width: 145,
+      width:"120px",
       isUseInputRef: true,
     },
     {
@@ -352,6 +359,7 @@ function MahajonDetails({ isDisable, setIsDisable, setTextDetail, search }) {
       headername: "Interest Type",
       fieldname: "InterestType",
       selectionname: "timing",
+      width:"150px",
       type: "String",
       isSelection: true,
       options: InterestTypeList,
@@ -386,7 +394,7 @@ function MahajonDetails({ isDisable, setIsDisable, setTextDetail, search }) {
       fieldname: "Address",
       type: "String",
       max: 100,
-      width: 250,
+      width:"200px",
       isShortingOff: true,
     },
   ];
@@ -394,7 +402,7 @@ function MahajonDetails({ isDisable, setIsDisable, setTextDetail, search }) {
   return (
     <div
       className="table-box"
-      style={{ height: "55vh", border: "1px solid lightgrey" }}
+      style={{ border: "1px solid lightgrey" }}
     >
       <Table
         tab={filteredData || []}
@@ -410,10 +418,13 @@ function MahajonDetails({ isDisable, setIsDisable, setTextDetail, search }) {
         isLoading={isLoadingMahajon}
         useInputRef={editinputref}
         isDelete={true}
+        PictureHandler={PictureHandler}
         handleDelete={handleDelete}
         getFocusText={(val) => {
           setTextDetail(val);
         }}
+        Img={Img}
+        height={"55vh"}
       />
     </div>
   );

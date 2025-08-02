@@ -92,13 +92,13 @@ function WSListEdit() {
     } = WSData;
 
     // Check if any required field is empty or null
-   if (!Name || !ContactNumber || !Address || !FineID) {
-         toast.error("Missing Fields are required!", {
-           position: "top-right",
-           autoClose: 3000,
-         });
-         return;
-       }
+    if (!Name || !ContactNumber || !Address || !FineID) {
+      toast.error("Missing Fields are required!", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
     if (WSData?.IDPROOF_Type == "Adhaar Card") {
       let check = AdhaarValidation(WSData?.IDPROOF);
       if (!check) {
@@ -233,7 +233,7 @@ function WSListEdit() {
   return (
     <Container fluid style={{ width: "100%", padding: 0 }}>
       <ToastContainer />
-      <Row style={{ marginTop: "60px", marginLeft: "1px", width: "98%" }}>
+      <Row style={{ marginTop: "50px", marginLeft: "1px", width: "98%" }}>
         <Col
           xs={12}
           sm={12}
@@ -243,7 +243,7 @@ function WSListEdit() {
           style={{ paddingLeft: "15px", margin: "0px" }}
         >
           <div className="d-flex justify-content-between">
-            <h5 style={{ fontSize: "18px" }}>Wholesaler Add</h5>
+            <h5>Wholesaler Add</h5>
           </div>
           <hr style={{ marginTop: "2px" }} />
         </Col>
@@ -419,6 +419,7 @@ function WSListEdit() {
               </tbody>
             </table>
           </div>
+          <hr className="mt-1 mb-0" />
         </Col>
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
           <div
@@ -426,7 +427,7 @@ function WSListEdit() {
             style={{ height: "100%" }}
           >
             <div>
-              <h5 style={{ fontSize: "17px" }}>Wholesaler Edit</h5>
+              <h5>Wholesaler Edit</h5>
             </div>
             <div>
               <Button

@@ -68,7 +68,7 @@ function UserTable({ setIsDisable, search }) {
     },
     {
       headername: "Utype",
-      fieldname: "Utype",
+      fieldname: "UserType",
       selectionname: "Utype",
       type: "number",
       isSelection: true,
@@ -95,13 +95,16 @@ function UserTable({ setIsDisable, search }) {
           order[field]?.toString().toLowerCase().includes(value)
         )
       );
-
+filtered.forEach(element => {
+  element.UserType = element.Utype == 1 ? "Admin" : "User";
+});
       setFilteredData(filtered);
     };
 
     useEffect(() => {
       handleSearch();
     }, [search]);
+  
       useEffect(() => {
         setTimeout(() => {
           if (editinputref.current) {
@@ -116,7 +119,9 @@ function UserTable({ setIsDisable, search }) {
        const sortedData = originalOrder
          .map((id) => UserList.find((row) => row.ID === id))
          .filter(Boolean);
-
+         sortedData.forEach(element => {
+           element.UserType = element.Utype == 1 ? "Admin" : "User";
+         });
        setFilteredData(sortedData);
      }
   }, [AddUserSuccess, UserEditSuccess]);
@@ -128,6 +133,9 @@ function UserTable({ setIsDisable, search }) {
         .map((id) => updatedData.find((row) => row.ID === id))
         .filter(Boolean);
     }
+    updatedData.forEach(element => {
+      element.UserType = element.Utype == 1 ? "Admin" : "User";
+    })
     setFilteredData([...updatedData]);
   }, [isUserLoading, UserEditSuccess, AddUserSuccess]);
 

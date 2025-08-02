@@ -6,27 +6,79 @@ import useFetchBanglaMonth from "../../store/ShowStore/useFetchBanglaMonth";
 import useFetchTotalDaysInMonth from "../../store/ShowStore/useFetchTotalDaysInMonth";
 import InputBox from "../InputBox";
 import moment from "moment";
-import "../Table/table.css";
+import "./Bong.css";
+import useFetchAuth from "../../store/Auth/useFetchAuth";
 function BongCalender({ view, handleclose, handleSave }) {
+  const { user } = useFetchAuth();
+  let str = user?.date;
+  let [uyear, umonth, uday] = str.split('-');
+  let ColCal = [
+    {
+      headername: "রবি",
+      fieldname: "1",
+      type: "String",
+      isShortingOff: true,
+    },
+    {
+      headername: "সোম",
+      fieldname: "2",
+      type: "String",
+      isShortingOff: true,
+    },
+    {
+      headername: "মঙ্গল",
+      fieldname: "3",
+      type: "String",
+      isShortingOff: true,
+    },
+    {
+      headername: "বুধ",
+      fieldname: "4",
+      type: "String",
+      isShortingOff: true,
+    },
+    {
+      headername: "বৃহস্পতি",
+      fieldname: "5",
+      type: "String",
+      isShortingOff: true,
+    },
+    {
+      headername: "শুক্র",
+      fieldname: "6",
+      type: "String",
+      isShortingOff: true,
+    },
+    {
+      headername: "শনি",
+      fieldname: "7",
+      type: "String",
+      isShortingOff: true,
+    },
+  ];
+
+  //-------------------------------hooks----------------------------//
   const [Bong, setBong] = useState({
     BongMonth: "",
-    BongDay: 0,
-    BongYear: 0,
-    MonthNumber: 0,
+    BongDay: parseInt(uday) || 0,
+    BongYear: parseInt(uyear) || 0,
+    MonthNumber: parseInt(umonth, 10) || 0,
     TotalDays: 0,
     fday: "",
     fweekday: "",
     CalenderTable: [],
-    BengaliDate: "",
-    EnglishDate: "",
+    BengaliDate: user?.date || "",
+    EnglishDate: moment().format("YYYY-MM-DD"),
   });
+  //----------------------------function------------------------------//
   const OnChangeHandler = (e) => {
     let value = e.target.value;
     let key = e.target.name;
     setBong((prev) => ({ ...prev, [key]: value }));
   };
-  const { isBanglaCalenderLoading, BanglaCalenderList, fetchBanglaCalender } =
-    useFetchBanglaCalender();
+  //-----------------------------------api call------------------------------------------//
+
+  const { isBanglaCalenderLoading, BanglaCalenderList, fetchBanglaCalender } = useFetchBanglaCalender();
   const {
     fetchBanglaMonth,
     BanglaMonthError,
@@ -36,7 +88,7 @@ function BongCalender({ view, handleclose, handleSave }) {
 
   const { fetchDaysInMonth, DaysInMonthList, isDaysInMonthLoading } =
     useFetchTotalDaysInMonth();
-
+//---------------------------------------------memo-----------------------------------//
   const bongMonthList = useMemo(() => {
     let array = [{ Name: "---Select Bengali Month---" }];
     BanglaMonthList.forEach((element) => {
@@ -52,13 +104,14 @@ function BongCalender({ view, handleclose, handleSave }) {
     });
     return array;
   }, [isBanglaCalenderLoading]);
-
+//-------------------------------------------------useEffect----------------------------//
   useEffect(() => {
     if (view) {
       fetchBanglaCalender();
       fetchBanglaMonth();
     }
   }, [view]);
+
   //day in month data fetch from api and store in state
   useEffect(() => {
     if (Bong?.BongMonth && Bong?.BongYear) {
@@ -77,6 +130,7 @@ function BongCalender({ view, handleclose, handleSave }) {
       }));
     }
   }, [Bong?.BongMonth, Bong?.BongYear]);
+
   //total days in month
   useEffect(() => {
     if (Array.isArray(DaysInMonthList)) {
@@ -85,6 +139,7 @@ function BongCalender({ view, handleclose, handleSave }) {
       setBong((prev) => ({ ...prev, TotalDays: obj?.[`${Bong?.BongMonth}`] }));
     }
   }, [isDaysInMonthLoading]);
+
   //calender calculation
   useEffect(() => {
     let obj = DaysInMonthList[0] || {};
@@ -157,6 +212,7 @@ function BongCalender({ view, handleclose, handleSave }) {
     Bong?.BongYear,
     Bong?.BongDay,
   ]);
+
   //set bengali date
   useEffect(() => {
     if (Bong?.BongDay && Bong?.BongMonth && Bong?.BongYear) {
@@ -169,50 +225,30 @@ function BongCalender({ view, handleclose, handleSave }) {
     }
   }, [Bong?.BongDay, Bong?.BongMonth, Bong?.BongYear]);
 
-  let ColCal = [
-    {
-      headername: "রবি",
-      fieldname: "1",
-      type: "String",
-      isShortingOff: true,
-    },
-    {
-      headername: "সোম",
-      fieldname: "2",
-      type: "String",
-      isShortingOff: true,
-    },
-    {
-      headername: "মঙ্গল",
-      fieldname: "3",
-      type: "String",
-      isShortingOff: true,
-    },
-    {
-      headername: "বুধ",
-      fieldname: "4",
-      type: "String",
-      isShortingOff: true,
-    },
-    {
-      headername: "বৃহস্পতি",
-      fieldname: "5",
-      type: "String",
-      isShortingOff: true,
-    },
-    {
-      headername: "শুক্র",
-      fieldname: "6",
-      type: "String",
-      isShortingOff: true,
-    },
-    {
-      headername: "শনি",
-      fieldname: "7",
-      type: "String",
-      isShortingOff: true,
-    },
-  ];
+  useEffect(() => {
+    if (
+      Bong?.MonthNumber > 0 &&
+      Bong?.BongMonth == "" &&
+      BanglaMonthList?.length > 0
+    ) {
+      console.log(
+        Bong?.MonthNumber > 0,
+        Bong?.BongMonth == "",
+        Bong?.BongMonth,
+        Bong?.MonthNumber,
+        BanglaMonthList
+      );
+      let obj1 = BanglaMonthList?.find((item) => item?.ID == Bong?.MonthNumber);
+      console.log(obj1);
+      setBong((prev) => ({ ...prev, BongMonth: obj1?.Month }));
+    }
+  }, [
+    Bong?.MonthNumber,
+    Bong?.BongMonth,
+    BanglaMonthList,
+    isBanglaMonthLoading,
+  ]);
+//------------------------------------------------var--------------------------------------//
 
   // console.log(Bong);
   return (
@@ -287,7 +323,10 @@ function BongCalender({ view, handleclose, handleSave }) {
         <br />
         <Row>
           <table>
-            <thead style={{ backgroundColor: "#2f2d66", color: "white" }}>
+            <thead
+              className="bong-tab-head"
+              style={{ backgroundColor: "#2f2d66", color: "white" }}
+            >
               <tr>
                 {ColCal?.map((item, colindex) => {
                   return (
@@ -298,7 +337,7 @@ function BongCalender({ view, handleclose, handleSave }) {
                 })}
               </tr>
             </thead>
-            <tbody className="tab-body">
+            <tbody className="bong-tab-body">
               {Bong?.CalenderTable?.map((item, rowindex) => {
                 return (
                   <tr key={rowindex}>
@@ -310,7 +349,13 @@ function BongCalender({ view, handleclose, handleSave }) {
                             backgroundColor:
                               item[col?.fieldname] === Bong?.BongDay
                                 ? "lightgreen"
+                                : item[col?.fieldname] == uday &&  Bong?.BongYear == uyear && Bong?.MonthNumber==umonth
+                                ? "lightblue"
+                                : colindex % 7 == 0
+                                ? "rgb(255, 145, 145)"
                                 : "white",
+                            color:
+                              colindex % 7 == 0 ? " rgb(156, 2, 2)" : "black",
                           }}
                           onClick={() => {
                             setBong((prev) => ({

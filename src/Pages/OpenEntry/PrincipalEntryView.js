@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
-import useFetchAuth from "../../store/Auth/useFetchAuth";
 import Table from "../../Component/Table";
+import DeleteConfirmation from "../../Component/ReusableDelete";
+import AddPrinciple from "./AddPrinciple";
 
 import checkOrder from "../../GlobalFunctions/Ordercheck";
 import SortArrayByString from "../../GlobalFunctions/SortarrayByString";
@@ -10,14 +11,18 @@ import SortArrayByDate from "../../GlobalFunctions/SortArrayByDate";
 import SortArrayByNumber from "../../GlobalFunctions/SortArrayByNumber";
 import SortArrayByTime from "../../GlobalFunctions/SortArrayByTime";
 import BongDateSorting from "../../GlobalFunctions/BongDateSorting";
+
 import "./openentry.css";
+
 import useFetchOpeningPrincipalReport from "../../store/ShowStore/useFetchOpeningPrincipalReport";
 import useCheckOpeningPrn from "../../store/Checker/useCheckOpeningPrn";
 import useEditOpeningPrincipal from "../../store/UpdateStore/useEditOpeningPrincipal";
 import useOpeningPrnDelete from "../../store/DeleteStore/useOpeningPrnDelete";
-import DeleteConfirmation from "../../Component/ReusableDelete";
 import useOpeningPrincipalDeleteCheck from "../../store/Checker/useOpeningPrincipalDeleteCheck";
-
+import useFetchOpeningDetailReport from "../../store/ShowStore/useFetchOpeningDetailReport";
+import useFetchAuth from "../../store/Auth/useFetchAuth";
+import useAddPrn from "../../store/AddStore/useAddPrn";
+import useFetchAdminSetUp from "../../store/ShowStore/useFetchAdminSetUp";
 function PrincipalEntryView({
   id,
   lotno,
@@ -25,13 +30,84 @@ function PrincipalEntryView({
   HandleClose,
   entityType,
   trancode,
-  Valuation,    
+  Valuation,
   headerEntryDate,
 }) {
+  //----------------------------------API-----------------------------//
+  //auth
+  const { user,CompanyID } = useFetchAuth();
+//prn
+  const {
+    fetchOpeningPrincipal,
+    ClearstateOpeningPrincipalList,
+    OpeningPrincipalList,
+    isOpeningPrincipalLoading,
+    isOpeningPrincipalListSuccess,
+    isOpeningPrincipalError,
+    OpenPrnDelErrMsg,
+  } = useFetchOpeningPrincipalReport();
+//edit prn
+  const {
+    OpePrnEditSuccess,
+    isOpePrnEditLoading,
+    OpePrnEditError,
+    ClearStateEditOpePrn,
+    EditOpePrnFunc,
+    isOpeningPrnEditSucc,
+  } = useEditOpeningPrincipal();
+//op prn
+  const {
+    isCheckOpeningPrnLoading,
+    CheckOpeningPrnErr,
+    CheckOpeningPrn,
+    ClearCheckOpeningPrn,
+    isCheckOpHeader,
+  } = useCheckOpeningPrn();
+//prn del
+  const {
+    OpeningPrnDeleteMsg,
+    isOpeningPrnDeleteLoading,
+    OpeningPrnDeleteErr,
+    DeleteOpeningPrn,
+    ClearOpeningPrnDelete,
+    isOpnPrnDeleteSucc,
+  } = useOpeningPrnDelete();
+//prn del check
+  const {
+    CheckOpeningPrincipalDeleteCheckMsg,
+    isCheckOpeningPrincipalDeleteCheck,
+    isCheckOpeningPrincipalDeleteCheckLoading,
+    CheckOpeningPrincipalDeleteCheckErr,
+    CheckOpeningPrincipalDeleteCheck,
+    ClearCheckOpeningPrincipalDeleteCheck,
+  } = useOpeningPrincipalDeleteCheck();
+//add prn
+  const {
+    ClearStateAddPrn,
+    InsertPrn,
+    AddPrnError,
+    isAddPrnLoading,
+    AddPrnSuccess,
+  } = useAddPrn();
+
+  //admin set up
+  const { AdminSetUp, ClearAdminSetUp, fetchAdminSetUp, isAdminSetUpSuccess } =
+    useFetchAdminSetUp();
+
+  //----------------------------hooks--------------------------------//
   const editinputref = useRef(null);
   const [filteredData, setFilteredData] = useState([]);
+  const [prn_row, setPrnRow] = useState({
+    DetailID: id,
+    InterestPercentage: null,
+    Date: headerEntryDate || user?.date,
+    AMOUNT: null,
+    PaymentMode: 1,
+    ReminderWadah: null,
+    ActualWadah:AdminSetUp[0]?.Days|| null,
+  });
   const [bongView, setBongView] = useState(false);
-
+  const [isAddPrn, setIsAddPrn] = useState(false);
   const [EditedData, setEditedData] = useState({
     AMOUNT: null,
     ActualWadah: null,
@@ -48,75 +124,15 @@ function PrincipalEntryView({
     ActionId: -1,
     isAction: false,
     SelectedID: -1,
+    maxSrl: 0,
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-  // const [originalOrder, setOriginalOrder] = useState([]);
-
-  const {
-    fetchOpeningPrincipal,
-    ClearstateOpeningPrincipalList,
-    OpeningPrincipalList,
-    isOpeningPrincipalLoading,
-    isOpeningPrincipalListSuccess,
-    isOpeningPrincipalError,
-    OpenPrnDelErrMsg,
-  } = useFetchOpeningPrincipalReport();
-
-  const {
-    OpePrnEditSuccess,
-    isOpePrnEditLoading,
-    OpePrnEditError,
-    ClearStateEditOpePrn,
-    EditOpePrnFunc,
-  } = useEditOpeningPrincipal();
-
-  const {
-    isCheckOpeningPrnLoading,
-    CheckOpeningPrnErr,
-    CheckOpeningPrn,
-    ClearCheckOpeningPrn,
-    isCheckOpHeader,
-  } = useCheckOpeningPrn();
-
-  const {
-    OpeningPrnDeleteMsg,
-    isOpeningPrnDeleteLoading,
-    OpeningPrnDeleteErr,
-    DeleteOpeningPrn,
-    ClearOpeningPrnDelete,
-    isOpnPrnDeleteSucc,
-  } = useOpeningPrnDelete();
-
-  const {
-    CheckOpeningPrincipalDeleteCheckMsg,
-    isCheckOpeningPrincipalDeleteCheck,
-    isCheckOpeningPrincipalDeleteCheckLoading,
-    CheckOpeningPrincipalDeleteCheckErr,
-    CheckOpeningPrincipalDeleteCheck,
-    ClearCheckOpeningPrincipalDeleteCheck,
-  } = useOpeningPrincipalDeleteCheck();
-
-  useEffect(() => {
-    if (isCheckOpeningPrincipalDeleteCheck === 1) {
-      // If check passes, show the delete confirmation modal
-      if (itemToDelete) {
-        setShowDeleteModal(true);
-      }
-    } else if (isCheckOpeningPrincipalDeleteCheck === 0) {
-      toast.dismiss();
-      toast.warning(CheckOpeningPrincipalDeleteCheckErr, {
-        position: "top-right",
-        autoClose: 3000,
-      });
-    }
-    ClearCheckOpeningPrincipalDeleteCheck();
-  }, [
-    isCheckOpeningPrincipalDeleteCheckLoading,
-    isCheckOpeningPrincipalDeleteCheck,
+  const [addPrnData, setAddPrnData] = useState([
+    { id: 1, rowid: 1, ...prn_row },
   ]);
 
-  const { user } = useFetchAuth();
+  //------------------------------------var------------------------------------//
 
   let ColumnPrincipal = [
     {
@@ -130,7 +146,7 @@ function PrincipalEntryView({
       headername: "EntryDate",
       fieldname: "EntryDate",
       type: "text",
-      width: "100px",
+      width: "150px",
       isBongDate: true,
     },
     {
@@ -148,8 +164,9 @@ function PrincipalEntryView({
       selectionname: "MODE_OF_PAYMENT",
       options: [
         { label: "Cash", value: 1 },
-        { label: "UPI", value: 2 },
-        { label: "Bank Transfer", value: 3 },
+        { label: "Bank Transfer", value: 2 },
+        { label: "UPI", value: 3 },
+        { label: "Adjust", value: 4 },
       ],
     },
     {
@@ -181,9 +198,12 @@ function PrincipalEntryView({
 
   const paymentMode = [
     { label: "Cash", Value: 1 },
-    { label: "UPI", Value: 2 },
-    { label: "Bank Transfer", Value: 3 },
+    { label: "Bank Transfer", Value: 2 },
+    { label: "UPI", Value: 3 },
+    { label: "Adjust", value: 4 },
   ];
+
+  //--------------------------------function---------------------------------------//
 
   const handleDeleteClick = (index) => {
     const selectedObj = filteredData[index];
@@ -276,16 +296,16 @@ function PrincipalEntryView({
     let key = e.target.name;
     let value = e.target.value;
 
-    console.log(key,value,"Key value")
+    console.log(key, value, "Key value");
     if (key == "EntryDate") {
-      if(headerEntryDate > value){
+      if (headerEntryDate > value) {
         toast.warning(`Entry Date Should be greater than ${headerEntryDate}`, {
           position: "top-right",
           autoClose: 3000,
         });
         return;
       }
- }
+    }
     let regex = {
       AMOUNT: /^\d*\.?\d{0,2}$/,
       InterestPercentage: /^\d*\.?\d{0,2}$/,
@@ -325,8 +345,11 @@ function PrincipalEntryView({
       ...EditedData,
     });
   };
-  // console.log(EditedData, "edited data");
-  //after hit edit button
+  //open modal
+  const handleAddPrn = () => {
+    setIsAddPrn(true);
+  };
+
   const FetchActionId = (index) => {
     setParams((prev) => ({ ...prev, SelectedID: index, isAction: true }));
     let { createdAt, updatedAt, ...remaining } = filteredData[index];
@@ -340,6 +363,62 @@ function PrincipalEntryView({
     });
   };
 
+  const handleSavePrn = (row) => {
+    let arr = row?.map((item) => {
+      return {
+        ...item,
+        InterestPercentage: parseFloat(item?.InterestPercentage),
+      };
+    });
+    let finalObj = {
+      DetailID: id,
+      lotno,
+      SRL,
+      Cust_Type: entityType,
+      TranCode: trancode,
+      TotalItemVal: Valuation,
+      Date: headerEntryDate,
+      data: arr,
+    };
+    InsertPrn(finalObj);
+    setIsAddPrn(false);
+  };
+
+  //----------------------------useEffect-------------------------------------//
+  //actual wadha
+  useEffect(() => {
+    if (entityType !== 1) {
+      fetchAdminSetUp({ Filter: "Default Wadha", CompanyID: CompanyID });
+    }
+  }, []);
+  //set prn_row
+  useEffect(() => {
+    if (entityType !== 1)
+    {
+      setPrnRow((prev) => ({ ...prev, ActualWadah: AdminSetUp[0]?.Days }));
+    }
+  
+  },[isAdminSetUpSuccess])
+
+  useEffect(() => {
+    if (isCheckOpeningPrincipalDeleteCheck === 1) {
+      // If check passes, show the delete confirmation modal
+      if (itemToDelete) {
+        setShowDeleteModal(true);
+      }
+    } else if (isCheckOpeningPrincipalDeleteCheck === 0) {
+      toast.dismiss();
+      toast.warning(CheckOpeningPrincipalDeleteCheckErr, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+    ClearCheckOpeningPrincipalDeleteCheck();
+  }, [
+    isCheckOpeningPrincipalDeleteCheckLoading,
+    isCheckOpeningPrincipalDeleteCheck,
+  ]);
+
   // prn data api call
   useEffect(() => {
     fetchOpeningPrincipal({
@@ -348,12 +427,20 @@ function PrincipalEntryView({
       Cust_Type: entityType,
       TranCode: trancode,
     });
-  }, [id, OpePrnEditSuccess, isOpnPrnDeleteSucc, entityType, trancode]);
+  }, [
+    id,
+    isOpeningPrnEditSucc,
+    AddPrnSuccess,
+    isOpnPrnDeleteSucc,
+    entityType,
+    trancode,
+  ]);
 
-  //prn data load in filter
-  //prn data load in filter
+  // prn data
   useEffect(() => {
+    console.log("hello");
     if (isOpeningPrincipalListSuccess) {
+      console.log(isOpeningPrincipalListSuccess, "succ");
       if (OpeningPrincipalList && OpeningPrincipalList.length > 0) {
         let newArray = OpeningPrincipalList?.map((item, index) => {
           let obj = paymentMode?.find(
@@ -364,6 +451,12 @@ function PrincipalEntryView({
         });
         newArray.sort((a, b) => a?.SRL_PRN - b?.SRL_PRN);
         setFilteredData(newArray);
+        const maxValue = Math.max(...newArray.map((item) => item?.SRL_PRN));
+        console.log(maxValue, "max srl");
+        setParams({
+          ...params,
+          maxSrl: parseInt(maxValue) + 1,
+        });
       }
     }
     if (isOpeningPrincipalError) {
@@ -377,9 +470,10 @@ function PrincipalEntryView({
   }, [
     id,
     OpeningPrincipalList,
-    OpePrnEditSuccess,
+    isOpeningPrnEditSucc,
     isOpnPrnDeleteSucc,
     isOpeningPrincipalError,
+    AddPrnSuccess,
   ]);
 
   //AutoClaculation
@@ -398,7 +492,7 @@ function PrincipalEntryView({
 
   //toaster of edit prn
   useEffect(() => {
-    if (OpePrnEditSuccess) {
+    if (isOpeningPrnEditSucc) {
       toast.success(OpePrnEditSuccess, {
         position: "top-right",
         autoClose: 3000,
@@ -421,16 +515,10 @@ function PrincipalEntryView({
       Valuation: null,
     });
     ClearStateEditOpePrn();
-  }, [isOpePrnEditLoading, OpePrnEditSuccess, OpePrnEditError]);
+  }, [isOpePrnEditLoading, isOpeningPrnEditSucc, OpePrnEditError]);
 
   //check editable or not then open for edit
   useEffect(() => {
-    // console.log(
-    //   "hi",
-    //   CheckOpeningPrnErr,
-    //   isCheckOpHeader,
-    //   isCheckOpeningPrnLoading
-    // );
     if (isCheckOpHeader == 1) {
       setParams((prev) => ({
         ...prev,
@@ -451,6 +539,7 @@ function PrincipalEntryView({
     }
     ClearCheckOpeningPrn();
   }, [isCheckOpeningPrnLoading, isCheckOpHeader]);
+
   //toaster delete
   useEffect(() => {
     if (isOpnPrnDeleteSucc) {
@@ -468,6 +557,7 @@ function PrincipalEntryView({
     ClearOpeningPrnDelete();
   }, [isOpnPrnDeleteSucc, OpeningPrnDeleteErr, isOpeningPrnDeleteLoading]);
 
+  //focus manager
   useEffect(() => {
     setTimeout(() => {
       if (editinputref.current) {
@@ -475,8 +565,90 @@ function PrincipalEntryView({
       }
     }, 150);
   }, [EditedData.ID]);
+
+  //TOASTER FOR ADD PRN
+  useEffect(() => {
+    if (AddPrnSuccess && !isAddPrnLoading) {
+      toast.success(AddPrnSuccess, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+    if (AddPrnError && !isAddPrnLoading) {
+      toast.error(AddPrnError, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+    ClearStateAddPrn();
+  }, [AddPrnSuccess, AddPrnError, isAddPrnLoading]);
+
+  useEffect(() => {
+    if (filteredData?.length > 0) {
+      setAddPrnData([
+        { id: 1, rowid: 1, SRL_PRN: filteredData?.length + 1, ...prn_row },
+      ]);
+    }
+  }, [filteredData?.length, OpeningPrincipalList,isAdminSetUpSuccess]);
+  //--------------------------------prn_COl----------------------------------------//
+  const PRNColumns = [
+    {
+      label: "SRL_PRN",
+      key: "SRL_PRN",
+      type: "text",
+      width: "65px",
+      readOnly: true, // Make it read-only
+    },
+    {
+      label: "Date",
+      key: "Date",
+      type: "date",
+      width: "130px",
+      banglaDate: true,
+    },
+    {
+      label: "Amount",
+      key: "AMOUNT",
+      type: "number",
+      width: "140px",
+      proprefs: true,
+    },
+    {
+      label: "Payment Mode*",
+      key: "PaymentMode",
+      AutoSearch: true,
+      SearchLabel: "paymentMode",
+      SearchValue: "value",
+      PlaceHolder: "Select Payment Mode",
+      data: [
+        { label: "Cash", value: 1 },
+        { label: "Bank Transfer", value: 2 },
+        { label: "UPI", value: 3 },
+        { label: "Adjust", value: 4 },
+      ],
+      width: "180px",
+    },
+    {
+      label: "Reminder Wadah",
+      key: "ReminderWadah",
+      type: "text",
+      width: "140px",
+    },
+    {
+      label: "Actual Wadah",
+      key: "ActualWadah",
+      type: "text",
+      width: "140px",
+    },
+    {
+      label: "Interest%",
+      key: "InterestPercentage",
+      type: "number",
+      width: "110px",
+    },
+  ];
   return (
-    <div className="table-box" style={{ maxHeight: "55vh" }}>
+    <div className="table-box">
       <Table
         tab={filteredData || []}
         Col={ColumnPrincipal}
@@ -490,7 +662,6 @@ function PrincipalEntryView({
         EditedData={EditedData}
         OnChangeHandler={onChangeHandler}
         OnSaveHandler={SaveHandler}
-        // handleDelete={DeletePrnDetail}
         handleDelete={handleDeleteClick}
         width={"81vw"}
         useInputRef={editinputref}
@@ -501,12 +672,45 @@ function PrincipalEntryView({
           setBongView(false);
         }}
       />
-
       <DeleteConfirmation
         show={showDeleteModal}
         onConfirm={confirmDelete}
         onCancel={cancelDelete}
       />
+      <div className="d-flex justify-content-end align-items-center my-2">
+        <div>
+          <button
+            className="btn btn-success m-0 px-2 py-1"
+            onClick={handleAddPrn}
+          >
+            <i className="bi bi-plus-lg"></i>
+          </button>
+        </div>
+      </div>
+      {isAddPrn && filteredData?.length > 0 && (
+        <>
+          <div>
+            <hr className="my-1" />
+            <div className="d-flex justify-content-center">
+              <h5>Add Principal</h5>
+            </div>
+            <hr className="my-1" />
+          </div>
+          <div>
+            <AddPrinciple
+              toaster={toast}
+              maxValuation={Valuation}
+              PrincipleRow={addPrnData}
+              prn_row={prn_row}
+              handleSave={handleSavePrn}
+              Prn_Column={PRNColumns}
+              srl_Prn={"SRL_PRN"}
+              maxlen={Math.max(...filteredData.map((item) => item?.SRL_PRN))}
+              entityType={entityType}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }

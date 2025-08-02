@@ -5,6 +5,8 @@ import useEditTiming from "../../store/UpdateStore/useEditTiming";
 import { toast } from "react-toastify";
 import useEditCredit from "../../store/UpdateStore/useEditCredit";
 import { ToastContainer } from "react-toastify";
+import InputBox from "../../Component/InputBox";
+import Initialization from "../Initialization";
 function CreditSetUp() {
   const [localData, setLocalData] = useState([
     {
@@ -33,17 +35,6 @@ function CreditSetUp() {
     ClearStateEditCredit,
   } = useEditCredit();
 
-  // Initialize local data when fetched data changes
-  useEffect(() => {
-    if (AdminSetUp?.length > 0) {
-      setLocalData(AdminSetUp.map((item) => ({ ...item })));
-    }
-  }, [AdminSetUp]);
-
-  useEffect(() => {
-    fetchAdminSetUp({});
-  }, [CreditEditSuccess]);
-
   const handleCheckboxChange = (rowId, fieldName, value) => {
     const newValue = value ? 1 : 0;
 
@@ -66,7 +57,21 @@ function CreditSetUp() {
     // Add to changed rows
     setSelectedRows((prev) => new Set([...prev, rowId]));
   };
-
+  const handleInputChange = (ID,name,newValue) => {
+    const updatedData = localData.map((item) =>
+      item.ID === ID ? { ...item, [name]: newValue } : item
+    );
+    setLocalData(updatedData);
+    // Track edited fields
+    setEditedData((prev) => ({
+      ...prev,
+      [ID]: {
+        ...prev[ID],
+        [name]: newValue,
+      },
+    }));
+    setSelectedRows((prev) => new Set([...prev, ID]));
+  }
   const handleMasterToggle = () => {
     const newToggleState = !masterToggle;
     const updates = {};
@@ -122,12 +127,23 @@ function CreditSetUp() {
     }
     ClearStateEditCredit();
   }, [CreditEditSuccess, CreditEditError]);
+  // Initialize local data when fetched data changes
+  useEffect(() => {
+    if (AdminSetUp?.length > 0) {
+      setLocalData(AdminSetUp.map((item) => ({ ...item })));
+    }
+  }, [AdminSetUp]);
+
+  useEffect(() => {
+    fetchAdminSetUp({});
+  }, [CreditEditSuccess]);
+
   return (
     <Container fluid className="pt-5">
-      <ToastContainer />
+      {/* <ToastContainer /> */}
       <Row className="pt-2">
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
-          <h5 className="my-1 mx-1 p-0">Credit Setup</h5>
+          <h5 className="my-1 mx-1 p-0">Setup Master</h5>
           <hr />
         </Col>
 
@@ -147,6 +163,7 @@ function CreditSetUp() {
                   <th>Customer</th>
                   <th>Wholesaler</th>
                   <th>Mahajan</th>
+                  <th>Days</th>
                   {/* <th style={{ backgroundColor: "#ffff00" }}>Date to Date</th>
                   <th style={{ backgroundColor: "#00ffff" }}>Monthly</th>
                   <th style={{ backgroundColor: "#00ffff" }}>
@@ -212,6 +229,26 @@ function CreditSetUp() {
                         }
                       />
                     </td>
+                    <td style={{ width: "200px" }}>
+                      <InputBox
+                        label={"Days"}
+                        Name={"Days"}
+                        isdisable={item?.Field_Name == "CREDIT"}
+                        isfrontIconOff={true}
+                        placeholder={item?.Field_Name == "CREDIT"?"":"Enter Days"}
+                        type="number"
+                        value={item?.Days ||""}
+                        onChange={(e) =>
+                          handleInputChange(item.ID, "Days", e.target.value)
+                        }
+                        InputStyle={{
+                          width: "100%",
+                          padding: "1px 5px",
+                          border: "none",
+                          textAlign: "center",
+                        }}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -243,6 +280,11 @@ function CreditSetUp() {
                 {isCreditEditLoading ? "Saving..." : "Save"}
               </Button>{" "}
             </div>
+          </div>
+        </Col>
+        <Col xl={12} lg={12} md={12} sm={12} xs={12}>
+          <div className="d-flex justify-content-end align-items-center">
+            <Initialization/>
           </div>
         </Col>
       </Row>

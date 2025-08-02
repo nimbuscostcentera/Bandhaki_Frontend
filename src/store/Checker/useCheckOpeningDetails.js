@@ -10,7 +10,11 @@ const useCheckOpeningDetails = create((set) => ({
   CheckOpeningDetails: async (userdata) => {
     set({ isCheckOpeningDetailsLoading: true, CheckOpeningDetailsErr: null }); // Start loading
     try {
-      const result = await axiosInstance.post(API, userdata);
+      const endpoint =
+        userdata?.Cust_Type == 3
+          ? `${process.env.REACT_APP_BASEURL}/mahajon-routes/mahajonopeningdetailedit-check`
+          : `${process.env.REACT_APP_BASEURL}/transaction-routes/checkedit-openingdetail`;
+      const result = await axiosInstance.post(endpoint, userdata);
       const { data } = result;
       console.log(data, "my");
       const { response, success } = data;

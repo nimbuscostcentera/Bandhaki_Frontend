@@ -100,7 +100,12 @@ function GroupCostTable({ setIsDisable, search }) {
     if (GroupCostList?.length > 0) {
       let updatedData = GroupCostList.map((item) => ({
         ...item,
-        TypeName: item.Type === 1 ? "Customer" : "WholeSeller",
+        TypeName:
+          item.Type === 1
+            ? "Customer"
+            : item.Type == 2
+            ? "WholeSeller"
+            : "Mahajon",
       }));
       if (originalOrder.length > 0) {
         updatedData = originalOrder
@@ -118,7 +123,7 @@ function GroupCostTable({ setIsDisable, search }) {
       headername: "Group CostCenter Code",
       fieldname: "CODE",
       type: "String",
-      width: "100px",
+      width: "320px",
     },
     {
       headername: "Type",
@@ -239,7 +244,7 @@ function GroupCostTable({ setIsDisable, search }) {
   return (
     <div
       className="table-box"
-      style={{ height: "60vh", border: "1px solid lightgrey" }}
+      style={{ height: "50vh" }}
     >
       <Table
         tab={filteredData}

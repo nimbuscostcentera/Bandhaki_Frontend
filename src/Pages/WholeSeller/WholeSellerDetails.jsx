@@ -24,6 +24,7 @@ function WholeSellerDetails({
   search,
 }) {
   const editinputref = useRef(null);
+  const [Img, setImg] = useState(""); 
   const [filteredData, setFilteredData] = useState([]);
   const [originalOrder, setOriginalOrder] = useState([]);
   const [params, SetParams] = useState({
@@ -111,7 +112,10 @@ function WholeSellerDetails({
     setFilteredData(result);
     setOriginalOrder(result.map((row) => row.ID));
   };
-
+  const PictureHandler = (index,e) => {
+    let value = e.target.files[0];
+    setImg(value);
+}
   const OnChangeHandler = (index, e) => {
     let key = e.target.name;
     let value = e.target.value;
@@ -175,7 +179,11 @@ function WholeSellerDetails({
         editedData[key] !== -1
       ) {
         newFormData.append(key, editedData[key]);
-      }
+      }    
+    }
+    if (Img !== "" && Img)
+    {
+      newFormData.append("IDPROOF_IMG", Img);
     }
     EditWSFunc(newFormData);
   };
@@ -317,7 +325,7 @@ useEffect(() => {
 
   const Col = [
     {
-      headername: "WholeSeller Name",
+      headername: "Wh.Name",
       fieldname: "Name",
       type: "String",
       max: 50,
@@ -351,6 +359,7 @@ useEffect(() => {
       headername: "Interest Type",
       fieldname: "InterestType",
       selectionname: "timing",
+      width:"150px",
       type: "String",
       isSelection: true,
       options: InterestTypeList,
@@ -393,7 +402,6 @@ useEffect(() => {
   return (
     <div
       className="table-box"
-      style={{ height: "55vh", border: "1px solid lightgrey" }}
     >
       <Table
         tab={filteredData || []}
@@ -413,6 +421,9 @@ useEffect(() => {
         getFocusText={(val) => {
           setTextDetail(val);
         }}
+        img={Img}
+        PictureHandler={PictureHandler}
+        height={"85vh"}
       />
     </div>
   );

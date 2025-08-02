@@ -18,6 +18,7 @@ import useFetchFineHeader from "../../store/ShowStore/useFetchFineHeader";
 import useCustomerDelete from "../../store/DeleteMasterStore/useCustomerDelete";
 function CustomerDetails({ isDisable, setIsDisable, setTextDetail, search }) {
   const editinputref = useRef(null);
+  const [Img, setImg] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [originalOrder, setOriginalOrder] = useState([]);
   const [editedData, setEditedData] = useState({
@@ -105,6 +106,10 @@ function CustomerDetails({ isDisable, setIsDisable, setTextDetail, search }) {
     setFilteredData(result);
     setOriginalOrder(result.map((row) => row.ID)); // Store order
   };
+  const PictureHandler = (index, e) => {
+    let value = e.target.files[0];
+    setImg(value);
+  };
   const OnChangeHandler = (index, e) => {
     let key = e.target.name;
     let value = e.target.value;
@@ -168,6 +173,9 @@ function CustomerDetails({ isDisable, setIsDisable, setTextDetail, search }) {
       ) {
         newFormData.append(key, editedData[key]);
       }
+    }
+    if (Img !== "" && Img) {
+      newFormData.append("IDPROOF_IMG", Img);
     }
     EditCustFunc(newFormData);
   };
@@ -241,13 +249,7 @@ function CustomerDetails({ isDisable, setIsDisable, setTextDetail, search }) {
       max: 100,
       width: "90px",
     },
-    {
-      headername: "Guardian Name",
-      fieldname: "GurdianName",
-      type: "String",
-      max: 100,
-      width: 135,
-    },
+
     {
       selectionname: "timing",
       headername: "Interest Type",
@@ -264,27 +266,10 @@ function CustomerDetails({ isDisable, setIsDisable, setTextDetail, search }) {
       fieldname: "FineCode",
       type: "String",
       max: 100,
-      width: 135,
       isSelection: true,
       options: SelectOptionFineInterestCode,
     },
-    {
-      selectionname: "IDPROOF_Type",
-      headername: "ID Proof Type",
-      fieldname: "IDPROOF_Type",
-      type: "String",
-      max: 100,
-      width: 135,
-      isSelection: true,
-      options: SelectOptionIDProof,
-    },
-    {
-      headername: "ID Proof No.",
-      fieldname: "IDPROOF",
-      type: "String",
-      max: 100,
-      width: 135,
-    },
+
     {
       headername: "ID Proof Img",
       fieldname: "IDPROOF_IMG",
@@ -294,11 +279,34 @@ function CustomerDetails({ isDisable, setIsDisable, setTextDetail, search }) {
       isNotEditable: true,
     },
     {
+      selectionname: "IDPROOF_Type",
+      headername: "ID Proof Type",
+      fieldname: "IDPROOF_Type",
+      type: "String",
+      max: 100,
+      width:"120px",
+      isSelection: true,
+      options: SelectOptionIDProof,
+    },
+    {
+      headername: "ID Proof No.",
+      fieldname: "IDPROOF",
+      type: "String",
+      width:"120px",
+      max: 100,
+    },
+    {
+      headername: "Guardian",
+      fieldname: "GurdianName",
+      type: "String",
+      max: 100,
+    }, 
+    {
       headername: "Address",
       fieldname: "Address",
       type: "String",
-      max: 100,
-      width: 250,
+      max: 300,
+      width:"280px",
       isShortingOff: true,
     },
   ];
@@ -405,10 +413,7 @@ function CustomerDetails({ isDisable, setIsDisable, setTextDetail, search }) {
   }, [CustomerDeleteErr, isCustomerDeleteLoading, CustomerDeleteMsg]);
 
   return (
-    <div
-      className="table-box"
-      style={{ height: "55vh", border: "1px solid lightgrey" }}
-    >
+    <div className="table-box mb-2">
       <Table
         tab={filteredData || []}
         isAction={params?.IsAction}
@@ -427,6 +432,10 @@ function CustomerDetails({ isDisable, setIsDisable, setTextDetail, search }) {
         }}
         isDelete={true}
         handleDelete={handleDelete}
+        height={"85vh"}
+        width={"100%"}
+        PictureHandler={PictureHandler}
+        img={Img}
       />
     </div>
   );

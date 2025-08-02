@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.min.js";
 import { useNavigate, useSearchParams } from "react-router";
-import  './Adjust.css'
+import "./Adjust.css";
 import {
   Row,
   Col,
@@ -33,7 +33,13 @@ import BongDateSorting from "../../GlobalFunctions/BongDateSorting";
 function AdjustEntry() {
   const navigation = useNavigate();
   const [searchParams] = useSearchParams();
-  let entityType = searchParams.get("type") === "customer" ? 1 : 2;
+  let entityType =
+    searchParams.get("type") === "customer"
+      ? 1
+      : searchParams.get("type") === "wholeseller"
+      ? 2
+      : 3;
+  let trancode = searchParams.get("trancode");
   const searchInputRef = useRef(null); // Create a ref for the search inputRef
   const { user, CompanyID } = useFetchAuth();
   const [showReceiveInterest, setShowReceiveInterest] = useState(false);
@@ -46,12 +52,12 @@ function AdjustEntry() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchDate, setSearchDate] = useState("");
   const [custId, setCustId] = useState(null);
+  const [searchHeaderID, setSearchHeaderID] = useState(-1);
   const [params, setParams] = useState({
     ActionID: null,
     IsAction: false,
     view: false,
   });
-  const [view, setView] = useState(false);
   const [checkedIds, setCheckedIds] = useState([]);
   // State for form data
   const [voucherDate] = useState(() => {
@@ -63,7 +69,6 @@ function AdjustEntry() {
   const [narration, setNarration] = useState("");
   const [showCalculationModal, setShowCalculationModal] = useState(false);
   const [calculationData, setCalculationData] = useState([]);
-  const [lotNo, setLotNo] = useState("");
   const [principalAmount, setPrincipalAmount] = useState(0);
   const [receiveAmount, setReceiveAmount] = useState(0);
   const [customerBalanceAmount, setCustomerBalanceAmount] = useState(0);
@@ -124,19 +129,6 @@ function AdjustEntry() {
     });
   };
 
-  // Calendar handlers
-  const handleShow = () => {
-    setView(true);
-  };
-
-  const handleClose1 = () => {
-    setView(false);
-  };
-
-  const handleSave1 = (BengaliDate, EnglishDate) => {
-    setSearchDate(BengaliDate);
-  };
-
   // Table handlers
   const OnChangeHandler = (index, e) => {
     const key = e.target.name;
@@ -185,9 +177,7 @@ function AdjustEntry() {
     setEditedData({});
   };
 
-  const handleClose = () => {
-    setParams({ ...params, view: false });
-  };
+
 
   const handleViewClick = (tabindex) => {
     const selectedData = filteredData[tabindex];
@@ -205,8 +195,51 @@ function AdjustEntry() {
   };
 
   // Handle save from Calculate component
-  const handleSaveCalculation = (data) => {
-    // Update state or submit data as needed
+  const handleSaveCalculation = (data, SearchId) => {
+    // Validate that toggled rows are consecutive
+    const validationErrors = [];
+
+    data.forEach((group) => {
+      // Get all Adjust rows (excluding Total)
+      const adjustRows = group.filter(
+        (row) => row.interfaceName === "Adjust" && row.isToggled
+      );
+
+      if (adjustRows.length > 0) {
+        // Get unique identifier for this group
+        const groupKey = `${adjustRows[0].lotNo}-${adjustRows[0].srl}-${adjustRows[0].srl_Prn}`;
+
+        // Extract and sort the period numbers from the startDate
+        const periodNumbers = adjustRows
+          .map(
+            (row) => parseInt(row.startDate.split("-")[1], 10) // Extract month number
+          )
+          .sort((a, b) => a - b);
+
+        // Check for consecutive sequence
+        for (let i = 1; i < periodNumbers.length; i++) {
+          if (periodNumbers[i] - periodNumbers[i - 1] !== 1) {
+            validationErrors.push(
+              `Missing periods in group ${groupKey}. ` +
+                `Found periods: ${periodNumbers.join(", ")}`
+            );
+            break;
+          }
+        }
+      }
+    });
+
+    // If validation errors found, show them and abort
+    if (validationErrors.length > 0) {
+      validationErrors.forEach((error) => toast.error(error));
+      return;
+    }
+
+    // Proceed with saving if validation passes
+    if (SearchId != -1 || SearchId != null) {
+      setSearchHeaderID(SearchId);
+    }
+
     let arr = [];
     data?.forEach((item) => {
       let lastindex = item?.length - 1;
@@ -215,11 +248,10 @@ function AdjustEntry() {
         (item[lastindex]?.interestCr != "" ||
           item[lastindex]?.principalCr != "")
       ) {
-        console.log(item);
         arr.push(item);
       }
     });
-    console.log(arr);
+
     setCalculationData(arr);
     setShowCalculationModal(false);
     setShowReceiveInterest(true);
@@ -253,12 +285,14 @@ function AdjustEntry() {
       headername: "Entry Date",
       fieldname: "EntryDate",
       type: "BongDate",
+      width: "150px",
     },
-    { headername: "LotNo", fieldname: "LotNo", type: "String" },
+    { headername: "LotNo", fieldname: "LotNo", type: "String", width: "280px" },
     {
-      headername: "Customer Name",
+      headername: "Name",
       fieldname: "CustomerName",
       type: "String",
+      width: "250px",
     },
   ];
   //-----------------------------useEffect---------------------------------
@@ -289,9 +323,9 @@ function AdjustEntry() {
   ]);
   // Search functionality
   useEffect(() => {
-      setFilteredData((prev)=>[]);
+    setFilteredData((prev) => []);
     const debounceTimer = setTimeout(() => {
-      if (searchTerm.trim() || searchDate ) {
+      if (searchTerm.trim() || searchDate) {
         setCheckedIds([]);
         performSearch(entityType);
       }
@@ -302,14 +336,13 @@ function AdjustEntry() {
 
   // Update filtered data when EntryList changes
   useEffect(() => {
-  
     if (AllLotsSearchList?.length >= 0) {
       setFilteredData(AllLotsSearchList);
     }
-   
-      if (!searchTerm && !searchDate) {
-        setFilteredData((prev)=>[]);
-      }
+
+    if (!searchTerm && !searchDate) {
+      setFilteredData((prev) => []);
+    }
   }, [searchDate, searchTerm, AllLotsSearchList, entityType]);
 
   // Fetch fine header data
@@ -326,7 +359,7 @@ function AdjustEntry() {
     setFineInterestCode(-1);
     setCustId(null);
     setFilteredData(() => []);
-    entityType=0;
+    entityType = 0;
   }, [entityType]);
 
   const excludedLotNos = useMemo(
@@ -341,8 +374,13 @@ function AdjustEntry() {
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
           <div className="d-flex align-items-center justify-content-between flex-wrap">
             <div>
-              <h5 className="m-0" style={{ fontSize: "18px", height: "100%" }}>
-                Adjust Entry For {entityType == 1 ? "Customer" : "Wholesaler"}
+              <h5 className="m-0" style={{ height: "100%" }}>
+                Adjust Entry For{" "}
+                {entityType == 1
+                  ? "Customer"
+                  : entityType == 2
+                  ? "Wholesaler"
+                  : "Mahajon"}
               </h5>
             </div>
             <div className="d-flex align-items-center justify-content-between flex-wrap">
@@ -435,14 +473,7 @@ function AdjustEntry() {
         {/* Calculate Interest Button */}
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
           <div className="d-flex justify-content-end align-items-center mt-2">
-            {/* <Button
-              variant="primary"
-              onClick={handleViewReport}
-              style={{ marginRight: "5px" }}
-              // disabled={checkedIds.length === 0}
-            >
-              <i className="bi bi-eye-fill"></i> View
-            </Button> */}
+           
             <Button
               variant="success"
               onClick={handleCalculateInterest}
@@ -459,14 +490,12 @@ function AdjustEntry() {
       <ReusableModal
         show={showCalculationModal}
         Title={"Interest Calculation"}
-        // isPrimary={true}
+        isFooterOff={true}
         handleClose={() => setShowCalculationModal(false)}
-        // handlePrimary={() => setShowCalculationModal(false)}
-        // PrimaryButtonName={"Submit"}
-        size="xl" // Use "xl" for extra large modal
         isFullScreen={true}
+        isCustomHeader={true}
         body={
-          <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
+          <div style={{ maxHeight: "85vh" }}>
             <Calculate
               checkedIds={checkedIds}
               voucherDate={voucherDate}
@@ -491,6 +520,8 @@ function AdjustEntry() {
         // setShowReceiveInterest={setShowReceiveInterest}
         LotNo={excludedLotNos}
         fineInterestCode={fineInterestCode}
+        TranCode={trancode}
+        searchHeaderID={searchHeaderID}
       />
       {/* )} */}
     </Container>

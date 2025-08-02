@@ -4,6 +4,8 @@ const API = `${process.env.REACT_APP_BASEURL}/transaction-routes/c_t_ledget-view
 
 const useFetchLedgerView = create((set) => ({
   LedgerViewList: [],
+  AdvanceReport: [],
+  OutstandingReport: [],
   isLedgerViewListLoading: false,
   isLedgerViewListError: false,
   LedgerViewErrMsg: "",
@@ -16,6 +18,8 @@ const useFetchLedgerView = create((set) => ({
 
       set({
         LedgerViewList: data?.response,
+        AdvanceReport: data?.response2,
+        OutstandingReport: data?.response3,
         isLedgerViewListLoading: false,
       });
     } catch (error) {
@@ -36,6 +40,8 @@ const useFetchLedgerView = create((set) => ({
       const { data } = result;
       set({
         LedgerViewList: data?.response,
+        AdvanceReport: data?.response2,
+        OutstandingReport: data?.response3,
         isLedgerViewListLoading: false,
       });
     } catch (error) {
@@ -53,6 +59,8 @@ const useFetchLedgerView = create((set) => ({
       isLedgerViewListError: false,
       LedgerViewErrMsg: "",
       LedgerViewList: [],
+      AdvanceReport: [],
+      OutstandingReport: [],
     });
   },
 }));

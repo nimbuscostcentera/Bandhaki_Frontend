@@ -25,7 +25,7 @@ import FineListEdit from "./Pages/Fine";
 import OpenEntryForm from "./Pages/OpenEntry/OpenEntryForm";
 import OpeningEntryViewReport from "./Pages/OpenEntry/OpeningEntryViewReport";
 import AdjustEntry from "./Pages/Adjust";
-import Calculate from "./Pages/Adjust/Calculate";
+import SearchDafa from "./Pages/SearchDafa";
 import AdjustEntryHeaderTableView from "./Pages/Adjust/AdjustEntryHeaderTableView";
 import MetalReturnView from "./Pages/MetalReturn/MetalReturnView";
 import LedgerView from "./Pages/Ledger/LedgerView";
@@ -36,7 +36,10 @@ import PaymentToWholeSaler from "./Pages/PaymentToWholeSaler";
 import DueRecWholesaler from "./Pages/DueRecWholesaler";
 import Duerecwhview from "./Pages/DueRecWholesaler/Duerecwhview";
 import MahajonListEdit from "./Pages/Mahajon";
-
+import FundRcvMahajon from "./Pages/FundRcvMahajon";
+import FundFrmMahajonHeaderView from "./Pages/FundRcvMahajon/FundFrmMahajonHeaderView";
+import SearchHeaderView from "../src/Pages/SearchDafa/SearchHeaderview";
+import Report from "./Pages/Report";
 const App = createBrowserRouter([
   {
     path: "/",
@@ -57,6 +60,7 @@ const App = createBrowserRouter([
     element: <AuthNavigator />,
     errorElement: <Pagenotfound />,
     children: [
+      //opening entry
       {
         path: "openentry",
         children: [
@@ -72,6 +76,24 @@ const App = createBrowserRouter([
           },
         ],
       },
+      //search all dafa
+      {
+        path: "search-dafa",
+        children: [
+          {
+            path: "",
+            element: <SearchDafa/>,
+            errorElement: <Pagenotfound />,
+          },
+          {
+            path: "view",
+            element: <SearchHeaderView/>,
+            errorElement: <Pagenotfound />,
+          },
+         
+        ],
+      },
+      //adjust
       {
         path: "adjust",
         errorElement: <Pagenotfound />,
@@ -88,26 +110,31 @@ const App = createBrowserRouter([
           },
         ],
       },
+      //metal return and others
       {
         path: "metal-return",
         errorElement: <Pagenotfound />,
         element: <MetalReturn />,
       },
+      //ledger
       {
         path: "ledger-view",
         errorElement: <Pagenotfound />,
         element: <LedgerView />,
       },
+      //pay
       {
         path: "pay-wholesaler",
         errorElement: <Pagenotfound />,
         element: <PaymentToWholeSaler />,
       },
+      //metal return
       {
         path: "metal-return-view",
         errorElement: <Pagenotfound />,
         element: <MetalReturnView />,
       },
+      //due
       {
         path: "duercv-wholesaler",
         errorElement: <Pagenotfound />,
@@ -118,7 +145,24 @@ const App = createBrowserRouter([
         errorElement: <Pagenotfound />,
         element: <Duerecwhview />,
       },
-
+      //Mahajon
+      {
+        path: "mahajon",
+        errorElement: <Pagenotfound />,
+        children: [
+          {
+            path: "form",
+            errorElement: <Pagenotfound />,
+            element: <FundRcvMahajon />,
+          },
+          {
+            path: "view",
+            errorElement: <Pagenotfound />,
+            element: <FundFrmMahajonHeaderView />,
+          },
+        ],
+      },
+      //master
       {
         path: "manager",
         errorElement: <Pagenotfound />,
@@ -188,6 +232,7 @@ const App = createBrowserRouter([
           },
         ],
       },
+      //admin settings
       {
         path: "admin",
         errorElement: <Pagenotfound />,
@@ -209,12 +254,18 @@ const App = createBrowserRouter([
           },
         ],
       },
-
+      //setup
       {
         path: "setup",
         errorElement: <Pagenotfound />,
         element: <Setup />,
       },
+      //Report
+      {
+        path: "report",
+        errorElement: <Pagenotfound />,
+        element: <Report/>,
+      }
     ],
   },
 ]);

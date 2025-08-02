@@ -7,6 +7,7 @@ const useFetchDueRcvWh = create((set) => ({
   isDueRcvwhListLoading: false,
   isDueRcvwhListError: false,
   DueRcvwhErrMsg: "",
+  isDueRcvSucc: false,
 
   fetchDueRcvwhHeader: async (userdata) => {
     set({ isDueRcvwhListLoading: true, isDueRcvwhListError: null });
@@ -16,15 +17,15 @@ const useFetchDueRcvWh = create((set) => ({
 
       set({
         DueRcvwhList: data?.response,
-        isDueRcvwhListLoading: false,
+        isDueRcvSucc: true,
       });
     } catch (error) {
       set({
         DueRcvwhErrMsg: error?.response?.data?.response,
         isDueRcvwhListError: true,
-        isDueRcvwhListLoading: false,
       });
     }
+    set({ isDueRcvwhListLoading: false });
   },
 
   // This function handles both regular fetching and searching
@@ -36,21 +37,22 @@ const useFetchDueRcvWh = create((set) => ({
       const { data } = result;
       set({
         DueRcvwhList: data?.response,
-        isDueRcvwhListLoading: false,
+        isDueRcvSucc: true,
       });
     } catch (error) {
       set({
         isDueRcvwhListError: true,
         DueRcvwhErrMsg: error.response.data.response,
-        isDueRcvwhListLoading: false,
       });
     }
+    set({ isDueRcvwhListLoading: false });
   },
 
   ClearstateDueRcvwhList: async () => {
     set({
       isDueRcvwhListLoading: false,
       isDueRcvwhListError: false,
+      isDueRcvSucc: false,
       DueRcvwhErrMsg: "",
       DueRcvwhList: [],
     });

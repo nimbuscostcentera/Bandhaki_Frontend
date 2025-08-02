@@ -12,16 +12,7 @@
   height: 100%;
   width: 100%;
 }
-.footer{
-    position: fixed;
-      bottom: 0;
-      color: #1a92f5;
-      width: 100vw;
-      background-color: var(--background-light);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-}
+
 #board {
   background-color: aqua;
   border-radius: 67% 33% 53% 47% / 62% 49% 51% 38%;

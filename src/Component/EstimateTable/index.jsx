@@ -6,12 +6,14 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "./EstimateTable.css";
 import "../Table/table.css";
 import { Button } from "react-bootstrap";
-import SearchableDropdown from "../SearchableDropDown/index1";
+import SearchableDropdown from "../SearchableDropDown/index";
 import InputBox from "../InputBox";
 import BongCalender from "../BongCalender";
 
 const CellRenderer = memo(
   ({
+    setRowIndex,
+    rowIndex,
     col,
     row,
     indexrow,
@@ -36,19 +38,17 @@ const CellRenderer = memo(
       [indexrow, col.key, handleChange, toaster]
     );
 
-    const handleBongSave = useCallback(
-      (bengalidate) => {
-        const obj = {
-          target: {
-            value: bengalidate,
-            name: "date",
-          },
-        };
-        handleChange(indexrow, col.key, obj);
-        CloseBongCal();
-      },
-      [indexrow, col.key, handleChange, CloseBongCal]
-    );
+    const handleBongSave = (bengalidate, index) => {
+      console.log(index, "bong calander");
+      const obj = {
+        target: {
+          value: bengalidate,
+          name: "date",
+        },
+      };
+      handleChange(index, col.key, obj);
+      CloseBongCal();
+    };
 
     // Checkbox
     if (col?.isCheckbox) {
@@ -124,7 +124,7 @@ const CellRenderer = memo(
           key={`${indexrow}${col.key}`}
           placeholder={col?.PlaceHolder}
           defaultval={row[col?.key]}
-          width={col?.width}
+          width={"100%"}
         />
       );
     }
@@ -143,11 +143,15 @@ const CellRenderer = memo(
               handleDateCheck(e);
               col?.LostFocus && col?.LostFocus(indexrow, e.target.value);
             }}
-            Icon={<i className="bi bi-calendar"></i>}
+            isfrontIconOff={true}
             SearchButton={true}
             SearchIcon={<i className="bi bi-calendar"></i>}
-            SearchHandler={() => setBongView(true)}
-            InputStyle={{ width: "100%" }}
+            SearchHandler={() => {
+              console.log(indexrow, "hit me");
+              setRowIndex(indexrow);
+              setBongView(true);
+            }}
+            InputStyle={{ width: "100%" ,padding:"5px 5px"}}
             value={row[col.key]}
           />
           {bongView && (
@@ -158,9 +162,10 @@ const CellRenderer = memo(
                 setBongView(!bongView);
               }}
               handleSave={(bdate, edate) => {
-                handleBongSave(bdate);
+                console.log(indexrow, "check");
+                handleBongSave(bdate, rowIndex);
                 CloseBongCal();
-                col?.LostFocus && col?.LostFocus(indexrow, bdate);
+                col?.LostFocus && col?.LostFocus(rowIndex, bdate);
                 setBongView(!bongView);
               }}
             />
@@ -180,6 +185,8 @@ const CellRenderer = memo(
           style={{ width: "170px" }}
           placeholder={col.label}
           className="input-cell"
+          // disabled={col?.isDisabled||false}
+          readOnly={col?.isReadOnly || false}
         />
       );
     }
@@ -195,7 +202,7 @@ const CellRenderer = memo(
         onChange={(event) => handleChange(indexrow, col.key, event)}
         placeholder={col.label}
         className="input-cell form-input"
-        style={{ width: "100%" }}
+        style={{ width: "100%",padding:"1px 5px" }}
       />
     );
   }
@@ -217,7 +224,7 @@ function EstimateTable({
   priorityref,
 }) {
   const [bongView, setBongView] = useState(false);
-
+  const [rowIndex, setRowIndex] = useState(0);
   const toggleBongView = useCallback(() => {
     setBongView((prev) => !prev);
   }, []);
@@ -229,11 +236,11 @@ function EstimateTable({
     >
       <table
         className="table align-middle m-0 p-0"
-        style={{ width: tableWidth || "auto" }}
+        style={{ width: tableWidth || "auto",height:"auto" }}
       >
         <thead className="thead-decor tab-head">
           <tr>
-            <th className="th-decor" style={{ width: "80px" }}>
+            <th className="th-decor" style={{ width: "50px" }}>
               Row
             </th>
             {columns.map((col) => (
@@ -251,7 +258,7 @@ function EstimateTable({
         <tbody className="table-body-decor tab-body">
           {rows.map((row, indexrow) => (
             <tr key={indexrow}>
-              <td className="th-decor">{indexrow + 1}</td>
+              <td className="th-decor" style={{width:"50px"}}>{indexrow + 1}</td>
               {columns.map((col) => (
                 <td
                   key={`${indexrow}-${col.key}`}
@@ -260,7 +267,10 @@ function EstimateTable({
                 >
                   <CellRenderer
                     col={col}
+                    key={`${indexrow}-${col.key}`}
                     row={row}
+                    setRowIndex={setRowIndex}
+                    rowIndex={rowIndex}
                     indexrow={indexrow}
                     handleChange={handleChange}
                     SearchHandler={SearchHandler}
@@ -277,14 +287,14 @@ function EstimateTable({
                 <td className="td-cell" style={{ width: "50px" }}>
                   <button
                     className={
-                      row?.[id] === 1
-                        ? "table-button-del-disabled"
-                        : "table-button-del"
+                      row?.[id] == 1
+                        ? "table-button-del-disabled py-0 px-1"
+                        : "table-button-del py-0 px-1"
                     }
-                    disabled={row?.[id] === 1}
+                    disabled={row?.[id] == 1}
                     onClick={() => deleteRow(row?.[id])}
                   >
-                    <i className="bi bi-trash"></i>
+                    <i className="bi bi-trash" style={{ fontSize: "18px" }}></i>
                   </button>
                 </td>
               )}

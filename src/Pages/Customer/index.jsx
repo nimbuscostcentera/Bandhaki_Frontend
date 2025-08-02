@@ -56,7 +56,7 @@ function CustListEdit() {
   ];
 
   const SelectOptionFineInterestCode = useMemo(() => {
-    let frstVal = [{ Name: "--Select Fine Interest Code--", Value: -1 }];
+    let frstVal = [{ Name: "--Select Fine Code--", Value: -1 }];
     let fineList = FineHeaderList.map((item) => ({
       Name: `${item?.CODE}`,
       Value: item?.ID,
@@ -241,19 +241,19 @@ function CustListEdit() {
   }, [isCustRegLoading, CustRegSuccess, CustRegError]);
 
   return (
-    <Container fluid style={{ width: "100%", padding: 0 }}>
+    <Container fluid style={{ width: "99%", padding: 0 }}>
       <ToastContainer />
-      <Row style={{ marginTop: "60px", marginLeft: "3px", width: "98%" }}>
+      <Row style={{ marginTop: "50px",marginLeft:"1px", width: "100%" }}>
         <Col
           xs={12}
           sm={12}
           md={12}
           lg={12}
           xl={12}
-          style={{ paddingLeft: "15px", margin: "0px" }}
+          style={{ margin: "0px" }}
         >
           <div className="d-flex justify-content-between">
-            <h5 style={{ fontSize: "18px" }}>Add Customer</h5>
+            <h5>Add Customer</h5>
           </div>
           <hr style={{ marginTop: "2px" }} />
         </Col>
@@ -263,7 +263,6 @@ function CustListEdit() {
           md={12}
           lg={12}
           xl={12}
-          style={{ paddingLeft: "15px", margin: "0px" }}
         >
           <div
             className="table-box"
@@ -310,7 +309,7 @@ function CustListEdit() {
                       type="text"
                       maxLength={100}
                       ref={inputRef}
-                      style={{ width: "160px" }}
+                      style={{ width: "150px" }}
                     />
                   </td>
                   <td>
@@ -343,7 +342,7 @@ function CustListEdit() {
                       Soptions={InterestCalculationTypeList}
                       PlaceHolder={"--Select Interest Calculation Type--"}
                       Value={CustData?.timing}
-                      SelectStyle={{ width: "180px", padding: "7px 8px" }}
+                      SelectStyle={{ width: "150px", padding: "7px 8px" }}
                       key={1}
                     />
                   </td>
@@ -362,9 +361,9 @@ function CustListEdit() {
                       OnSelect={OnChangeHandler}
                       SName={"FineID"}
                       Soptions={SelectOptionFineInterestCode}
-                      PlaceHolder={"--Select Fine Interest Code--"}
+                      PlaceHolder={"--Select Fine Code--"}
                       Value={CustData?.FineID}
-                      SelectStyle={{ width: "200px", padding: "7px 8px" }}
+                      SelectStyle={{ width: "150px", padding: "7px 8px" }}
                       key={1}
                     />
                   </td>
@@ -407,7 +406,7 @@ function CustListEdit() {
                       Soptions={SelectOptionIDProof}
                       PlaceHolder={"--Select ID Proof Type--"}
                       Value={CustData?.IDPROOF_Type}
-                      SelectStyle={{ width: "200px", padding: "7px 8px" }}
+                      SelectStyle={{ width: "150px", padding: "7px 8px" }}
                       key={1}
                     />
                   </td>
@@ -420,6 +419,7 @@ function CustListEdit() {
                       onChange={OnChangeHandler}
                       type="text"
                       maxLength={CustData?.IDProofLength}
+                      style={{ width: "150px" }}
                     />
                   </td>
 
@@ -431,6 +431,7 @@ function CustListEdit() {
                       onChange={OnchangeHandlePic}
                       type="file"
                       ref={custref}
+                      style={{ width: "150px" }}
                     />
                   </td>
                 </tr>
@@ -440,11 +441,15 @@ function CustListEdit() {
         </Col>
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
           <div
-            className="d-flex justify-content-between align-items-center mt-1"
-            style={{ height: "100%" }}
+            className="d-flex justify-content-between align-items-center my-1"
+            style={{
+              height: "100%",
+              borderTop: "1px solid lightgrey",
+              borderBottom: "1px solid lightgrey",
+            }}
           >
             <div>
-              <h5 style={{ fontSize: "18px" }}>Customer List</h5>
+              <h5>Customer List</h5>
             </div>
             <div>
               <Button
@@ -460,16 +465,16 @@ function CustListEdit() {
           </div>
         </Col>
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
-          <hr className="my-1" />
-          <div className="d-flex justify-content-between align-items-center m-0 flex-wrap">
-            <div>
+          {/* <hr className="my-1" /> */}
+          <div className="d-flex justify-content-between align-items-center  flex-wrap">
+            <div className="mt-2 mb-1" style={{ width: "50%" }}>
               <textarea
                 value={textDetail}
                 readOnly
                 type="search"
                 placeholder="Detail View"
                 style={{
-                  width: "50vw",
+                  width: "100%",
                   border: "1px solid dodgerblue",
                   outline: "1px solid dodgerblue",
                   borderRadius: "5px",
@@ -512,7 +517,7 @@ function CustListEdit() {
               </label>
             </div>
           </div>
-          <hr className="my-1" />
+          {/* <hr className="my-1" /> */}
         </Col>
         <Col
           xs={12}
@@ -520,7 +525,6 @@ function CustListEdit() {
           md={12}
           lg={12}
           xl={12}
-          style={{ paddingLeft: "15px" }}
         >
           <CustomerDetails
             isDisable={isDisable}

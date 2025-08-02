@@ -32,6 +32,7 @@ import useOpeningHeaderDeleteCheck from "../../store/Checker/useOpeningHeaderDel
 import BongDatePicker from "../../Component/BongDatePicker";
 
 function OpeningEntryViewReport() {
+  const { user, CompanyID } = useFetchAuth();
   //-----------------------------------hooks-----------------------------------//
   const [searchParams] = useSearchParams();
   const trancode = searchParams.get("trancode");
@@ -43,12 +44,11 @@ function OpeningEntryViewReport() {
   //------------------------------------useStatehook---------------------------------//
   const [filteredData, setFilteredData] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
-  const [info , setInfo ] = useState({});
+  const [info, setInfo] = useState({});
   const [originalOrder, setOriginalOrder] = useState([]);
   const [editedData, setEditedData] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [descripSearch, setDescripSearch] = useState("");
-  const [entryDate, setEntryDate] = useState(null);
   const [params, setParams] = useState({
     ActionID: null,
     IsAction: false,
@@ -61,11 +61,23 @@ function OpeningEntryViewReport() {
     EndDate: null,
     view1: false,
     view2: false,
-    headerData:{}
+    headerData: {
+      CostCenterCode: null,
+      CustomerID: null,
+      CustomerName: null,
+      EntryDate: user?.date,
+      ID: null,
+      LotNo: null,
+      PacketNo: null,
+      Status: null,
+      TotalItems: null,
+      TotalPaidInterest: null,
+      WarehouseCode: null,
+    },
   });
   const [textDetail, setTextDetail] = useState("");
   //---------------------------------------------API Call------------------------------------//
-  const { user, CompanyID } = useFetchAuth();
+
   const {
     CheckOpeningHeaderMsg,
     isCheckOpeningHeaderLoading,
@@ -202,7 +214,7 @@ function OpeningEntryViewReport() {
       TranCode: trancode,
     });
     setSelectedId(index);
-   
+
     // Find the warehouse ID based on the warehouse code
     const selectedWarehouse = WareHouseList.find(
       (warehouse) => warehouse.CODE === editableobj.WarehouseCode
@@ -265,7 +277,6 @@ function OpeningEntryViewReport() {
     }
     setParams((prev) => ({ ...prev, [key]: val }));
   };
-  // console.log(params,"out")
   //----------------------------------------------useEffects------------------------------------------//
 
   useEffect(() => {
@@ -378,6 +389,7 @@ function OpeningEntryViewReport() {
   }, [EntryList, OpeningHeaderDeleteMsg, OpeningHeaderEditSuccess]);
 
   useEffect(() => {
+    setSearchTerm("");
     setTextDetail("");
     setParams({
       ActionID: null,
@@ -392,6 +404,7 @@ function OpeningEntryViewReport() {
       view1: false,
       view2: false,
     });
+    setDescripSearch("");
   }, [rendering, entityType]);
 
   useEffect(() => {
@@ -468,6 +481,13 @@ function OpeningEntryViewReport() {
 
   const columns = [
     {
+      headername: "ID",
+      fieldname: "ID",
+      type: "number",
+      isNotEditable: true,
+      width: "60px",
+    },
+    {
       headername: "Entry Date",
       fieldname: "EntryDate",
       type: "BongDate",
@@ -504,6 +524,7 @@ function OpeningEntryViewReport() {
       selectionname: "WarehouseID",
       isSelection: true,
       options: selectwarehouse,
+      width: "120px",
     },
     {
       headername: "Cloing Status",
@@ -519,7 +540,7 @@ function OpeningEntryViewReport() {
       <Row className="pt-2">
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
           <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-            <h5 style={{ fontSize: "18px", marginBottom: 0 }}>
+            <h5 style={{ marginBottom: 0 }}>
               {(trancode === "0RC" || trancode === "0RW"
                 ? "Opening"
                 : "Receive/Dafa") +
@@ -548,7 +569,7 @@ function OpeningEntryViewReport() {
                 }
                 SelectStyle={{
                   width: "150px",
-                  padding: "7px 8px",
+                  padding: "5px 8px",
                   borderRadius: "5px",
                   border: "1px solid #ccc",
                   fontSize: "14px",
@@ -567,139 +588,162 @@ function OpeningEntryViewReport() {
 
           <hr className="my-2" />
         </Col>
-        <Col xl={12} lg={12} md={12} sm={12} xs={12}>
-          <div className="d-flex flex-wrap align-items-center gap-3 my-2">
-            {/* Detail View Input */}
-            <input
-              value={textDetail}
-              readOnly
-              type="search"
-              placeholder="Detail View"
-              style={{
-                width: "40vw",
-                border: "2px solid #ced4da",
-                borderRadius: "8px",
-                padding: "10px 16px",
-                fontSize: "14px",
-                backgroundColor: "white",
-                color: "#212529",
-                transition: "all 0.3s ease",
-                outline: "none",
-                boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
-                "::placeholder": {
-                  color: "#868e96",
-                  opacity: " 1",
-                  fontWeight: "300",
-                },
-                // Focus state
-                ":focus": {
-                  borderColor: "#3b7ddd",
-                  boxShadow: "0 0 0 3px rgba(59, 125, 221, 0.25)",
-                  backgroundColor: "#f8fbff",
-                },
-              }}
-            />
-
-            {/* Search Inputs */}
-            <div className="d-flex flex-wrap gap-2">
-              <input
-                placeholder="Search here..."
-                style={{
-                  width: "20vw",
-                  border: "2px solid #ced4da",
-                  borderRadius: "8px",
-                  padding: "10px 16px",
-                  fontSize: "14px",
-                  backgroundColor: "white",
-                  color: "#212529",
-                  transition: "all 0.3s ease",
-                  outline: "none",
-                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
-                  "::placeholder": {
-                    color: "#868e96",
-                    opacity: " 1",
-                    fontWeight: "300",
-                  },
-                  // Focus state
-                  ":focus": {
-                    borderColor: "#3b7ddd",
-                    boxShadow: "0 0 0 3px rgba(59, 125, 221, 0.25)",
-                    backgroundColor: "#f8fbff",
-                  },
-                }}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-
-              <input
-                placeholder="Description search..."
-                style={{
-                  width: "20vw",
-                  border: "2px solid #ced4da",
-                  borderRadius: "8px",
-                  padding: "10px 16px",
-                  fontSize: "14px",
-                  backgroundColor: "white",
-                  color: "#212529",
-                  transition: "all 0.3s ease",
-                  outline: "none",
-                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
-                  // Focus state
-                  ":focus": {
-                    borderColor: "#3b7ddd",
-                    boxShadow: "0 0 0 3px rgba(59, 125, 221, 0.25)",
-                    backgroundColor: "#f8fbff",
-                  },
-                }}
-                value={descripSearch}
-                onChange={(e) => setDescripSearch(e.target.value)}
-              />
-            </div>
-          </div>
+        <Col xl={6} lg={6} md={6} sm={12} xs={12} className="my-1">
+          <input
+            value={textDetail}
+            readOnly
+            type="search"
+            placeholder="Detail View"
+            style={{
+              width: "100%",
+              border: "1px solid #ced4da",
+              borderRadius: "8px",
+              padding: "5px 8px",
+              fontSize: "14px",
+              backgroundColor: "white",
+              color: "#212529",
+              transition: "all 0.3s ease",
+              outline: "none",
+              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+              "::placeholder": {
+                color: "#868e96",
+                opacity: " 1",
+                fontWeight: "300",
+              },
+              // Focus state
+              ":focus": {
+                borderColor: "#3b7ddd",
+                boxShadow: "0 0 0 3px rgba(59, 125, 221, 0.25)",
+                backgroundColor: "#f8fbff",
+              },
+            }}
+          />
+        </Col>
+        <Col xl={3} lg={3} md={3} sm={6} xs={12} className="my-1">
+          <input
+            placeholder="Search here..."
+            style={{
+              width: "100%",
+              border: "1px solid #ced4da",
+              borderRadius: "8px",
+              padding: "5px 8px",
+              fontSize: "14px",
+              backgroundColor: "white",
+              color: "#212529",
+              transition: "all 0.3s ease",
+              outline: "none",
+              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+              "::placeholder": {
+                color: "#868e96",
+                opacity: " 1",
+                fontWeight: "300",
+              },
+              // Focus state
+              ":focus": {
+                borderColor: "#3b7ddd",
+                boxShadow: "0 0 0 3px rgba(59, 125, 221, 0.25)",
+                backgroundColor: "#f8fbff",
+              },
+            }}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </Col>
+        <Col xl={3} lg={3} md={3} sm={6} xs={12} className="my-1">
+          <input
+            placeholder="Description search..."
+            style={{
+              width: "100%",
+              border: "1px solid #ced4da",
+              borderRadius: "8px",
+              padding: "5px 8px",
+              fontSize: "14px",
+              backgroundColor: "white",
+              color: "#212529",
+              transition: "all 0.3s ease",
+              outline: "none",
+              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+              // Focus state
+              ":focus": {
+                borderColor: "#3b7ddd",
+                boxShadow: "0 0 0 3px rgba(59, 125, 221, 0.25)",
+                backgroundColor: "#f8fbff",
+              },
+            }}
+            value={descripSearch}
+            onChange={(e) => setDescripSearch(e.target.value)}
+          />
         </Col>
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
           <div
             className="table-box"
-            style={{ height: "55vh", border: "1px solid lightgrey" }}
+            style={{ height: "60vh", border: "1px solid lightgrey" }}
           >
-            <Table
-              Col={columns}
-              tab={filteredData || []}
-              isLoading={isEntryListLoading}
-              onSorting={SortingFunc}
-              OnChangeHandler={OnChangeHandler}
-              // ActionId={params?.SelectedID}
-              ActionId={params?.ActionID}
-              ActionFunc={FetchActionId}
-              isEdit={true}
-              isView={true}
-              isDelete={true}
-              handleViewClick={(index) => {
-                const selectedData = filteredData[index];
-                setSelectedId(selectedData.ID);
-                setInfo({
-                  custId: selectedData.CustomerID,
-                  LotNo: selectedData.LotNo,
-                });
-                setParams({
-                  ...params,
-                  view: true,
-                  Lotno: selectedData?.LotNo,
-                  headerData: selectedData,
-                });
-              }}
-              EditedData={editedData}
-              OnSaveHandler={SaveHandler}
-              PageNumber={params?.page}
-              rowsperpage={params?.limit}
-              // handleDelete={handleDelete}
-              handleDelete={handleDeleteClick}
-              useInputRef={editinputref}
-              getFocusText={(val) => {
-                setTextDetail(val);
-              }}
-              showScrollButtons={false}
-            />
+            {filteredData.length > 0 ? (
+              <Table
+                Col={columns}
+                tab={filteredData || []}
+                isLoading={isEntryListLoading}
+                onSorting={SortingFunc}
+                OnChangeHandler={OnChangeHandler}
+                // ActionId={params?.SelectedID}
+                ActionId={params?.ActionID}
+                ActionFunc={FetchActionId}
+                isEdit={true}
+                isView={true}
+                isDelete={true}
+                handleViewClick={(index) => {
+                  const selectedData = filteredData[index];
+                  setSelectedId(selectedData.ID);
+                  setInfo({
+                    custId: selectedData.CustomerID,
+                    LotNo: selectedData.LotNo,
+                  });
+                  console.log(selectedData);
+                  setParams({
+                    ...params,
+                    view: true,
+                    Lotno: selectedData?.LotNo,
+                    headerData: {
+                      CostCenterCode: selectedData.CostCenterCode,
+                      CustomerID: selectedData?.CustomerID,
+                      CustomerName: selectedData?.CustomerName,
+                      EntryDate: selectedData?.EntryDate || user?.date,
+                      ID: selectedData?.ID,
+                      LotNo: selectedData?.LotNo,
+                      PacketNo: selectedData?.PacketNo,
+                      Status: selectedData?.Status,
+                      TotalItems: selectedData?.TotalItems,
+                      TotalPaidInterest: selectedData?.TotalPaidInterest,
+                      WarehouseCode: selectedData?.WarehouseCode,
+                    },
+                  });
+                }}
+                EditedData={editedData}
+                OnSaveHandler={SaveHandler}
+                PageNumber={params?.page}
+                rowsperpage={params?.limit}
+                // handleDelete={handleDelete}
+                handleDelete={handleDeleteClick}
+                useInputRef={editinputref}
+                getFocusText={(val) => {
+                  setTextDetail(val);
+                }}
+                showScrollButtons={false}
+              />
+            ) : isEntryListLoading ? (
+              <div className="d-flex justify-content-center align-items-center h-100">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            ) : (
+              <div className="d-flex justify-content-center align-items-center h-100 text-muted">
+                {isEntryListError
+                  ? "No results found. Try a different search."
+                  : "Use the search bar or date picker to find entries."}
+              </div>
+            )}
             <DeleteConfirmation
               show={showDeleteModal}
               onConfirm={confirmDelete}

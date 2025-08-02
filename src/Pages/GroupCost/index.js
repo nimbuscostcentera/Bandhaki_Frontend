@@ -33,6 +33,7 @@ function GroupCostListEdit() {
   const typeArr = [
     { label: 1, value: "Customer" },
     { label: 2, value: "WholeSeller" },
+    { label: 3, value: "Mahajon" },
   ];
   // console.log(companyData);
   const [isDisable, setIsDisable] = useState(false);
@@ -100,7 +101,7 @@ function GroupCostListEdit() {
   return (
     <Container fluid style={{ width: "98%", padding: 0 }}>
       <ToastContainer />
-      <Row style={{ marginTop: "60px", width: "100%" }}>
+      <Row style={{ marginTop: "50px", width: "100%" }}>
         <Col
           xs={12}
           sm={12}
@@ -111,11 +112,10 @@ function GroupCostListEdit() {
         >
           <div className="d-flex justify-content-between">
             <div>
-              {" "}
               <h5>Group CostCenter</h5>
             </div>
           </div>
-          <hr style={{ marginTop: "2px" }} />
+          <hr className="my-1" />
         </Col>
         <Col xs={12} sm={12} md={6} lg={6} xl={6}>
           <div
@@ -192,15 +192,8 @@ function GroupCostListEdit() {
         </Col>
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
           <hr className="mt-3 mb-2" />
-          <div className="d-flex justify-content-between">
+          <div className=" d-flex justify-content-between align-items-center m-0 flex-wrap">
             <h5>Group CostCenter Edit</h5>
-          </div>
-          <hr style={{ marginTop: "2px" }} />
-        </Col>
-
-        <Col xs={12} sm={12} md={12} lg={12} xl={12}>
-          <hr className="my-1" />
-          <div className="d-flex justify-content-between align-items-center m-0 flex-wrap">
             <div>
               <label
                 className="form-input"
@@ -236,6 +229,12 @@ function GroupCostListEdit() {
               </label>
             </div>
           </div>
+          {/* <hr style={{ marginTop: "2px" }} /> */}
+        </Col>
+
+        <Col xs={12} sm={12} md={12} lg={12} xl={12}>
+          {/* <hr className="my-1" /> */}
+          <div className="d-flex justify-content-between align-items-center m-0 flex-wrap"></div>
           <hr className="my-1" />
         </Col>
         <Col

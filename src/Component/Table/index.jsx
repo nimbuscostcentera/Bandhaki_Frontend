@@ -14,17 +14,18 @@ import InputBox from "../InputBox";
 
 const ActionButton = ({ icon, color, onClick, disabled, title }) => (
   <button
-    className="btn btn-link p-0"
+    className="btn btn-link p-0 m-0"
     onClick={onClick}
     disabled={disabled}
     title={title}
     aria-label={title}
+    style={{height:"30px"}}
   >
     <i
       className={`bi bi-${icon}`}
       style={{
         color: disabled ? "lightgrey" : color || "#ac4bec",
-        fontSize: "22px",
+        fontSize: "20px",
       }}
     />
   </button>
@@ -39,11 +40,13 @@ const RenderCellContent = ({
   ActionId,
   HandleMultiSelection,
   EditedData,
+  img,
   OnChangeHandler,
   bongView,
   setBongView,
   useInputRef,
   isUseInputRef,
+  PictureHandler,
 }) => {
   const handleDateCheck = useCallback(
     (event) => {
@@ -72,7 +75,7 @@ const RenderCellContent = ({
   );
 
   if (field?.isIconicData) {
-    return item[field.fieldname] == 1
+    return item[field.fieldname] != 0 && item[field.fieldname] != null
       ? field.iconSuccess(item)
       : field.iconError(item);
   }
@@ -103,10 +106,12 @@ const RenderCellContent = ({
         />
       );
     }
-
     if (field?.isBongDate) {
       return (
-        <div className="d-flex justify-content-start flex-nowrap table-input-wrapper">
+        <div
+          className="d-flex justify-content-start flex-nowrap table-input-wrapper"
+          style={{ width: field?.width }}
+        >
           <InputBox
             type="text"
             placeholder="yyyy-mm-dd"
@@ -117,11 +122,11 @@ const RenderCellContent = ({
               handleDateCheck(e);
               field?.LostFocus?.(index, e.target.value);
             }}
-            Icon={<i className="bi bi-calendar" />}
             SearchButton={true}
+            isfrontIconOff={true}
             SearchIcon={<i className="bi bi-calendar" />}
             SearchHandler={() => setBongView(true)}
-            InputStyle={{ width: field?.width }}
+            InputStyle={{ width: "100%", padding: "5px 8px" }}
             value={EditedData[field.fieldname] || item[field.fieldname]}
           />
           {bongView && (
@@ -139,7 +144,6 @@ const RenderCellContent = ({
         </div>
       );
     }
-
     return (
       <input
         name={field.fieldname}
@@ -155,7 +159,7 @@ const RenderCellContent = ({
     );
   }
 
-  if (field?.type === "Img") {
+  if (field?.type === "Img" && ActionId !== index) {
     const imageUrl = item[field.fieldname]
       ? `${process.env.REACT_APP_BASEURL_IMAGE}/${item[field.fieldname]}`
       : defaultimage;
@@ -167,20 +171,43 @@ const RenderCellContent = ({
         rel="noopener noreferrer"
         className="text-decoration-none"
       >
-        <img
-          src={imageUrl || "/placeholder.svg"}
-          alt=""
-          className="w-100 cursor-pointer"
-          style={{ height: "50px" }}
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = defaultimage;
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
           }}
-        />
+        >
+          <div style={{ height: "30px" }}>
+            <img
+              src={imageUrl || "/placeholder.svg"}
+              alt=""
+              className="w-100 cursor-pointer"
+              style={{ height: "30px", width: "35px" }}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = defaultimage;
+              }}
+            />
+          </div>
+        </div>
       </a>
     );
   }
 
+  if (field?.type === "Img" && ActionId === index) {
+    return (
+      <input
+        type="file"
+        name={"Img"}
+        accept="image/*"
+        ref={field?.isUseInputRef ? useInputRef : null}
+        onChange={(e) => PictureHandler(index, e)}
+        className="input-cell form-input w-100"
+        readOnly={field?.isReadOnly || false}
+      />
+    );
+  }
   return item[field.fieldname] == 0 ? "-" : item[field.fieldname];
 };
 
@@ -202,6 +229,7 @@ const Table = ({
   OnChangeHandler,
   OnSaveHandler,
   EditedData = {},
+  img,
   HandleMultiSelection,
   isLoading,
   PageNumber,
@@ -222,6 +250,7 @@ const Table = ({
   CloseBongCal,
   isUseInputRef,
   actions = [],
+  PictureHandler,
 }) => {
   const scrollRef = useRef(null);
 
@@ -239,7 +268,7 @@ const Table = ({
     return actions.map((action, i) => {
       if (action.type === "checkbox") {
         return (
-          <td key={i}>
+          <td key={i} style={{ Width: "120px" }}>
             <input
               type="checkbox"
               checked={action.checkedItems?.some(
@@ -247,7 +276,7 @@ const Table = ({
               )}
               onChange={(e) => action.onChange(item, e.target.checked)}
               className="cursor-pointer"
-              style={{ width: "18px", height: "18px" }}
+              style={{ width: "100px", height: "18px" }}
             />
           </td>
         );
@@ -276,7 +305,7 @@ const Table = ({
   };
 
   const renderLoadingSkeleton = () =>
-    [...Array(8)].map((_, index) => (
+    [...Array(12)].map((_, index) => (
       <tr key={index}>
         <td>
           <Skeleton width={30} />
@@ -307,12 +336,13 @@ const Table = ({
 
     return (
       <tr>
-        <td />
+        <td></td>
+
         <td
           colSpan={colspan}
           className="text-center text-muted bg-light"
           style={{
-            height: height || "250px",
+            height: "40vh"||"auto",
             fontSize: "16px",
             letterSpacing: "1px",
           }}
@@ -326,18 +356,22 @@ const Table = ({
 
   const renderDataRows = () =>
     tab.map((item, index) => (
-      <tr key={index}>
-        <td>{renderRowNumber(index)}</td>
+      <tr key={index} className="m-0 p-0">
+        <td style={{ width: "45px" }}>{renderRowNumber(index)}</td>
         {Col?.map((field, indexfield) => (
           <td
+            style={{
+              height: "25px",
+              maxWidth: field?.width || "200px",
+              textAlign: "center",
+            }}
             key={indexfield}
             onClick={() => getFocusText?.(item[field?.fieldname])}
           >
             <div
               style={{
                 textAlign: "center",
-                margin: "0px 2px",
-                maxWidth: field?.width || "100%",
+                Width: field?.width || "200px",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
@@ -352,11 +386,13 @@ const Table = ({
                 ActionId={ActionId}
                 HandleMultiSelection={HandleMultiSelection}
                 EditedData={EditedData}
+                img={img}
                 OnChangeHandler={OnChangeHandler}
                 bongView={bongView}
                 setBongView={setBongView}
                 useInputRef={useInputRef}
                 isUseInputRef={isUseInputRef}
+                PictureHandler={PictureHandler}
               />{" "}
             </div>
           </td>
@@ -364,7 +400,7 @@ const Table = ({
 
         {isEdit && (
           <>
-            <td>
+            <td style={{ width: "45px" }}>
               <ActionButton
                 icon="pencil-square"
                 color="#ac4bec"
@@ -372,7 +408,7 @@ const Table = ({
                 title="Edit"
               />
             </td>
-            <td>
+            <td style={{ width: "45px" }}>
               <ActionButton
                 icon="floppy"
                 color={index === ActionId ? "green" : "lightgrey"}
@@ -385,7 +421,7 @@ const Table = ({
         )}
 
         {isView && (
-          <td>
+          <td style={{ width: "45px" }}>
             <ActionButton
               icon="eye"
               color="#ac4bec"
@@ -396,7 +432,7 @@ const Table = ({
         )}
 
         {isPrint && (
-          <td>
+          <td style={{ width: "45px" }}>
             <ActionButton
               icon="printer"
               color="#ac4bec"
@@ -407,7 +443,7 @@ const Table = ({
         )}
 
         {isCheck && (
-          <td>
+          <td style={{ width: "120px" }}>
             <input
               type="checkbox"
               checked={checkedIds.some(
@@ -421,7 +457,7 @@ const Table = ({
         )}
 
         {isDelete && (
-          <td>
+          <td style={{ width: "45px" }}>
             <ActionButton
               icon="trash"
               color="#ff0000"
@@ -439,12 +475,13 @@ const Table = ({
     <div>
       <div
         ref={scrollRef}
-        className="overflow-auto border border-secondary-subtle"
-        style={{ maxHeight: height || "auto" }}
+        // className="overflow-auto border border-secondary-subtle"
+        className="overflow-auto "
+        style={{ maxHeight: height || "auto", scrollbarWidth: "thin" }}
       >
         <table className="table table-responsive table-sm table-hover align-middle w-100">
           <thead className="tab-head">
-            <tr className="table-secondary">
+            <tr className="table-secondary" style={{ height: "30px" }}>
               <th scope="col" style={{ width: "40px" }}>
                 Row
               </th>
@@ -477,7 +514,7 @@ const Table = ({
                 </>
               )}
               {isView && (
-                <th scope="col" style={{ minWidth: "70px" }}>
+                <th scope="col" style={{ minWidth: "55px" }}>
                   {viewPref} View
                 </th>
               )}
@@ -487,7 +524,7 @@ const Table = ({
                 </th>
               )}
               {isCheck && (
-                <th scope="col" style={{ minWidth: "70px" }}>
+                <th scope="col" style={{ minWidth: "60px" }}>
                   Check Button
                 </th>
               )}

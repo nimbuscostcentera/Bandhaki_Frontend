@@ -108,7 +108,7 @@ function GoldRateListEdit() {
   return (
     <Container fluid style={{ width: "98%", padding: 0 }}>
       <ToastContainer />
-      <Row style={{ marginTop: "60px", width: "100%" }}>
+      <Row style={{ marginTop: "50px", width: "100%" }}>
         <Col xs={12}>
           <div className="d-flex justify-content-between">
             <h5>Gold Rate Management</h5>
@@ -117,8 +117,8 @@ function GoldRateListEdit() {
         </Col>
 
         {/* Form Section */}
-        <Col xs={12} sm={12} md={10} lg={10} xl={9}>
-          <div style={{ width: "40%", overflow: "auto" }}>
+        <Col xs={12} sm={6} md={5} lg={4} xl={3}>
+        
             <table style={{ width: "100%", overflow: "auto" }}>
               <thead className="tab-head">
                 <tr>
@@ -150,7 +150,9 @@ function GoldRateListEdit() {
                 </tr>
               </tbody>
             </table>
-          </div>
+         
+        </Col>
+        <Col xs={12} sm={6} md={7} lg={8} xl={9}>
           <div className="d-flex justify-content-start align-items-center mt-2">
             <Button variant="success" onClick={SaveData} disabled={isDisable}>
               {isGoldRateLoading ? "Please wait..." : "Add"}
@@ -162,16 +164,11 @@ function GoldRateListEdit() {
         {/* <Col xs={12} sm={12} md={2} lg={2} xl={3}></Col> */}
 
         {/* Edit Section */}
-        <Col xs={12}>
-          <hr className="mt-3 mb-2" />
-          <div className="d-flex justify-content-between">
-            <h5>Gold Rate Edit</h5>
-          </div>
-          <hr className="mt-1 mb-2" />
-        </Col>
+
         <Col xs={12} sm={12} md={12} lg={12} xl={12}>
-          <hr className="my-1" />
-          <div className="d-flex justify-content-between align-items-center m-0 flex-wrap">
+          <hr className="mt-3 mb-2" />
+          <div className=" d-flex justify-content-between align-items-center m-0 flex-wrap">
+            <h5>Gold Rate Edit</h5>
             <div>
               <label
                 className="form-input"
@@ -207,7 +204,8 @@ function GoldRateListEdit() {
               </label>
             </div>
           </div>
-          <hr className="my-1" />
+          <hr className="mt-2 mb-2" />
+          {/* <hr style={{ marginTop: "2px" }} /> */}
         </Col>
 
         <Col xs={12}>

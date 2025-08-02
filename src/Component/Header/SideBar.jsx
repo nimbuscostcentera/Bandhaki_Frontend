@@ -43,8 +43,46 @@ function SideBar() {
           <i className="bi bi-list"></i>
         </button>
       </div>
-
       <div style={{ padding: "0" }}>
+        {/** Report */}
+        <details>
+          <summary
+            className="border-bottom border-secondary py-1"
+            style={{
+              color: "white",
+              padding: "0 0 0 10px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <OverlayTrigger
+              placement="bottom"
+              overlay={renderTooltip("All Reports")}
+            >
+              <i
+                className="bi bi-graph-up me-2"
+                style={{ fontSize: "20px" }}
+              ></i>
+            </OverlayTrigger>
+            {Open && <span>All Reports</span>}
+          </summary>
+          <div style={{ backgroundColor: "#212121" }}>
+            <Link
+              to={"/auth/report"}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Report")}
+              >
+                <i className="bi bi-graph-up-arrow ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Report</span>}
+            </Link>
+          </div>
+        </details>
+
+        {/** Manage Customer */}
         <details className="py-1 border-bottom border-light">
           <summary
             className="border-bottom border-secondary py-1"
@@ -64,8 +102,8 @@ function SideBar() {
             {Open && <span>Manage Customer</span>}
           </summary>
           <div style={{ backgroundColor: "#212121" }}>
+            {/** Opening  */}
             <Link
-              // to={"/auth/openentry/form"}
               to={{
                 pathname: "/auth/openentry/form",
                 search: "?type=customer&trancode=0RC",
@@ -92,15 +130,11 @@ function SideBar() {
                 overlay={renderTooltip("Opening Entry View")}
               >
                 <i className="bi bi-list-check ps-3 pe-1"></i>
-                {/* <i className="bi bi-file-spreadsheet ps-3 pe-1"></i> */}
               </OverlayTrigger>
               {Open && <span className="ml-2">Opening Entry View</span>}
             </Link>
-
-            {/* for recive dafa interface form  */}
-
+            {/** Recive/Dafa  */}
             <Link
-              // to={"/auth/openentry/form"}
               to={{
                 pathname: "/auth/openentry/form",
                 search: "?type=customer&trancode=RAC",
@@ -115,7 +149,6 @@ function SideBar() {
               </OverlayTrigger>
               {Open && <span className="ml-2">Recive/Dafa Entry</span>}
             </Link>
-
             <Link
               to={{
                 pathname: "/auth/openentry/view",
@@ -132,38 +165,133 @@ function SideBar() {
               {Open && <span className="ml-2">Recive/Dafa View</span>}
             </Link>
 
-            <Link
-              // to={}
+            {/* <Link
               to={{
-                pathname: "/auth/adjust/entry-point",
-                search: "?type=customer",
+                pathname: "/auth/search-dafa/selected-dafa",
+                search: "?type=customer&trancode=RAC,0RC",
               }}
               className="border-bottom border-secondary"
             >
               <OverlayTrigger
                 placement="bottom"
-                overlay={renderTooltip("Opening Entry Adjust View")}
+                overlay={renderTooltip("Selected Form")}
+              >
+                <i className="bi bi-box-arrow-in-down pe-2 ps-3"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Selected Dafa</span>}
+            </Link> */}
+            {/** Adjust/Dafa  */}
+            <Link
+              to={{
+                pathname: "/auth/adjust/entry-point",
+                search: "?type=customer&trancode=IAC",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Adjust Dafa Entry")}
               >
                 <i className="bi bi-calculator ps-3 pe-1"></i>
               </OverlayTrigger>
-              {Open && <span className="ml-2">Adjust Receive/Dafa </span>}
+              {Open && <span className="ml-2">Adjust Dafa </span>}
             </Link>
             <Link
-              // to={}
               to={{
                 pathname: "/auth/adjust/view",
-                search: "?type=customer",
+                search: "?type=customer&trancode=IAC&opening=2",
               }}
               className="border-bottom border-secondary"
             >
               <OverlayTrigger
                 placement="bottom"
-                overlay={renderTooltip("Opening Entry View")}
+                overlay={renderTooltip("Adjust Dafa View")}
               >
                 <i className="bi bi-list-check ps-3 pe-1"></i>
               </OverlayTrigger>
               {Open && <span className="ml-2">Adjust Dafa View</span>}
             </Link>
+
+            {/**  Search Dafa  */}
+            <Link
+              to={{
+                pathname: "/auth/search-dafa",
+                search: "?type=customer&trancode=RAC,0RC",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("search/Dafa")}
+              >
+                <i className="bi bi-box-arrow-in-down pe-2 ps-3"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Search Dafa</span>}
+            </Link>
+            <Link
+              to={{
+                pathname: "/auth/search-dafa/view",
+                search: "?type=customer&trancode=RAC,0RC",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("search/Dafa View")}
+              >
+                <i className="bi bi-box-arrow-in-down pe-2 ps-3"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Search Dafa View</span>}
+            </Link>
+            {/**  Payment without item */}
+            <Link
+              to={{
+                pathname: "/auth/pay-wholesaler",
+                search: "?type=customer&trancode=PMC&opening=3",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Payment Receive from Mahajon")}
+              >
+                <i className="bi bi-credit-card pe-2 ps-3"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Pmt. to Customer</span>}
+            </Link>
+            {/**  Due  */}
+            <Link
+              to={{
+                pathname: "/auth/duercv-wholesaler",
+                search: "?type=customer&trancode=RMC",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Outstanding Cust.")}
+              >
+                <i className="bi bi-list-check ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Outstanding Cust.</span>}
+            </Link>
+            <Link
+              // to={}
+              to={{
+                pathname: "/auth/duercv-view",
+                search: "?type=customer&trancode=RMC",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Outstanding Cust. View")}
+              >
+                <i className="bi bi-list-check ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Outstanding Cust. View</span>}
+            </Link>
+            {/**  Metal return  */}
             <Link
               // to={}
               to={{
@@ -195,6 +323,7 @@ function SideBar() {
               </OverlayTrigger>
               {Open && <span className="ml-2">Return Metal View</span>}
             </Link>
+            {/**  ledger  */}
             <Link
               to={{
                 pathname: "/auth/ledger-view",
@@ -212,7 +341,7 @@ function SideBar() {
             </Link>
           </div>
         </details>
-
+        {/** Manage Wholesaler */}
         <details className="py-1 border-bottom border-light">
           <summary
             className="border-bottom border-secondary py-1"
@@ -303,6 +432,7 @@ function SideBar() {
               // to={"/auth/openentry/form"}
               to={{
                 pathname: "/auth/pay-wholesaler",
+                search: "?type=wholeseller&trancode=PMW&opening=2",
               }}
               className="border-bottom border-secondary"
             >
@@ -315,7 +445,10 @@ function SideBar() {
               {Open && <span className="ml-2">WholeSaler Pmt.</span>}
             </Link>
             <Link
-              to={"/auth/adjust/entry-point"}
+              to={{
+                pathname: "/auth/adjust/entry-point",
+                search: "?type=wholeseller&trancode=IAW&opening=2",
+              }}
               className="border-bottom border-secondary"
             >
               <OverlayTrigger
@@ -324,10 +457,13 @@ function SideBar() {
               >
                 <i className="bi bi-calculator ps-3 pe-1"></i>
               </OverlayTrigger>
-              {Open && <span className="ml-2">Adjust Receive/Dafa </span>}
+              {Open && <span className="ml-2">Adjust Dafa </span>}
             </Link>
             <Link
-              to={"/auth/adjust/view"}
+              to={{
+                pathname: "/auth/adjust/view",
+                search: "?type=wholeseller&trancode=IAW&opening=2",
+              }}
               className="border-bottom border-secondary"
             >
               <OverlayTrigger
@@ -338,11 +474,43 @@ function SideBar() {
               </OverlayTrigger>
               {Open && <span className="ml-2">Adjust Dafa View</span>}
             </Link>
+
+            {/**  Search Dafa  */}
+            <Link
+              to={{
+                pathname: "/auth/search-dafa",
+                search: "?type=wholesaler&trancode=RAW,0RW",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("search/Dafa")}
+              >
+                <i className="bi bi-box-arrow-in-down pe-2 ps-3"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Search Dafa</span>}
+            </Link>
+            <Link
+              to={{
+                pathname: "/auth/search-dafa/view",
+                search: "?type=wholesaler&trancode=RAW,0RW",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("search/Dafa View")}
+              >
+                <i className="bi bi-box-arrow-in-down pe-2 ps-3"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Search Dafa View</span>}
+            </Link>
             <Link
               // to={}
               to={{
                 pathname: "/auth/metal-return",
-                search: "?type=wholeseller",
+                search: "?type=wholeseller&trancode=IMW",
               }}
               className="border-bottom border-secondary"
             >
@@ -358,7 +526,7 @@ function SideBar() {
               // to={}
               to={{
                 pathname: "/auth/metal-return-view",
-                search: "?type=wholeseller",
+                search: "?type=wholeseller&trancode=IMW",
               }}
               className="border-bottom border-secondary"
             >
@@ -374,38 +542,38 @@ function SideBar() {
               // to={}
               to={{
                 pathname: "/auth/duercv-wholesaler",
-                search: "?type=wholeseller",
+                search: "?type=wholeseller&trancode=DPW",
               }}
               className="border-bottom border-secondary"
             >
               <OverlayTrigger
                 placement="bottom"
-                overlay={renderTooltip("Due Rcv. WholeSaler")}
+                overlay={renderTooltip("Outstanding Wh.")}
               >
                 <i className="bi bi-list-check ps-3 pe-1"></i>
               </OverlayTrigger>
-              {Open && <span className="ml-2">Due Rcv. WholeSaler</span>}
+              {Open && <span className="ml-2">Outstanding Wh.</span>}
             </Link>
             <Link
               // to={}
               to={{
                 pathname: "/auth/duercv-view",
-                search: "?type=wholeseller",
+                search: "?type=wholeseller&trancode=DPW",
               }}
               className="border-bottom border-secondary"
             >
               <OverlayTrigger
                 placement="bottom"
-                overlay={renderTooltip("Due Rcv. Wh. View")}
+                overlay={renderTooltip("Outstanding Wh. View")}
               >
                 <i className="bi bi-list-check ps-3 pe-1"></i>
               </OverlayTrigger>
-              {Open && <span className="ml-2">Due Rcv. Wh. View</span>}
+              {Open && <span className="ml-2">Outstanding Wh. View</span>}
             </Link>
             <Link
               to={{
                 pathname: "/auth/ledger-view",
-                search: "?type=wholeseller",
+                search: "?type=wholeseller&trancode=IAW",
               }}
               className="border-bottom border-secondary"
             >
@@ -420,7 +588,253 @@ function SideBar() {
             </Link>
           </div>
         </details>
+        {/** Manage Mahajon */}
+        <details className="py-1 border-bottom border-light">
+          <summary
+            className="border-bottom border-secondary py-1"
+            style={{
+              color: "white",
+              padding: "0 0 0 10px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <OverlayTrigger
+              placement="bottom"
+              overlay={renderTooltip("Manage Mahajon")}
+            >
+              <i className="bi bi-people me-2" style={{ fontSize: "22px" }}></i>
+            </OverlayTrigger>
+            {Open && <span>Manage Mahajon</span>}
+          </summary>
+          <div style={{ backgroundColor: "#212121" }}>
+            <Link
+              // to={"/auth/openentry/form"}
+              to={{
+                pathname: "/auth/mahajon/form",
+                search: "?type=mahajon&trancode=0RM&opening=3",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Opening Entry Form")}
+              >
+                <i className="bi bi-journal-arrow-down pe-2 ps-3"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Opening Entry</span>}
+            </Link>
+            <Link
+              // to={"/auth/openentry/view"}
+              to={{
+                pathname: "/auth/mahajon/view",
+                search: "?type=mahajon&trancode=0RM&opening=3",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Opening Entry View")}
+              >
+                <i className="bi bi-list-check ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Opening Entry View</span>}
+            </Link>
 
+            {/* for recive dafa entry for wholeseller */}
+            <Link
+              to={{
+                pathname: "/auth/mahajon/form",
+                search: "?type=mahajon&trancode=RAM",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Dafa Form")}
+              >
+                <i className="bi bi-box-arrow-in-down pe-2 ps-3"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Dafa Entry</span>}
+            </Link>
+            {/* for recive dafa entry for wholeseller */}
+            <Link
+              // to={"/auth/openentry/view"}
+              to={{
+                pathname: "/auth/mahajon/view",
+                search: "?type=mahajon&trancode=RAM&opening=3",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Dafa View")}
+              >
+                <i className="bi bi-list-ul ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Dafa View</span>}
+            </Link>
+            <Link
+              // to={"/auth/openentry/form"}
+              to={{
+                pathname: "/auth/pay-wholesaler",
+                search: "?type=mahajon&trancode=PMM&opening=3",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Payment Receive from Mahajon")}
+              >
+                <i className="bi bi-credit-card pe-2 ps-3"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Rcv. from Mahajon</span>}
+            </Link>
+            <Link
+              to={{
+                pathname: "/auth/adjust/entry-point",
+                search: "?type=mahajon&trancode=IAM",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Adjust Dafa")}
+              >
+                <i className="bi bi-calculator ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Adjust Dafa</span>}
+            </Link>
+            <Link
+              to={{
+                pathname: "/auth/adjust/view",
+                search: "?type=mahajon&trancode=IAM",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Adjust Dafa View")}
+              >
+                <i className="bi bi-list-check ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Adjust Dafa View</span>}
+            </Link>
+
+            {/**  Search Dafa  */}
+            <Link
+              to={{
+                pathname: "/auth/search-dafa",
+                search: "?type=mahajon&trancode=RAM,0RM",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("search/Dafa")}
+              >
+                <i className="bi bi-box-arrow-in-down pe-2 ps-3"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Search Dafa</span>}
+            </Link>
+            <Link
+              to={{
+                pathname: "/auth/search-dafa/view",
+                search: "?type=mahajon&trancode=RAM,0RM",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("search/Dafa View")}
+              >
+                <i className="bi bi-box-arrow-in-down pe-2 ps-3"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Search Dafa View</span>}
+            </Link>
+
+            <Link
+              // to={}
+              to={{
+                pathname: "/auth/metal-return",
+                search: "?type=mahajon&trancode=IMM",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Metal Back")}
+              >
+                <i className="bi bi-arrow-repeat ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Metal Back </span>}
+            </Link>
+            <Link
+              to={{
+                pathname: "/auth/metal-return-view",
+                search: "?type=mahajon&trancode=IMM",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Metal Back View")}
+              >
+                <i className="bi bi-list-check ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Metal Back View</span>}
+            </Link>
+            <Link
+              // to={}
+              to={{
+                pathname: "/auth/duercv-wholesaler",
+                search: "?type=mahajon&trancode=DPM",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("OutStanding Mh.")}
+              >
+                <i className="bi bi-list-check ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">OutStanding Mh.</span>}
+            </Link>
+            <Link
+              // to={}
+              to={{
+                pathname: "/auth/duercv-view",
+                search: "?type=mahajon&trancode=DPM",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("OutStanding Mh. View")}
+              >
+                <i className="bi bi-list-check ps-3 pe-1"></i>
+              </OverlayTrigger>
+              {Open && <span className="ml-2">OutStanding Mh. View</span>}
+            </Link>
+            <Link
+              to={{
+                pathname: "/auth/ledger-view",
+                search: "?type=mahajon&trancode=IAM",
+              }}
+              className="border-bottom border-secondary"
+            >
+              <OverlayTrigger
+                placement="bottom"
+                overlay={renderTooltip("Ledger View")}
+              >
+                <i className="bi bi-cash-coin ps-3 pe-1"></i>
+                {/* <i className="bi bi-arrow-repeat ps-3 pe-1"></i> */}
+              </OverlayTrigger>
+              {Open && <span className="ml-2">Ledger View</span>}
+            </Link>
+          </div>
+        </details>
+        {/** Manage Master */}
         <details className="py-1 border-bottom border-light">
           <summary
             className="border-bottom border-secondary py-1"
@@ -521,7 +935,7 @@ function SideBar() {
             >
               <OverlayTrigger
                 placement="bottom"
-                overlay={renderTooltip("Manage Group WH.")}
+                overlay={renderTooltip("Manage Group Warehouse")}
               >
                 <i className="bi bi-houses ps-3 pe-1"></i>
               </OverlayTrigger>
@@ -577,7 +991,7 @@ function SideBar() {
             </Link>
           </div>
         </details>
-
+        {/** Manage Admin settings */}
         <details className="py-1 border-bottom border-light">
           <summary
             className="border-bottom border-secondary py-1"
@@ -634,7 +1048,7 @@ function SideBar() {
               >
                 <i className="bi bi-credit-card-fill ps-3 pe-1"></i>
               </OverlayTrigger>
-              {Open && <span className="ml-2">Credit Setup</span>}
+              {Open && <span className="ml-2">Setup Master</span>}
             </Link>
           </div>
         </details>

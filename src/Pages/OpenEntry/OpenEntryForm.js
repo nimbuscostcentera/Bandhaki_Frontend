@@ -1,49 +1,56 @@
-"use client";
-
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import { useSearchParams } from "react-router-dom";
+import moment from "moment";
+
 import { Container, Row, Col, Button } from "react-bootstrap";
 
-import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-import "../../Component/Table/table.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "../../Component/Table/table.css";
 import "./openentry.css";
-import BongCalender from "../../Component/BongCalender";
+
 import InputBox from "../../Component/InputBox";
-import SearchableDropDown from "../../Component/SearchableDropDown/index";
-import ReusableModal from "../../Component/Modal";
+import BongCalender from "../../Component/BongCalender";
+import ReusableModal from "../../Component/ReusableModal";
 import EstimateTable from "../../Component/EstimateTable";
-import moment from "moment";
+import SearchableDropDown from "../../Component/SearchableDropDown/index";
+
+
+
 import useFetchAuth from "../../store/Auth/useFetchAuth";
 import useAddOpenEntry from "../../store/AddStore/useAddOpenEntry";
-import useFetchCust from "../../store/ShowStore/useFetchCust";
-import useFetchCostCenter from "../../store/ShowStore/useFetchCostCenter";
-import useFetchWareHouse from "../../store/ShowStore/useFetchWareHouse";
 import useFetchCheckLot from "../../store/ShowStore/useFetchCheckLot";
+import useFetchCostCenter from "../../store/ShowStore/useFetchCostCenter";
+import useFetchAdminSetUp from "../../store/ShowStore/useFetchAdminSetUp";
+import useFetchWareHouse from "../../store/ShowStore/useFetchWareHouse";
 import useFetchGoldRate from "../../store/ShowStore/useFetchGoldRate";
-import { useSearchParams } from "react-router-dom";
+import useFetchCust from "../../store/ShowStore/useFetchCust";
 import useFetchWS from "../../store/ShowStore/useFetchWS";
 
 const OpenEntryForm = () => {
   //---------------------------fetch data by zunstand store api call---------------------
-
-  const { CompanyID } = useFetchAuth();
+  const { CompanyID,user } = useFetchAuth();
   const { CostCenterList, fetchCostCenter } = useFetchCostCenter();
-  const { WholeSellerList, fetchWSomrData } = useFetchWS();
-  const { GoldRateError, isGoldRateLoading, GoldRateList, fetchGoldRate } =
-    useFetchGoldRate();
+  const { WholeSellerList, fetchWSomrData, isWsSuccess, ClearWSList } =
+    useFetchWS();
+  const { isGoldRateLoading, GoldRateList, fetchGoldRate } = useFetchGoldRate();
+  const {
+    AdminSetUp,
+    ClearAdminSetUp,
+    fetchAdminSetUp,
+    isAdminSetUpSuccess,
+  } = useFetchAdminSetUp();
   const { CustomerList, fetchCustomrData } = useFetchCust();
   const { WareHouseList, fetchWareHouse } = useFetchWareHouse();
   const {
     ClearStateOpenEntryAdd,
     InsertOpenEntry,
     OpenEntryError,
-    isOpenEntryLoading,
     OpenEntrySuccess,
   } = useAddOpenEntry();
 
-  const { CheckLotError, isCheckLotLoading, isCheckLotList, fetchCheckLot } =
+  const { isCheckLotLoading, fetchCheckLot } =
     useFetchCheckLot();
   //---------------------------------other states----------------------------------------
   const [searchParams] = useSearchParams();
@@ -60,21 +67,14 @@ const OpenEntryForm = () => {
   const srlPrnInputRef = useRef(null);
   const prevDetailRowsLength = useRef(0);
   const srlRefs = useRef([]);
-  const prn_row = {
-    interestPercentage: null,
-    srl_Prn: null,
-    date: null,
-    amount: null,
-    paymentMode: 1,
-    reminderWadah: null,
-    actualWadah: null,
-  };
 
   //--------------------------------------useState----------------------------------
-
+  const [customer, setCustomer] = useState([]);
+  const [setup,setSetUp]=useState([]);    
+  const [wholeseller, setWholeseller] = useState([]);
   const [detailRows, setDetailRows] = useState([]);
   const [headerData, setHeaderData] = useState({
-    date: "",
+    date:user?.date,
     packetNo: "",
     costCenter: "",
     id_costcenter: "",
@@ -85,8 +85,20 @@ const OpenEntryForm = () => {
     id_warehouse: "",
     CompanyID: CompanyID,
     Cust_Type: entityType,
-    TranCode: trancode,
+    TranCode: trancode, 
   });
+  const [prn_row,setPrnRow] = useState({
+    id: 1,
+    rowid: 1,
+    interestPercentage: null,
+    srl_Prn: 1,
+    date: user?.date,
+    amount: null,
+    paymentMode: 1,
+    reminderWadah: null,
+    actualWadah: entityType!==1?AdminSetUp[0]?.Days?.Days:null,
+  });
+  console.log(prn_row, AdminSetUp[0]?.Days);
   const newRow = {
     srl: 1, // Auto-assigned SRL
     description: "",
@@ -99,22 +111,17 @@ const OpenEntryForm = () => {
     principalDetails: [],
     ...headerData,
   };
-  // console.log(headerData, "Header data");
-  // console.log(trancode, "Trancode data");
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [currentDetailIndex, setCurrentDetailIndex] = useState(null);
   const [rows, setRows] = useState([{ rowid: 1, id: 1, ...prn_row }]);
   const [view, setView] = useState(false);
-
-
-  //--------------------------------functions--------------------------------
+  //--------------------------------functions--------------------------------//
   function onfocusinput() {
     if (srlPrnInputRef.current) {
       srlPrnInputRef.current.focus(); // ✅ Focus on the date field when page loads
     }
   }
-  // Handle Header Form Input Change
   const handleHeaderChange = (e) => {
     const { name, value } = e.target;
     if (name === "id_costcenter") {
@@ -160,7 +167,6 @@ const OpenEntryForm = () => {
     }
   };
   const addDetailRow = async () => {
-    
     if (!isHeaderFilled) {
       toast.error("Please fill all the header fields", {
         position: "top-right",
@@ -178,13 +184,13 @@ const OpenEntryForm = () => {
     }
 
     try {
-      //  console.log("hi");
       if (trancode === "0RC" || trancode === "0RW") {
         const lotCheck = await fetchCheckLot({
           LotNo: headerData.lotNo,
           packetNo: headerData.packetNo,
           id_costcenter: headerData.id_costcenter,
           Cust_Type: headerData.Cust_Type,
+          TranCode: trancode,
         });
 
         if (!lotCheck?.success) {
@@ -195,161 +201,84 @@ const OpenEntryForm = () => {
           return;
         }
       }
-        await fetchGoldRate({
-          CompanyID: CompanyID,
-          today: moment().format("YYYY-MM-DD"),
-        });
-        // Automatically assign the next sequential SRL number
-        const nextSrl =
-          detailRows.length > 0 ? (detailRows.length + 1).toString() : "1";
-        let obj = { ...newRow, srl: nextSrl, rate: GoldRateList[0]?.GOLD_RATE || 0 };
-        setDetailRows((prev) => [...prev,obj]);
+   
+      // Automatically assign the next sequential SRL number
+      const nextSrl =
+        detailRows.length > 0 ? (detailRows.length + 1).toString() : "1";
+      let obj = {
+        ...newRow,
+        srl: nextSrl,
+        rate: detailRows [detailRows.length-1]?.rate || GoldRateList[0]?.GOLD_RATE,
+      };
+      setDetailRows((prev) => [...prev, obj]);
     } catch (error) {
       // Handle unexpected errors (like network issues)
-      toast.error(error.message || "Failed to validate Lot Number", {
+      toast.error(error.message,"Failed to validate Lot Number", {
         position: "top-right",
         autoClose: 3000,
       });
     }
   };
-  //setgoldrate
-  useEffect(() => {
-    console.log("hui")
-    if (GoldRateList?.length > 0) {
-      let arr=[...detailRows]
-      let len = arr?.length;
-      let obj = {...arr[len - 1]};
-      obj.rate = GoldRateList[0]?.GOLD_RATE || 0;
-      arr[len - 1] = obj;
-      setDetailRows(arr);
+const handleDetailChange = (index, e) => {
+  let { name, value } = e.target;
+  const updatedRows = [...detailRows];
+
+  // Validation patterns
+  const amountRegex = /^(\d*\.?\d{0,2})?$/;
+  const weightRegex = /^(\d*\.?\d{0,3})?$/;
+
+  // Validate input based on field type
+  let isValid = true;
+  if (name === "grossWeight" || name === "netWeight") {
+    isValid = weightRegex.test(value);
+  } else if (
+    ["rate", "percentage", "principalAmount", "valuation"].includes(name)
+  ) {
+    isValid = amountRegex.test(value);
+  }
+
+  if (!isValid) return;
+
+  // Validate netWeight <= grossWeight
+  if (name === "netWeight") {
+    const gross = parseFloat(updatedRows[index]["grossWeight"]);
+    const net = parseFloat(value);
+    if (!isNaN(gross) && !isNaN(net) && net > gross) {
+      toast.error("Net Weight should be less than or equal to Gross Weight");
+      return;
     }
-  }, [isGoldRateLoading, GoldRateList, detailRows?.length]);
+  }
 
-  // console.log(trackchange);
-  // Handle Detail Form Input Change
-  const handleDetailChange = (index, e) => {
-    const { name, value } = e.target;
-    const updatedRows = [...detailRows];
-
-    // Validation patterns
-    const amountRegex = /^(\d*\.?\d{0,2})?$/;
-    const weightRegex = /^(\d*\.?\d{0,3})?$/;
-
-    // Validate input based on field type
-    let isValid = true;
-    if (name === "grossWeight" || name === "netWeight") {
-      isValid = weightRegex.test(value);
-    } else if (
-      ["rate", "percentage", "principalAmount", "valuation"].includes(name)
-    ) {
-      isValid = amountRegex.test(value);
+  // Validate netWeight when grossWeight changes
+  if (name === "grossWeight") {
+    const gross = parseFloat(value);
+    const net = parseFloat(updatedRows[index]["netWeight"]);
+    if (!isNaN(net) && !isNaN(gross) && net > gross) {
+      updatedRows[index]["netWeight"] = "";
+      toast.error("Net Weight should be less than or equal to Gross Weight");
     }
+  }
 
-    if (!isValid) return;
-
-    // Update the changed field
-    updatedRows[index][name] = value;
-    setDetailRows(updatedRows);
-
-    // Track the change to trigger calculations
-    setTrackChange({
-      index,
-      name,
-      value,
-    });
-  };
-
-  useEffect(() => {
-    if (trackchange.index === undefined || !trackchange.name) return;
-
-    const { index, name, value } = trackchange;
-    const updatedRows = [...detailRows];
-    const row = updatedRows[index];
-
-    // Reset dependent fields when their dependencies change
-    // eslint-disable-next-line default-case
-    switch (name) {
-      case "rate":
-        row.valuation = "";
-        break;
-      case "netWeight":
-        row.valuation = "";
-        break;
-      case "grossWeight":
-        row.valuation = "";
-        row.netWeight = "";
-        row.percentage = "";
-        break;
-      case "percentage":
-        row.netWeight = "";
-        row.valuation = "";
-        break;
-      case "valuation":
-         row.rate = "";
-        // Don't reset percentage when valuation changes
-        break;
-      // Don't reset any fields when description changes
-      case "description":
-        break;
+  // Validate percentage <= 100
+  if (name === "percentage") {
+    const perc = parseFloat(value);
+    if (!isNaN(perc) && perc > 100) {
+      value = "";
+      toast.error("Purity can not be greater than 100%");
     }
+  }
 
-    // Get current values (use updated values where available)
-    const grossWeight =
-      name === "grossWeight"
-        ? Number.parseFloat(value) || 0
-        : Number.parseFloat(row.grossWeight) || 0;
-    const netWeight =
-      name === "netWeight"
-        ? Number.parseFloat(value) || 0
-        : Number.parseFloat(row.netWeight) || 0;
-    const percentage =
-      name === "percentage"
-        ? Number.parseFloat(value) || 0
-        : Number.parseFloat(row.percentage) || 0;
-    const rate =
-      name === "rate"
-        ? Number.parseFloat(value) || 0
-        : Number.parseFloat(row.rate) || 0;
+  // Update the changed field
+  updatedRows[index][name] = value;
+  setDetailRows(updatedRows);
 
-    // Skip calculations if we're just changing the description
-    if (name === "description") return;
-
-    let calculatedNetWeight, recalculatedPercentage, calculatedPercentage;
-
-    // Calculate netWeight if grossWeight and percentage are provided
-    if (grossWeight > 0 && percentage > 0 && name !== "netWeight" && rate != 0) {
-      calculatedNetWeight = grossWeight * (percentage / 100);
-      row.netWeight = calculatedNetWeight.toFixed(2);
-
-      // Recalculate percentage based on the new netWeight (to ensure consistency)
-      recalculatedPercentage = (calculatedNetWeight / grossWeight) * 100;
-      row.percentage = Number.parseFloat(recalculatedPercentage.toFixed(2));
-      row.valuation = ((calculatedNetWeight || netWeight) * rate).toFixed(2);
-    }
-
-    // Calculate percentage if grossWeight and netWeight are provided
-    if (
-      grossWeight > 0 &&
-      netWeight > 0 &&
-      name !== "percentage" &&
-      (name === "grossWeight" || name === "netWeight")
-    ) {
-      calculatedPercentage = (netWeight / grossWeight) * 100;
-      row.percentage = Number.parseFloat(calculatedPercentage.toFixed(2));
-    }
-
-    // Calculate valuation if netWeight and rate are provided
-    if (netWeight > 0 && rate > 0) {
-      const valuation = netWeight * rate;
-      row.valuation = valuation.toFixed(2);
-    }
-    // if (rate == 0)
-    // {
-    //   row.valuation = row.valuation;
-    // }
-
-    setDetailRows(updatedRows);
-  }, [trackchange]);
+  // Track the change to trigger calculations
+  setTrackChange({
+    index,
+    name,
+    value,
+  });
+};
   // Delete a row from the Detail Form
   const deleteDetailRow = (index) => {
     // Remove the row at the specified index
@@ -383,11 +312,6 @@ const OpenEntryForm = () => {
     // Find the column definition
     const column = detailColumns.find((col) => col.key === colKey);
 
-    // If the column is marked as readOnly, don't update it
-    // if (column && column.readOnly) {
-    //   return;
-    // }
-
     const regex = {
       amount: /^(\d*\.?\d{0,2})?$/,
     };
@@ -396,21 +320,20 @@ const OpenEntryForm = () => {
     const obj = { ...updatedRows[rowIndex] };
     if (regex[colKey] && regex[colKey].test(value)) {
       obj[colKey] = value;
-    } else if (!regex[colKey]) { 
+    } else if (!regex[colKey]) {
       obj[colKey] = value;
     }
     updatedRows[rowIndex] = obj;
     setRows(updatedRows);
   };
   const addRow = () => {
-   
     // Automatically assign the next sequential srl_Prn number
     const nextSrlPrn = rows.length > 0 ? (rows.length + 1).toString() : 1;
     const newRow = {
       id: rows.length + 1, // Changed from rowid to id to match EstimateTable
       rowid: rows.length + 1, // Keep rowid for backward compatibility
       srl_Prn: nextSrlPrn, // Auto-assigned srl_Prn
-      date: rows.length == 0 ? headerData?.date : "",
+      date: rows.length == 0 ? headerData?.date : user?.date,
       amount: "",
       paymentMode: 1, // Default value
       reminderWadah: "",
@@ -447,6 +370,16 @@ const OpenEntryForm = () => {
       });
       return;
     }
+    
+    const isDateValid = rows.every((row) => row.date >= headerData.date);
+
+    if (!isDateValid) {
+      toast.error("Date should be greater than or equal to Entry Date", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
 
     // Check for duplicate dates with different amounts
     const dateMap = new Map();
@@ -459,6 +392,36 @@ const OpenEntryForm = () => {
         return;
       }
       dateMap.set(row.date, row.amount);
+    }
+
+    //ascending order
+    for (let i = 0; i < rows?.length - 1; i++) {
+      if (rows[i]?.date > rows[i + 1]?.date) {
+        toast.error("Date should be in ascending order", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        return;
+      }
+    }
+    // Calculate total principal amount
+    const totalAmount = rows.reduce(
+      (sum, row) => sum + Number.parseFloat(row.amount || 0),
+      0
+    );
+
+  
+
+    if (parseFloat(detailRows[currentDetailIndex]?.valuation) < totalAmount) {
+      toast.error(
+        `Principal amount should be less than or equal to total Valuation
+         ${detailRows[currentDetailIndex]?.valuation}`,
+        {
+          position: "top-right",
+          autoClose: 3000,
+        }
+      );
+      return;
     }
 
     // Check for duplicate Lot No + srl + srl_Prn
@@ -477,12 +440,6 @@ const OpenEntryForm = () => {
       }
       uniqueKeys.add(key);
     }
-
-    // Calculate total principal amount
-    const totalAmount = rows.reduce(
-      (sum, row) => sum + Number.parseFloat(row.amount || 0),
-      0
-    );
 
     // Update the detail row with principal details and total amount
     const updatedDetailRows = [...detailRows];
@@ -574,20 +531,24 @@ const OpenEntryForm = () => {
     }));
   }, [CostCenterList]);
 
-  const customer = useMemo(() => {
-    return CustomerList.map((item) => ({
+ useEffect(() => {
+    let arr=CustomerList.map((item) => ({
       label: `${item?.Name}`,
       value: item?.ID,
     }));
+   setCustomer(arr);
   }, [CustomerList]);
 
-  const wholeseller = useMemo(() => {
-    return WholeSellerList.map((item) => ({
+  useEffect(() => {
+    let arr= WholeSellerList.map((item) => ({
       label: `${item?.Name}`,
       value: item?.ID,
     }));
-  }, [WholeSellerList]);
+    setWholeseller((prev)=>arr);
+    ClearWSList();
+  }, [isWsSuccess]);
 
+  
   const warehouselist = useMemo(() => {
     return WareHouseList.map((item) => ({
       label: `${item?.CODE}`,
@@ -602,7 +563,7 @@ const OpenEntryForm = () => {
       key: "srl_Prn",
       type: "text",
       width: "65px",
-      readOnly: true, // Make it read-only
+      isReadOnly: true, // Make it read-only
     },
     {
       label: "Date",
@@ -611,19 +572,20 @@ const OpenEntryForm = () => {
       width: "150px",
       banglaDate: true,
       LostFocus: (rowIndex, val) => {
-        if (rowIndex !== 0) {
+        if (rowIndex >= 0) {
           const checkdate2 = Number.parseInt(
             val.toString().replace(/-/g, ""),
             10
           );
           const checkdate1 = Number.parseInt(
-            headerData.date.toString().replace(/-/g, ""),
+            headerData?.date.toString().replace(/-/g, ""),
             10
           );
           if (checkdate2 < checkdate1) {
             toast.error(
-              "2nd time Principle Rcv Date should be greater than to opening date"
+              "Principle Rcv date should be greater than or equal to entry date"
             );
+           // rows[rowIndex].date = headerData?.date;
           }
         }
       },
@@ -644,10 +606,11 @@ const OpenEntryForm = () => {
       PlaceHolder: "Select Payment Mode",
       data: [
         { label: "Cash", value: 1 },
-        { label: "Bank", value: 2 },
+        { label: "Bank Transfer", value: 2 },
         { label: "UPI", value: 3 },
+        { label: "Adjust", value: 4 },
       ],
-      width: "180px",
+      width: "150px",
     },
     {
       label: "Reminder Wadah",
@@ -669,7 +632,120 @@ const OpenEntryForm = () => {
     },
   ];
 
-  //-----------------------------------state Control by useEffect--------------------------
+  //-----------------------------------useEffect--------------------------------//
+
+  useEffect(() => {
+    if (GoldRateList?.length > 0 && detailRows?.length == 0) {
+      let arr = [...detailRows];
+      let len = arr?.length;
+      let obj = { ...arr[len - 1] };
+      obj.rate =GoldRateList[0]?.GOLD_RATE||0;
+      arr[len - 1] = obj;
+      setDetailRows(arr);
+    }
+  }, [isGoldRateLoading, GoldRateList, detailRows?.length]);
+
+  //valuation calculation
+  useEffect(() => {
+    if (trackchange.index === undefined || !trackchange.name) return;
+
+    const { index, name, value } = trackchange;
+    const updatedRows = [...detailRows];
+    const row = updatedRows[index];
+    // Check if row is undefined
+    if (!row) return;
+    switch (name) {
+      case "rate":
+        row.valuation = "";
+        break;
+      case "netWeight":
+        row.valuation = "";
+        row.percentage = "";
+        break;
+      case "grossWeight":
+        row.valuation = "";
+        row.netWeight = "";
+        row.percentage = "";
+        break;
+      case "percentage":
+        row.netWeight = "";
+        row.valuation = "";
+        break;
+      case "valuation":
+        row.rate = "";
+        // Don't reset percentage when valuation changes
+        break;
+      // Don't reset any fields when description changes
+      case "description":
+        break;
+    }
+ 
+    // Get current values (use updated values where available)
+    const grossWeight =
+      name === "grossWeight"
+        ? Number.parseFloat(value) || 0
+        : Number.parseFloat(row.grossWeight) || 0;
+    const netWeight =
+      name === "netWeight"
+        ? Number.parseFloat(value) || 0
+        : Number.parseFloat(row.netWeight) || 0;
+    const percentage =
+      name === "percentage"
+        ? Number.parseFloat(value > 100 ? 0 : value)
+        : Number.parseFloat(row.percentage) || 0;
+    const rate =
+      name === "rate"
+        ? Number.parseFloat(value) || 0
+        : Number.parseFloat(row.rate) || 0;
+
+    // Skip calculations if we're just changing the description
+    if (name === "description") return;
+
+    if (netWeight != "" && grossWeight != "" && netWeight > grossWeight) {
+      row.valuation = "";
+      row.percentage = "";
+    }
+
+    let calculatedNetWeight = netWeight,
+      calculatedPercentage = 0,
+      val = 0;
+
+    // Calculate netWeight if grossWeight and percentage are provided
+    if (
+      grossWeight !== "" &&
+      percentage !== "" &&
+      name !== "netWeight" &&
+      name == "percentage"
+    ) {
+      calculatedNetWeight = grossWeight * (percentage / 100);
+      row.netWeight = calculatedNetWeight.toFixed(2);
+    }
+ 
+    // Calculate percentage if grossWeight and netWeight are provided
+    if (
+      grossWeight > 0 &&
+      (calculatedNetWeight > 0 || netWeight > 0) &&
+      name !== "percentage" &&
+      (name === "grossWeight" || name === "netWeight")
+    ) {
+      calculatedPercentage =
+        ((calculatedNetWeight > 0 ? calculatedNetWeight : netWeight) /
+          grossWeight) *
+        100;
+      row.percentage = Number.parseFloat(
+        calculatedPercentage.toFixed(2) > 100
+          ? 0
+          : calculatedPercentage.toFixed(2)
+      );
+    }
+
+    // Calculate valuation if netWeight and rate are provided
+    if ((calculatedNetWeight > 0 || netWeight > 0) && rate > 0) {
+      val = (calculatedNetWeight <= 0 ? netWeight : calculatedNetWeight) * rate;
+      row.valuation = val.toFixed(2);
+    }
+    setDetailRows(updatedRows);
+  }, [trackchange]);
 
   // Add this useEffect hook to focus on newly added row
   useEffect(() => {
@@ -679,11 +755,12 @@ const OpenEntryForm = () => {
     }
     prevDetailRowsLength.current = detailRows.length;
   }, [detailRows.length]);
+
   useEffect(() => {
     if (OpenEntrySuccess) {
       toast.success("Entry Added Successfully");
       setHeaderData({
-        date: "",
+        date: user?.date,
         packetNo: "",
         costCenter: "",
         id_costcenter: "",
@@ -693,6 +770,8 @@ const OpenEntryForm = () => {
         warehouse: "",
         id_warehouse: "",
         CompanyID: CompanyID,
+        Cust_Type: entityType,
+        TranCode:trancode
       });
       setDetailRows([]);
     }
@@ -701,23 +780,30 @@ const OpenEntryForm = () => {
 
     ClearStateOpenEntryAdd();
   }, [OpenEntrySuccess, OpenEntryError, ClearStateOpenEntryAdd]);
+
   // Mock data fetching (replace with actual API calls)
   useEffect(() => {
     fetchCostCenter({ CompanyID, Type: entityType });
-
+    fetchGoldRate({
+      CompanyID: CompanyID,
+      today: moment().format("YYYY-MM-DD"),
+      Cust_Type: entityType,
+    });
+   
     if (entityType == 1) {
       fetchCustomrData({ CompanyID });
-    } else {
+    }
+    else {
       //wholeseller fetching
+      fetchAdminSetUp({ Filter: "Default Wadha", CompanyID: CompanyID });
       fetchWSomrData({ CompanyID: CompanyID });
     }
     fetchWareHouse({ CompanyID });
     if (dateInputRef.current) {
       dateInputRef.current.focus(); // ✅ Focus on the date field when page loads
     }
-
     setHeaderData({
-      date: "",
+      date:user?.date,
       packetNo: "",
       costCenter: "",
       id_costcenter: "",
@@ -733,28 +819,26 @@ const OpenEntryForm = () => {
     setRows([{ rowid: 1, id: 1, ...prn_row }]);
     setDetailRows([]);
   }, [entityType, trancode]);
+
   useEffect(() => {
     onfocusinput();
   }, [rows.length]);
+
   useEffect(() => {
     if (srlInputRef.current) {
       srlInputRef.current.focus(); // ✅ Focus on the date field when page loads
     }
   }, [detailRows.length]);
-  //gold rate api call
+
   useEffect(() => {
-    if (detailRows?.length > 0) {
-      fetchGoldRate({
-        CompanyID: CompanyID,
-        today: moment().format("YYYY-MM-DD"),
-      });
-    }
-  }, [detailRows?.length]);
+    setSetUp(() => AdminSetUp[0]);
+    setPrnRow((prev) => ({ ...prev, actualWadah: AdminSetUp[0]?.Days }));
+  }, [isAdminSetUpSuccess]);
 
   return (
     <Container fluid style={{ width: "98%", padding: 0 }}>
       <ToastContainer />
-      <Row style={{ marginTop: "60px", width: "100%" }}>
+      <Row style={{ marginTop: "50px", width: "100%" }}>
         <Col
           xs={12}
           sm={12}
@@ -764,11 +848,11 @@ const OpenEntryForm = () => {
           style={{ paddingLeft: "15px", margin: "0px" }}
         >
           <div className="d-flex justify-content-between">
-            <h5 style={{ fontSize: "18px" }}>
+            <h5>
               {trancode === "0RC" || trancode === "0RW"
                 ? "Opening"
-                : "Recive/Dafa"}{" "}
-              Entry of {entityType == 1 ? "Customer" : "Wholesaler "}{" "}
+                : "Recive/Dafa"}
+              Entry of {entityType == 1 ? "Customer" : "Wholesaler "}
             </h5>
           </div>
           <hr className="my-1" />
@@ -832,7 +916,7 @@ const OpenEntryForm = () => {
                       SearchIcon={<i className="bi bi-calendar"></i>}
                       SearchHandler={handleShow}
                       maxlen={100}
-                      value={headerData?.date || ""}
+                      value={headerData?.date || user?.date}
                       onFocusChange={() => {
                         if (!headerData?.date) {
                         } else {
@@ -985,12 +1069,6 @@ const OpenEntryForm = () => {
                   <th>Rate</th>
                   <th>Valuation*</th>
                   <th>Principal Amt*</th>
-                  {/* <th>Date</th>
-                  <th>Packet No</th>
-                  <th>Cost Center</th>
-                  <th>Lot No</th>
-                  <th>{entityType == 1 ? "Customer" : "Wholeseller"} Name</th>
-                  <th>Warehouse</th> */}
                   <th>Action</th>
                 </tr>
               </thead>
@@ -1056,12 +1134,11 @@ const OpenEntryForm = () => {
                         placeholder="Rate"
                         className="input-cell"
                         name="rate"
-                        value={row?.rate||""}
+                        value={row?.rate || ""}
                         onChange={(e) => handleDetailChange(index, e)}
                         type="number"
                         step="0.01"
                         style={{ width: "100%" }}
-                      
                       />
                     </td>
                     <td style={{ width: "130px" }}>
@@ -1099,29 +1176,13 @@ const OpenEntryForm = () => {
                           size="sm"
                           className="ms-1"
                           onClick={() => handleOpenModal(index)}
+                          disabled={row.valuation === "" || row.valuation === 0 || row.valuation === null}
                         >
                           <i className="bi bi-pencil-square"></i>
                         </Button>
                       </div>
                     </td>
-                    {/* <td style={{ padding: "5px 8px", width: "100px" }}>
-                      {row.date}
-                    </td>
-                    <td style={{ padding: "5px 8px", width: "100px" }}>
-                      {row.packetNo}
-                    </td>
-                    <td style={{ padding: "5px 8px", width: "100px" }}>
-                      {row.costCenter}
-                    </td>
-                    <td style={{ padding: "5px 8px", width: "100px" }}>
-                      {row.lotNo}
-                    </td>
-                    <td style={{ padding: "5px 8px", width: "150px" }}>
-                      {row.customerName}
-                    </td>
-                    <td style={{ padding: "5px 8px", width: "100px" }}>
-                      {row.warehouse}
-                    </td> */}
+
                     <td style={{ width: "80px" }}>
                       <Button
                         variant="danger"
@@ -1153,6 +1214,7 @@ const OpenEntryForm = () => {
 
       {/* Modal for Principal Amount Details */}
       <ReusableModal
+        isFullScreen={true}
         show={showModal}
         Title={"Principal Amount Details"}
         isPrimary={true}
@@ -1165,7 +1227,7 @@ const OpenEntryForm = () => {
         key={4}
         body={
           <div>
-            <EstimateTable
+            <EstimateTable 
               columns={detailColumns}
               rows={rows || [[{ rowid: 1, id: 1, ...prn_row }]]}
               handleChange={handleDetailModalChange}
@@ -1173,8 +1235,8 @@ const OpenEntryForm = () => {
               isDelete={true}
               id={"rowid"}
               toaster={toast}
-              tableWidth={"80vw"}
               priorityref={srlPrnInputRef}
+              tableWidth="100%"
             />
           </div>
         }

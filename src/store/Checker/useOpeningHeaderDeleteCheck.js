@@ -1,16 +1,21 @@
 import { create } from "zustand";
 import axiosInstance from "../AxiosInterceptor";
-const API = `${process.env.REACT_APP_BASEURL}/transaction-routes/delcheck-openingheader`;
+let API = `${process.env.REACT_APP_BASEURL}/transaction-routes/delcheck-openingheader`;
 const useOpeningHeaderDeleteCheck = create((set) => ({
   CheckOpeningHeaderDeleteCheckMsg: "",
-  isCheckOpeningHeaderDeleteCheck:-1,
+  isCheckOpeningHeaderDeleteCheck: -1,
   isCheckOpeningHeaderDeleteCheckLoading: false,
   CheckOpeningHeaderDeleteCheckErr: null,
 
   CheckOpeningHeaderDeleteCheck: async (userdata) => {
     try {
+
+      const endpoint =
+        userdata?.Cust_Type == 3
+          ? `${process.env.REACT_APP_BASEURL}/mahajon-routes/mahajonopeningheaderdeletecheck`
+          : `${process.env.REACT_APP_BASEURL}/transaction-routes/delcheck-openingheader`;
       set({ isCheckOpeningHeaderDeleteCheckLoading: true });
-      const result = await axiosInstance.post(API, userdata);
+      const result = await axiosInstance.post(endpoint, userdata);
       const { success, response } = result.data;
 
       set({
@@ -32,7 +37,7 @@ const useOpeningHeaderDeleteCheck = create((set) => ({
     set({
       isCheckOpeningHeaderDeleteCheckLoading: false,
       CheckOpeningHeaderDeleteCheckErr: null,
-      isCheckOpeningHeaderDeleteCheck:-1,
+      isCheckOpeningHeaderDeleteCheck: -1,
     });
   },
 }));

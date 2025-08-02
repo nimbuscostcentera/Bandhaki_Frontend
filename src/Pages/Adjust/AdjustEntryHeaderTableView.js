@@ -18,19 +18,31 @@ import AdjustEntryDetailTableView from "./AdjustEntryDetailTableView";
 import { useLocation, useSearchParams } from "react-router-dom";
 import BongDateSorting from "../../GlobalFunctions/BongDateSorting";
 import SortArrayByTime from "../../GlobalFunctions/SortArrayByTime";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import useFetchAdjustDetailReport from "../../store/ShowStore/useFetchAdjustDetailReport";
 import BongDatePicker from "../../Component/BongDatePicker";
+import useAdjustVouDelete from "../../store/DeleteStore/useAdjustVoucherDelete";
+import useAdjustDeleteCheck from "../../store/Checker/useAdjustDeleteCheck";
+import DeleteConfirmation from "../../Component/ReusableDelete";
 
 function AdjustEntryHeaderTableView() {
   //---------other state-------
   const location = useLocation();
-  const { custId, customertype } = location?.state || {};
+  const { custId, customertype, trancode } = location?.state || {};
 
   //------use state hooks----------//
   const [searchParams] = useSearchParams();
-  let entityType = searchParams.get("type") === "customer" ? 1 : 2;
+  let entityType =
+    searchParams.get("type") === "customer"
+      ? 1
+      : searchParams.get("type") === "wholeseller"
+      ? 2
+      : 3;
   entityType = customertype ? customertype : entityType;
+
+  let Trancode = searchParams.get("trancode");
+
+  Trancode = trancode ? trancode : Trancode;
   const [Filters, setFilters] = useState({
     StartDate: null,
     EndDate: null,
@@ -47,7 +59,8 @@ function AdjustEntryHeaderTableView() {
     View1: false,
     View2: false,
   });
-
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
   //-----------------------api calls--------------------------------
 
   const { user, CompanyID } = useFetchAuth();
@@ -60,6 +73,22 @@ function AdjustEntryHeaderTableView() {
     fetchAdjustEntryHeader,
     searchAdjustEntryHeader,
   } = useFetchAdjustEntryHeader();
+  const {
+    DeleteAdjustVou,
+    ClearAdjustVouDelete,
+    AdjustVouDeleteErr,
+    isAdjustVouDeleteLoading,
+    AdjustVouDeleteMsg,
+  } = useAdjustVouDelete();
+
+  const {
+    CheckAdjustDeleteCheckMsg,
+    isCheckAdjustDeleteCheck,
+    isCheckAdjustDeleteCheckLoading,
+    CheckAdjustDeleteCheckErr,
+    ClearCheckAdjustDeleteCheck,
+    CheckAdjustDeleteCheck,
+  } = useAdjustDeleteCheck();
   //--------------------------function call-----------------------------
 
   //edit input handler
@@ -155,6 +184,7 @@ function AdjustEntryHeaderTableView() {
       custId !== null &&
       custId !== ""
     ) {
+      console.log( "performSearch");
       fetchAdjustEntryHeader({
         CustomerID: custId || null,
         CompanyID: user?.CompanyID,
@@ -163,6 +193,7 @@ function AdjustEntryHeaderTableView() {
         EndDate: Filters?.EndDate,
       });
     } else {
+      console.log("performSearch");
       searchAdjustEntryHeader({
         keyword: searchTerm.trim(),
         date: searchDate,
@@ -174,26 +205,66 @@ function AdjustEntryHeaderTableView() {
     }
   };
 
+  const handleDeleteClick = (index) => {
+    const selectedObj = filteredData[index];
+    console.log(selectedObj, "selectedObj");
+    setInitialCustId((prev) => selectedObj?.id_Customer);
+    if (!initialCustId) {
+      return;
+    }
+    // console.log(initialCustId);
+    CheckAdjustDeleteCheck({
+      ID: selectedObj?.ID,
+      TranCode: Trancode,
+      Cust_Type: entityType,
+    });
+    setItemToDelete(selectedObj);
+    //  setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (itemToDelete) {
+      DeleteAdjustVou({
+        ID: itemToDelete?.ID,
+        // Cust_ID: initialCustId,
+        TranCode: Trancode,
+        Cust_Type: entityType,
+      });
+      setShowDeleteModal(false);
+      setItemToDelete(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setItemToDelete(null);
+  };
   //--------------------------useEffects-----------------------------
 
   // Modified data fetch useEffect
   useEffect(() => {
     if (custId) {
       performSearch();
-    }
-    else
-    {
+    } else {
       if (searchTerm === "" && !searchDate) {
         setFilteredData([]);
       }
-      if (searchTerm.trim() || searchDate || (Filters?.StartDate && Filters?.EndDate)) {
+      if (
+        searchTerm.trim() ||
+        searchDate ||
+        (Filters?.StartDate && Filters?.EndDate)
+      ) {
         const debounceTimer = setTimeout(() => {
           performSearch();
         }, 500);
         return () => clearTimeout(debounceTimer);
       }
     }
-  }, [searchDate, searchTerm, custId,Filters]);
+  }, [searchDate, searchTerm, custId, Filters]);
+
+
+
+
   //debouncing
   useEffect(() => {
     if (isAdjustDetailError) {
@@ -248,13 +319,70 @@ function AdjustEntryHeaderTableView() {
     setSearchDate("");
     ClearstateAdjustEntryList();
   }, [entityType]);
+
+  useEffect(() => {
+    if (isCheckAdjustDeleteCheck == 1) {
+      // If check passes, show the delete confirmation modal
+      if (itemToDelete) {
+        setShowDeleteModal(true);
+      }
+    } else if (isCheckAdjustDeleteCheck === 2) {
+      toast.dismiss();
+      toast.warning(CheckAdjustDeleteCheckErr, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+    ClearCheckAdjustDeleteCheck();
+  }, [isCheckAdjustDeleteCheckLoading, isCheckAdjustDeleteCheck]);
+
+  useEffect(() => {
+    if (AdjustVouDeleteMsg) {
+      toast.success(AdjustVouDeleteMsg, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+    if (custId) {
+      performSearch();
+    } else {
+      if (searchTerm === "" && !searchDate) {
+        setFilteredData([]);
+      }
+      if (
+        searchTerm.trim() ||
+        searchDate ||
+        (Filters?.StartDate && Filters?.EndDate)
+      ) {
+        const debounceTimer = setTimeout(() => {
+          performSearch();
+        }, 500);
+        return () => clearTimeout(debounceTimer);
+      }
+    }
+   
+    if (AdjustVouDeleteErr) {
+      toast.error(AdjustVouDeleteErr, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+    ClearAdjustVouDelete();
+  }, [AdjustVouDeleteErr, isAdjustVouDeleteLoading, AdjustVouDeleteMsg]);
   //-------------------------variables call-----------------------------
   const paymentMode = [
     { label: "Cash", Value: 1 },
-    { label: "UPI", Value: 2 },
-    { label: "Bank Transfer", Value: 3 },
+    { label: "Bank Transfer", Value: 2 },
+    { label: "UPI", Value: 3 },
+    { label: "Adjust", value: 4 },
   ];
   const columns = [
+    {
+      headername: "ID",
+      fieldname: "ID",
+      type: "number",
+      width:"65px"
+    },
     {
       headername: "Customer",
       fieldname: "CustomerName",
@@ -310,7 +438,7 @@ function AdjustEntryHeaderTableView() {
     },
 
     {
-      headername: "CreditAmt",
+      headername: entityType == 3 ? "DebitAmt" : "CreditAmt",
       fieldname: "CreditAmt",
       type: "number",
     },
@@ -334,51 +462,53 @@ function AdjustEntryHeaderTableView() {
   return (
     <Container fluid className="pt-5">
       <ToastContainer />
-      <Row className="pt-2">
-        <Col xl={12} lg={12} md={12} sm={12} xs={12}>
-          <div className="d-flex align-items-center justify-content-between flex-wrap">
-            <div>
-              <h5 className="mt-2" style={{ fontSize: "18px" }}>
-                Adjusted Dafa of {entityType == 1 ? "Customer" : "Wholesaler"}
-              </h5>
-            </div>
-            <div className="d-flex justify-content-between flex-wrap align-items-end">
-              <div>
-                <BongDatePicker
-                  view1={view?.View1}
-                  view2={view?.View2}
-                  endDate={Filters?.EndDate}
-                  startDate={Filters?.StartDate}
-                  handleChange={HandleInputDateRange}
-                  handleClose={handleClose}
-                  handleOpenEndDate={handleShow2}
-                  handleOpenStartDate={handleShow1}
-                />
-              </div>
-              <div className="mt-1 mb-0">
-                <InputGroup>
-                  <Form.Control
-                    autoFocus
-                    placeholder="Search..."
-                    aria-label="search"
-                    aria-describedby="basic-addon1"
-                    style={{ width: "340px", zIndex: "1", padding: "3px 5px" }}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </InputGroup>
-              </div>
-            </div>
-          </div>
-          <hr className="my-1" />
+      <Row className="pt-2 ">
+        <Col
+          xl={4}
+          lg={4}
+          md={6}
+          sm={12}
+          xs={12}
+          className="text-md-start text-sm-center"
+        >
+          <h5 className="mt-2">
+            Adjusted Dafa of
+            {entityType == 1
+              ? " Customer"
+              : entityType == 2
+              ? " Wholesaler"
+              : " Mahajon"}
+          </h5>
+        </Col>
+        <Col xl={4} lg={5} md={6} sm={12} xs={12} className="my-2">
+          <BongDatePicker
+            view1={view?.View1}
+            view2={view?.View2}
+            endDate={Filters?.EndDate}
+            startDate={Filters?.StartDate}
+            handleChange={HandleInputDateRange}
+            handleClose={handleClose}
+            handleOpenEndDate={handleShow2}
+            handleOpenStartDate={handleShow1}
+          />
+        </Col>
+        <Col xl={4} lg={3} md={12} sm={12} xs={12} className="my-2">
+          <InputGroup>
+            <Form.Control
+              autoFocus
+              placeholder="Search..."
+              aria-label="search"
+              aria-describedby="basic-addon1"
+              style={{ width: "100%", zIndex: "1", padding: "3px 5px" }}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </InputGroup>
         </Col>
 
         {/* Table */}
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
-          <div
-            className="table-box"
-            style={{ height: "75vh", border: "1px solid lightgrey" }}
-          >
+          <div className="table-box">
             {filteredData?.length > 0 ? (
               <Table
                 Col={columns}
@@ -389,18 +519,27 @@ function AdjustEntryHeaderTableView() {
                 isView={true}
                 handleViewClick={handleViewClick}
                 // EditedData={editedData}
+                // handleDelete={handleDelete}
+                isDelete={true}
+                handleDelete={handleDeleteClick}
+                height={"75vh"}
               />
             ) : isAdjustEntryListLoading ? (
-              <div className="d-flex justify-content-center align-items-center h-100">
+              <div className="d-flex justify-content-center align-items-center">
                 <div className="spinner-border text-primary" role="status">
                   <span className="visually-hidden">Loading...</span>
                 </div>
               </div>
             ) : (
-              <div className="d-flex justify-content-center align-items-center h-100 text-muted">
-                {searchTerm || searchDate
-                  ? "No results found. Try a different search."
-                  : "Use the search bar or date picker to find entries."}
+              <div
+                style={{ height: "80vh" }}
+                className="d-flex justify-content-center align-items-center border border-secondary border-opacity-25"
+              >
+                <div className="text-muted">
+                  {searchTerm || searchDate
+                    ? "No results found. Try a different search."
+                    : "Use the search bar or date picker to find entries."}
+                </div>
               </div>
             )}
           </div>
@@ -422,6 +561,11 @@ function AdjustEntryHeaderTableView() {
         isPrimary={true}
         handlePrimary={CloseHandler}
         PrimaryButtonName={"Close"}
+      />
+      <DeleteConfirmation
+        show={showDeleteModal}
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
       />
     </Container>
   );

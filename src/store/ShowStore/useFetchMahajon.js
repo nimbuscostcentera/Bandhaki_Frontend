@@ -1,11 +1,11 @@
 import { create } from "zustand";
-import axios from "axios";
 import axiosInstance from "./../AxiosInterceptor";
 const API = `${process.env.REACT_APP_BASEURL}/data-routes/mahajan-list`;
 const useFetchMahajon = create((set) => ({
   MahajonList: [],
   isLoadingMahajon: false,
   errorMahajon: null,
+  isMJSuccess: false,
 
   fetchMahajonData: async (userdata) => {
     set({ isLoadingMahajon: true, error: null }); // Start isLoadingMahajon
@@ -17,9 +17,10 @@ const useFetchMahajon = create((set) => ({
     } catch (error) {
       set({ errorMahajon: error.message }); // Handle errors
     }
-    set({ isLoadingMahajon: false });
+    set({ isLoadingMahajon: false, isMJSuccess: true });
   },
-  ClearMahajonList: () => set({ isLoadingMahajon: false, errorMahajon: null }),
+  ClearMahajonList: () =>
+    set({ isLoadingMahajon: false, errorMahajon: null, isMJSuccess: false }),
 }));
 
 export default useFetchMahajon;

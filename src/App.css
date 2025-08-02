@@ -1,4 +1,12 @@
-
+:root {
+  --sidebar-width: 180px;
+  --sidebar-collapsed-width: 55px;
+  --background-light: #f8f8ff;
+  --background-dark: #192532;
+  --text-light: rgb(199, 199, 199);
+  --text-dark: white;
+  font-size: small;
+}
 .input-cell {
   font-size: 12px;
   text-align: end;

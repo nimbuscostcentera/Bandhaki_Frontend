@@ -17,7 +17,13 @@ const useFetchOpeningDetailReport = create((set) => ({
   fetchOpeningDetail: async (userdata) => {
     set({ isOpeningDetailLoading: true, isOpeningDetailError: null });
     try {
-      const result = await axiosInstance.post(API, userdata);
+
+
+      const endpoint =
+        userdata?.Cust_Type == 3
+          ? `${process.env.REACT_APP_BASEURL}/mahajon-routes/mahajonopeningdetail-show`
+          : `${process.env.REACT_APP_BASEURL}/transaction-routes/openingdetailbyid-show`;
+      const result = await axiosInstance.post(endpoint, userdata);
       const { data } = result;
       set({
         isOpeningDetailListSuccess: true,

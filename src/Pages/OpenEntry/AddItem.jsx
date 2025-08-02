@@ -1,12 +1,15 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import { Button } from "react-bootstrap";
-import ReusableModal from "../../Component/ReusableModal";
-import AddPrinciple from "./AddPrinciple";
-import useAddExtraItem from "../../store/AddStore/useAddExtraItem";
-import useFetchAuth from "../../store/Auth/useFetchAuth";
 
-function AddItem({
+import AddPrinciple from "./AddPrinciple";
+import ReusableModal from "../../Component/ReusableModal";
+
+import useFetchAuth from "../../store/Auth/useFetchAuth";
+import useAddExtraItem from "../../store/AddStore/useAddExtraItem";
+import useFetchAdminSetUp from "../../store/ShowStore/useFetchAdminSetUp";
+
+function AddItem({ 
   newrow,
   params,
   setParams,
@@ -16,30 +19,11 @@ function AddItem({
   entityType,
   headerData,
   headerid,
-
 }) {
-  //-----------------------------------usestate & useref------------------------------------------//
-  const prn_row = {
-    interestPercentage: null,
-    srl_Prn: 1,
-    date: null,
-    amount: null,
-    paymentMode: 1,
-    reminderWadah: null,
-    actualWadah: null,
-  };
-
-  const srlInputRef = useRef(null);
-  const srlPrnInputRef = useRef(null);
-  const [showModal, setShowModal] = useState(false);
-
-  const [detailRows, setDetailRows] = useState([]);
-  const [trackchange, setTrackChange] = useState({
-    index: 0,
-    value: 0,
-    name: 0,
-  });
   //------------------------------------API call------------------------------------------------------//
+  
+  const { CompanyID, user } = useFetchAuth();
+  
   const {
     ClearStateExtraItemAdd,
     ExtraItemAddError,
@@ -47,12 +31,43 @@ function AddItem({
     ExtraItemAddSuccess,
     ExtraItemAdd,
   } = useAddExtraItem();
-  const {CompanyID}=useFetchAuth()
+
+  const { AdminSetUp, ClearAdminSetUp, fetchAdminSetUp, isAdminSetUpSuccess }=useFetchAdminSetUp();
+
+  //-----------------------------------usestate & useref------------------------------------------//
+
+  const srlInputRef = useRef(null);
+  const [showModal, setShowModal] = useState(false);
+  const [detailRows, setDetailRows] = useState([]);
+  const [trackchange, setTrackChange] = useState({
+    index: 0,
+    value: 0,
+    name: 0,
+  });
+
+  const [prn_row, setPrnRow] = useState({
+    interestPercentage: null,
+    srl_Prn: 1,
+    date: user?.date,
+    amount: null,
+    paymentMode: 1,
+    reminderWadah: null,
+    actualWadah: entityType!==1 ? (AdminSetUp[0] ?.Days||null) :null,
+    LotNo: lotno,
+    TranCode: trancode,
+    Cust_Type: entityType,
+  });
+
   //-------------------------------------functions-----------------------------------//
   const handleDetailChange = (index, e) => {
     const { name, value } = e.target;
     const updatedRows = [...detailRows];
-
+    // Track the change to trigger calculations
+    setTrackChange(()=>({
+      index,
+      name,
+      value,
+    }));
     // Validation patterns
     const amountRegex = /^(\d*\.?\d{0,2})?$/;
     const weightRegex = /^(\d*\.?\d{0,3})?$/;
@@ -72,40 +87,27 @@ function AddItem({
     // Update the changed field
     updatedRows[index][name] = value;
     setDetailRows(updatedRows);
-
-    // Track the change to trigger calculations
-    setTrackChange({
-      index,
-      name,
-      value,
-    });
   };
   //row delete
   const deleteDetailRow = (index) => {
     setParams((prev) => ({ ...prev, isDelete: true }));
     let arr = [...detailRows];
     const updatedRows = arr?.filter((i) => {
-      return i?.srl != (index + 1 + lastSrl);
+      return i?.srl != index + 1 + lastSrl;
     });
     console.log(index);
     // Resequence the SRL numbers for all remaining rows
     updatedRows.forEach((row, i) => {
-      row.srl = (lastSrl + i + 1).toString(); 
+      row.srl = (lastSrl + i + 1).toString();
     });
     setParams((prev) => {
       let countrow = 0;
-      if (prev?.ItemCounter - 1 >= 0)
-        countrow=params?.ItemCounter-1;
+      if (prev?.ItemCounter - 1 >= 0) countrow = params?.ItemCounter - 1;
       console.log(countrow);
-      return { ...prev, ItemCounter: countrow,isDelete:true };
+      return { ...prev, ItemCounter: countrow, isDelete: true };
     });
     setDetailRows(updatedRows);
   };
-  function onfocusinput() {
-    if (srlPrnInputRef.current) {
-      srlPrnInputRef.current.focus(); // ✅ Focus on the date field when page loads
-    }
-  }
   const handleOpenModal = (index) => {
     setShowModal(true);
     setTrackChange((prev) => ({ ...prev, index: index }));
@@ -125,6 +127,26 @@ function AddItem({
     setShowModal(false);
   };
   const handleSubmit = () => {
+    let flag = 0;
+    detailRows?.forEach((item) => {
+      if (!item)
+      {
+        flag = 1;
+      }
+      if (
+        !item?.principalAmount ||
+        !item?.valuation ||
+        !item?.grossWeight ||
+        !item?.netWeight  ) {
+        flag = 1;        
+      } 
+    });
+    if (flag == 1)
+    {
+      toast.error("Enter All Required Fields!");
+      return;
+    }
+
     let finalobj = {
       ...headerData,
       Cust_Type: entityType,
@@ -133,7 +155,6 @@ function AddItem({
       details: [...detailRows],
       CompanyID,
     };
-    console.log(finalobj);
     ExtraItemAdd(finalobj);
   };
   //-----------------------------------useEffect-----------------------------------------------------//
@@ -144,7 +165,7 @@ function AddItem({
     const { index, name, value } = trackchange;
     const updatedRows = [...detailRows];
     const row = updatedRows[index];
-
+    if (!row) return;
     // Reset dependent fields when their dependencies change
     switch (name) {
       case "rate":
@@ -165,6 +186,8 @@ function AddItem({
         break;
       case "valuation":
         row.rate = "";
+        break;
+      case "description":
         break;
       // Don't reset any fields when description changes
       default:
@@ -189,28 +212,50 @@ function AddItem({
         ? Number.parseFloat(value) || 0
         : Number.parseFloat(row.rate) || 0;
 
-    let calculatedNetWeight = netWeight;
-      // recalculatedPercentage = percentage;
+    if (name === "description") return;
+
+    if (netWeight != "" && grossWeight != "" && netWeight > grossWeight) {
+      row.valuation = "";
+      row.percentage = "";
+    }
+    let calculatedNetWeight = netWeight,
+      calculatedPercentage = 0,
+      val = 0;
 
     // Calculate netWeight if grossWeight and percentage are provided
-    if (grossWeight > 0 && percentage > 0) {
+    if (
+      grossWeight !== "" &&
+      percentage !== "" &&
+      name !== "netWeight" &&
+      name == "percentage"
+    ) {
       calculatedNetWeight = grossWeight * (percentage / 100);
       row.netWeight = calculatedNetWeight.toFixed(2);
     }
-    // if (calculatedNetWeight > 0 && grossWeight > 0 && rate > 0) {
-    //   Recalculate percentage based on the new netWeight (to ensure consistency)
-    //   recalculatedPercentage = (calculatedNetWeight / grossWeight) * 100;
-    //   row.percentage = Number.parseFloat(recalculatedPercentage.toFixed(2));
-    // }
-    if (calculatedNetWeight > 0 && rate > 0) {
-      row.valuation = (calculatedNetWeight * rate).toFixed(2);
-    }
-    if (grossWeight < netWeight) {
-      row.percentage = "";
-      row.netWeight = "";
-      row.valuation = "";
-    }
 
+    // Calculate percentage if grossWeight and netWeight are provided
+    if (
+      grossWeight > 0 &&
+      (calculatedNetWeight > 0 || netWeight > 0) &&
+      name !== "percentage" &&
+      (name == "grossWeight" || name == "netWeight")
+    ) {
+      calculatedPercentage =
+        ((calculatedNetWeight > 0 ? calculatedNetWeight : netWeight) /
+          grossWeight) *
+        100;
+      row.percentage = Number.parseFloat(
+        calculatedPercentage.toFixed(2) > 100
+          ? 0
+          : calculatedPercentage.toFixed(2)
+      );
+    }
+    // Calculate valuation if netWeight and rate are provided
+    if ((calculatedNetWeight > 0 || netWeight > 0) && rate > 0) {
+      val = (calculatedNetWeight <= 0 ? netWeight : calculatedNetWeight) * rate;
+      row.valuation = val.toFixed(2);
+    }
+ 
     setDetailRows(updatedRows);
   }, [trackchange]);
   //add row of table
@@ -218,24 +263,26 @@ function AddItem({
     if (params?.ItemCounter && params?.ItemCounter > -1 && !params?.isDelete) {
       if (params?.ItemCounter > 0) {
         setDetailRows((prev) => [
-          ...prev,
+          ...prev, 
           {
             srl: params?.ItemCounter + lastSrl,
             ...newrow,
-            PrnData: [{...prn_row}],
+            PrnData: [{ ...prn_row }],
           },
         ]);
       }
     }
     if (params?.ItemCounter == 0) {
-      console.log("hi");
       setDetailRows([]);
     }
   }, [params?.ItemCounter]);
   //toaster
   useEffect(() => {
     if (ExtraItemAddError) {
-      toast.error(ExtraItemAddError,{position:"top-right",autoClose:3000});
+      toast.error(ExtraItemAddError, {
+        position: "top-right",
+        autoClose: 3000,
+      });
     }
     if (ExtraItemAddSuccess) {
       toast.success(ExtraItemAddSuccess, {
@@ -244,8 +291,20 @@ function AddItem({
       });
     }
     ClearStateExtraItemAdd();
-  },[ExtraItemAddError,ExtraItemAddSuccess]);
-console.log(params?.ItemCounter)
+  }, [ExtraItemAddError, ExtraItemAddSuccess]);
+  //actual wadha
+  useEffect(() => {
+    if (entityType !== 1) {
+      fetchAdminSetUp({ Filter: "Default Wadha", CompanyID: CompanyID });
+    }
+  }, []);
+  //setup
+  useEffect(() => {
+    if (entityType !== 1 && AdminSetUp[0]?.Days) {
+      setPrnRow((prev) => ({ ...prev, actualWadah: AdminSetUp[0]?.Days }));
+    }
+    ClearAdminSetUp();
+  }, [AdminSetUp[0]?.Days,showModal]);
   return (
     <div>
       <div>
@@ -423,11 +482,17 @@ console.log(params?.ItemCounter)
               toaster={toast}
               handleSave={handleSave}
               prn_row={prn_row}
-              PrincipleRow={detailRows[trackchange?.index]?.PrnData}
+              PrincipleRow={
+                detailRows[trackchange?.index]?.PrnData || [prn_row]
+              }
+              maxlen={detailRows[trackchange?.index]?.PrnData?.length || 0}
               maxValuation={detailRows[trackchange?.index]?.valuation}
+              srl_Prn={"srl_Prn"}
+              entityType={entityType}
             />
           }
         />
+       
       </div>
       <div className="d-flex justify-content-end mt-1">
         <button className="btn btn-success py-1 px-2" onClick={handleSubmit}>

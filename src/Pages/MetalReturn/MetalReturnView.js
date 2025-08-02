@@ -25,11 +25,16 @@ function MetalReturnView() {
 
   const location = useLocation();
   const { custId, customertype, lotNo, srl } = location?.state || {};
-  // console.log(custId, customertype, lotNo,"1","2");
+  console.log(custId, customertype, lotNo,srl,"1","2");
 
   //------use state hooks----------//
   const [searchParams] = useSearchParams();
-  let entityType = searchParams.get("type") === "customer" ? 1 : 2;
+  let entityType =
+    searchParams.get("type") === "customer"
+      ? 1
+      : searchParams.get("type") === "wholeseller"
+      ? 2
+      : 3;
   entityType = customertype ? customertype : entityType;
   const [Filters, setFilters] = useState({
     StartDate: null,
@@ -135,7 +140,11 @@ function MetalReturnView() {
         SRL: srl || null,
         ...Filters,
       });
-    } else {
+    }
+    else if (
+      (searchTerm !== "" && searchTerm !== null && searchTerm !== undefined) ||
+      (searchDate !== "" && searchDate !== null && searchDate !== undefined)
+    ) {
       searchMetalReturnHeader({
         keyword: searchTerm.trim(),
         date: searchDate,
@@ -177,17 +186,30 @@ function MetalReturnView() {
 
   // Modified data fetch useEffect
   useEffect(() => {
+   
     if (custId) {
       performSearch();
     }
     else
     {
       if (
-        searchTerm.trim() ||
-        searchDate ||
+        (searchTerm !== "" &&
+          searchTerm !== undefined &&
+          searchTerm !== null &&
+          searchDate !== "" &&
+          searchDate !== null &&
+          searchDate !== undefined) ||
         (Filters?.StartDate && Filters?.EndDate) ||
         (!Filters?.StartDate && !Filters?.EndDate)
       ) {
+        console.log(
+          searchTerm,
+          searchDate,
+          custId,
+          entityType,
+          Filters?.StartDate,
+          Filters?.EndDate
+        );
         const debounceTimer = setTimeout(() => {
           performSearch();
         }, 500);
@@ -251,10 +273,16 @@ function MetalReturnView() {
   //-------------------------variables call-----------------------------
   const paymentMode = [
     { label: "Cash", Value: 1 },
-    { label: "UPI", Value: 2 },
-    { label: "Bank Transfer", Value: 3 },
+    { label: "Bank Transfer", Value: 2 },
+    { label: "UPI", Value: 3 },
+    { label: "Adjust", Value: 4 },
   ];
   const columns = [
+    {
+      headername: "ID",
+      fieldname: "ID",
+      type: "String",
+    },
     {
       headername: "Customer",
       fieldname: "CustomerName",
@@ -292,7 +320,6 @@ function MetalReturnView() {
     },
   ];
 
-  //   console.log(initialCustId);
   return (
     <Container fluid className="pt-5">
       <ToastContainer />
@@ -300,9 +327,13 @@ function MetalReturnView() {
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
           <div className="d-flex align-items-center justify-content-between flex-wrap my-2">
             <div>
-              <h5 className="mt-2" style={{ fontSize: "18px" }}>
-                Return Metal List for
-                {entityType == 1 ? " Customer" : " Wholesaler"}
+              <h5 className="mt-2">
+                View Return Metal
+                {entityType == 1
+                  ? " to Customer"
+                  : entityType == 2
+                  ? " to  Wholesaler"
+                  : " from  Mahajon"}
               </h5>
             </div>
             <div className="d-flex align-items-center justify-content-center text-nowrap">
@@ -388,10 +419,7 @@ function MetalReturnView() {
         </Col> */}
         {/* Table */}
         <Col xl={12} lg={12} md={12} sm={12} xs={12}>
-          <div
-            className="table-box"
-            style={{ height: "55vh", border: "1px solid lightgrey" }}
-          >
+          <div className="table-box">
             {filteredData?.length > 0 ? (
               <Table
                 Col={columns}
@@ -399,6 +427,7 @@ function MetalReturnView() {
                 OnChangeHandler={OnChangeHandler}
                 tab={filteredData || []}
                 isLoading={isMetalReturnListLoading}
+                height={"80%"}
                 // isView={true}
                 // handleViewClick={handleViewClick}
                 // EditedData={editedData}
@@ -410,32 +439,17 @@ function MetalReturnView() {
                 </div>
               </div>
             ) : (
-              <div className="d-flex justify-content-center align-items-center h-100 text-muted">
-                {searchTerm || searchDate
-                  ? "No results found. Try a different search."
-                  : "Use the search bar or date picker to find entries."}
+              <div className="d-flex justify-content-center align-items-center border border-secondary border-opacity-25" style={{height:"70vh"}}>
+                <div className="text-muted">
+                  {searchTerm || searchDate
+                    ? "No results found. Try a different search."
+                    : "Use the search bar or date picker to find entries."}
+                </div>
               </div>
             )}
           </div>
         </Col>
       </Row>
-      {/* Modal
-      <ReusableModal
-        show={params}
-        handleClose={CloseHandler}
-        body={
-          <AdjustEntryDetailTableView
-            id={selectedId}
-            CustomerID={initialCustId || -1}
-            handleClose={CloseHandler}
-            entityType={entityType}
-          />
-        }
-        Title={"Metal Return Detail View"}
-        isPrimary={true}
-        handlePrimary={CloseHandler}
-        PrimaryButtonName={"Close"}
-      /> */}
     </Container>
   );
 }

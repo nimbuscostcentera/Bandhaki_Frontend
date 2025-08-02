@@ -94,77 +94,7 @@ function CompanyTable({ setIsDisable, setTextDetail, search }) {
     }
   }, [CompanyRegSuccess, CompanyEditSuccess, currentPage, limit]);
 
-  // const renderPaginationItems = () => {
-  //   let items = [];
-  //   const maxVisiblePages = 5;
-  //   let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-  //   let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-  //   // Adjust start page if we're at the end
-  //   if (endPage - startPage < maxVisiblePages - 1) {
-  //     startPage = Math.max(1, endPage - maxVisiblePages + 1);
-  //   }
-
-  //   // Previous Button
-  //   items.push(
-  //     <Pagination.Prev
-  //       key="prev"
-  //       onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-  //       disabled={currentPage === 1}
-  //     />
-  //   );
-
-  //   // First Page
-  //   if (startPage > 1) {
-  //     items.push(
-  //       <Pagination.Item key={1} onClick={() => setCurrentPage(1)}>
-  //         1
-  //       </Pagination.Item>
-  //     );
-  //     if (startPage > 2) {
-  //       items.push(<Pagination.Ellipsis key="ellipsis-start" />);
-  //     }
-  //   }
-
-  //   // Page Numbers
-  //   for (let number = startPage; number <= endPage; number++) {
-  //     items.push(
-  //       <Pagination.Item
-  //         key={number}
-  //         active={number === currentPage}
-  //         onClick={() => setCurrentPage(number)}
-  //       >
-  //         {number}
-  //       </Pagination.Item>
-  //     );
-  //   }
-
-  //   // Last Page
-  //   if (endPage < totalPages) {
-  //     if (endPage < totalPages - 1) {
-  //       items.push(<Pagination.Ellipsis key="ellipsis-end" />);
-  //     }
-  //     items.push(
-  //       <Pagination.Item
-  //         key={totalPages}
-  //         onClick={() => setCurrentPage(totalPages)}
-  //       >
-  //         {totalPages}
-  //       </Pagination.Item>
-  //     );
-  //   }
-
-  //   // Next Button
-  //   items.push(
-  //     <Pagination.Next
-  //       key="next"
-  //       onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-  //       disabled={currentPage === totalPages}
-  //     />
-  //   );
-
-  //   return items;
-  // };
 
   // Populate filtered data while maintaining order
   useEffect(() => {
@@ -319,10 +249,7 @@ function CompanyTable({ setIsDisable, setTextDetail, search }) {
 
   return (
     <div>
-      <div
-        className="table-box"
-        style={{ height: "54vh", width: "90%", border: "1px solid lightgrey" }}
-      >
+      <div className="table-box" style={{ height: "35vh", width: "90%" }}>
         <Table
           tab={filteredData}
           isAction={params?.IsAction}
@@ -339,6 +266,7 @@ function CompanyTable({ setIsDisable, setTextDetail, search }) {
           getFocusText={(val) => {
             setTextDetail(val);
           }}
+          height={"35vh"}
         />
       </div>
       {/* Pagination Controls */}

@@ -114,7 +114,7 @@ function UserListEdit() {
   return (
     <Container fluid style={{ width: "100%", padding: 0 }}>
       <ToastContainer />
-      <Row style={{ marginTop: "60px", marginLeft: "3px", width: "98%" }}>
+      <Row style={{ marginTop: "50px", marginLeft: "1px", width: "98%" }}>
         <Col
           xs={12}
           sm={12}
@@ -125,7 +125,6 @@ function UserListEdit() {
         >
           <div className="d-flex justify-content-between">
             <div>
-              {" "}
               <h5>Add User</h5>
             </div>
           </div>
@@ -244,52 +243,44 @@ function UserListEdit() {
                 <h5>Edit User</h5>
               </div>
               <div>
-                {`1 : Adimn`}&nbsp;&nbsp;&nbsp;{`2 : user`}
+                <div>
+                  <label
+                    className="form-input"
+                    style={{
+                      width: "28vw",
+                      border: "1px solid dodgerblue",
+                      borderRadius: "5px",
+                      padding: "5px",
+                      outline: "1px solid dodgerblue",
+                      display: "flex",
+                      alignItems: "center",
+                      // borderColor: "#25a353",
+                    }}
+                  >
+                    <i
+                      className="bi bi-search"
+                      style={{
+                        fontSize: "16px",
+                      }}
+                    ></i>
+                    <input
+                      value={searchData}
+                      type="search"
+                      placeholder="Search here....."
+                      style={{
+                        width: "80%",
+                        border: "none",
+                        outline: "none",
+                        padding: "0px 5px",
+                      }}
+                      onChange={(e) => setSearchData(e.target.value)}
+                    />
+                  </label>
+                </div>
               </div>
             </div>
-
             <hr className="my-2" />
           </div>
-        </Col>
-        <Col xs={12} sm={12} md={12} lg={12} xl={12}>
-          <hr className="my-1" />
-          <div className="d-flex justify-content-between align-items-center m-0 flex-wrap">
-            <div>
-              <label
-                className="form-input"
-                style={{
-                  width: "28vw",
-                  border: "1px solid dodgerblue",
-                  borderRadius: "5px",
-                  padding: "5px",
-                  outline: "1px solid dodgerblue",
-                  display: "flex",
-                  alignItems: "center",
-                  // borderColor: "#25a353",
-                }}
-              >
-                <i
-                  className="bi bi-search"
-                  style={{
-                    fontSize: "16px",
-                  }}
-                ></i>
-                <input
-                  value={searchData}
-                  type="search"
-                  placeholder="Search here....."
-                  style={{
-                    width: "80%",
-                    border: "none",
-                    outline: "none",
-                    padding: "0px 5px",
-                  }}
-                  onChange={(e) => setSearchData(e.target.value)}
-                />
-              </label>
-            </div>
-          </div>
-          <hr className="my-1" />
         </Col>
         <Col
           xs={12}

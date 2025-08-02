@@ -211,7 +211,7 @@ function CostCenterTable({ setIsDisable, search }) {
     if (CostCenterList?.length > 0 && originalOrder?.length == 0) {
       updatedData = CostCenterList?.map((item) => ({
         ...item,
-        TypeName: item.Type === 1 ? "Customer" : "WholeSeller",
+        TypeName: item.Type === 1 ? "Customer" : item.Type == 2  ? "WholeSaler" : "Mahajon",
         TypeSelete: item.Type,
       }));
       setFilteredData([...updatedData]);
@@ -260,6 +260,7 @@ function CostCenterTable({ setIsDisable, search }) {
   const typeArr = [
     { label: 1, value: "Customer" },
     { label: 2, value: "WholeSeller" },
+    { label: 3, value: "Mahajon" },
   ];
   // Convert type array for dropdown
   const typeList = useMemo(() => {
@@ -281,31 +282,32 @@ function CostCenterTable({ setIsDisable, search }) {
       headername: "Cost Center Code",
       fieldname: "CODE",
       type: "String",
-      width: "200px",
+      width: "150px",
       isNotEditable: true,
-    },
-    {
-      headername: "Description",
-      fieldname: "DESCRIPTION",
-      type: "String",
-      width: "200px",
-      isUseInputRef: true,
-    },
-    {
-      headername: "Type",
-      fieldname: "TypeName",
-      selectionname: "TypeSelete",
-      type: "String",
-      isSelection: true,
-      options: typeList,
     },
     {
       headername: "Group CC.",
       fieldname: "GroupCenterCode",
       selectionname: "ParentCode",
       type: "String",
+      width: "120px",
       isSelection: true,
       options: GroupCost,
+    },
+    {
+      headername: "Type",
+      fieldname: "TypeName",
+      selectionname: "TypeSelete",
+      type: "String",
+      width: "120px",
+      isSelection: true,
+      options: typeList,
+    },
+    {
+      headername: "Description",
+      fieldname: "DESCRIPTION",
+      type: "String",
+      isUseInputRef: true,
     },
   ];
 
@@ -313,7 +315,6 @@ function CostCenterTable({ setIsDisable, search }) {
   return (
     <div
       className="table-box"
-      style={{ height: "55vh", border: "1px solid lightgrey" }}
     >
       <Table
         tab={filteredData || []}
@@ -330,6 +331,7 @@ function CostCenterTable({ setIsDisable, search }) {
         useInputRef={editinputref}
         isDelete={true}
         handleDelete={handleDelete}
+        height={"55vh"} 
       />
     </div>
   );

@@ -257,9 +257,9 @@ function AdjustEntryDetailTableView({
         tab={filteredData}
         Col={ColumnDetail}
         isLoading={isAdjustDetailLoading}
-        isDelete={true}
+        // isDelete={true}
         // handleDelete={handleDelete}
-        handleDelete={handleDeleteClick}
+        // handleDelete={handleDeleteClick}
         onSorting={SortingFunc}
       />
       <DeleteConfirmation
